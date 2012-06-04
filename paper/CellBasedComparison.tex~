@@ -64,7 +64,6 @@ The key results intended for this paper are: a comparison of different cell-leve
 \item Once a rough first draft is in place, we should send round to people and decide on authorship: presumably, those developers that have helped to develop the cell-based functionality exhibited in this paper.
 \item We need to ensure consistency in naming and terminology throughout, e.g. `cell-based model' versus `individual-based model'.
 \item Is the plan to release all this code in a new release, or base all code on e.g. release 3.0?
-\item See also \tt{https://chaste.cs.ox.ac.uk/cgi-bin/trac.cgi/wiki/CellBasedComparisonPaper}.
 \end{itemize}
 }
 \end{abstract}

@@ -1,0 +1,45 @@
+This is BibTeX, Version 0.99c (Web2C 7.5.6)
+The top-level auxiliary file: CellBasedComparison.aux
+The style file: apalike.bst
+Database file #1: comparison_refs.bib
+You've used 10 entries,
+            1935 wiz_defined-function locations,
+            545 strings with 6514 characters,
+and the built_in function-call counts, 5837 in all, are:
+= -- 522
+> -- 439
+< -- 2
++ -- 164
+- -- 164
+* -- 586
+:= -- 1056
+add.period$ -- 30
+call.type$ -- 10
+change.case$ -- 132
+chr.to.int$ -- 10
+cite$ -- 10
+duplicate$ -- 140
+empty$ -- 292
+format.name$ -- 176
+if$ -- 1067
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 10
+newline$ -- 53
+num.names$ -- 30
+pop$ -- 110
+preamble$ -- 1
+purify$ -- 132
+quote$ -- 0
+skip$ -- 103
+stack$ -- 0
+substring$ -- 358
+swap$ -- 10
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 60
+warning$ -- 0
+while$ -- 37
+width$ -- 0
+write$ -- 132

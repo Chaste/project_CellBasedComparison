@@ -1,0 +1,67 @@
+\begin{thebibliography}{}
+
+\bibitem[Drasdo et~al., 2007]{Drasdo2007Role}
+Drasdo, D., Hoehme, S., and Block, M. (2007).
+\newblock {On the role of physics in the growth and pattern formation of
+  multi-cellular systems: What can we learn from individual-cell based models?}
+\newblock {\em J. Stat. Phys.}, 128:287--345.
+
+\bibitem[Meineke et~al., 2001]{Meineke2001Cell}
+Meineke, F.~A., Potten, C.~S., and Loeffler, M. (2001).
+\newblock Cell migration and organization in the intestinal crypt using a
+  lattice-free model.
+\newblock {\em Cell Prolif.}, 34:253--266.
+
+\bibitem[Newman, 2005]{Newman2005Modeling}
+Newman, T.~J. (2005).
+\newblock Modeling multi-cellular systems using sub-cellular elements.
+\newblock {\em Math. Biosci. Eng.}, 2:611--622.
+
+\bibitem[Osborne et~al., 2010]{Osborne2010Hybrid}
+Osborne, J., Walter, A., Kershaw, S., Mirams, G., Fletcher, A., Pathmanathan,
+  P., Gavaghan, D., Jensen, O., Maini, P., and Byrne, H. (2010).
+\newblock {A hybrid approach to multi-scale modelling of cancer}.
+\newblock {\em Phil. Trans. Roy. Soc.A}, 368:5013--5028.
+
+\bibitem[Pathmanathan et~al., 2009]{Pathmanathan2009Computational}
+Pathmanathan, P., Cooper, J., Fletcher, A., Mirams, G., Murray, P., Osborne,
+  J., Pitt-Francis, J., Walter, A., and Chapman, S. (2009).
+\newblock {A computational study of discrete mechanical tissue models}.
+\newblock {\em Phys. Biol.}, 6:036001.
+
+\bibitem[Pitt-Francis et~al., 2008]{Pitt-Francis2008Chaste}
+Pitt-Francis, J., Bernabeu, M., Cooper, J., Garny, A., Momtahan, L., Osborne,
+  J., Pathmanathan, P., Rodriguez, B., Whiteley, J., and Gavaghan, D. (2008).
+\newblock {Chaste: using agile programming techniques to develop computational
+  biology software}.
+\newblock {\em Phil. Trans. Roy. Soc. A}, 366:3111--3136.
+
+\bibitem[Pitt-Francis et~al., 2009]{Pitt-Francis2009Chaste}
+Pitt-Francis, J., Pathmanathan, P., Bernabeu, M., Bordas, R., Cooper, J.,
+  Fletcher, A., Mirams, G., Murray, P., Osborne, J., Walter, A., Chapman, S.,
+  Garny, A., {van Leeuwen}, I., Maini, P., Rodriguez, B., Waters, S., Whiteley,
+  J., Byrne, H., and Gavaghan, D. (2009).
+\newblock {Chaste: a test-driven approach to software development for
+  biological modelling}.
+\newblock {\em Comp. Phys. Comm.}, 180(12):2452--2471.
+
+\bibitem[Sandersius and Newman, 2008]{Sandersius2008Modeling}
+Sandersius, S. and Newman, T. (2008).
+\newblock {Modeling cell rheology with the Subcellular Element Model}.
+\newblock {\em Phys. Biol.}, 5:015002.
+
+\bibitem[Smith et~al., 2011]{Smith2011Incorporating}
+Smith, A., Baker, R., Kay, D., and Maini, P. (2011).
+\newblock Incorporating chemical signalling factors into cell-based models of
+  growing epithelial tissues.
+\newblock {\em J. Math. Biol.}, ???:???
+
+\bibitem[Van~Leeuwen et~al., 2009]{Leeuwen2009Integrative}
+Van~Leeuwen, I., Mirams, G., Walter, A., Fletcher, A., Murray, P., Osborne, J.,
+  Varma, S., Young, S., Cooper, J., Doyle, B., Pitt-Francis, J., Momtahan, L.,
+  Pathmanathan, P., Whiteley, J., Chapman, S., Gavaghan, D., Jensen, O., King,
+  J., Maini, P., Waters, S., and Byrne, H. (2009).
+\newblock {An integrative computational model for intestinal tissue renewal}.
+\newblock {\em Cell Prolif.}, 42:617--636.
+
+\end{thebibliography}
