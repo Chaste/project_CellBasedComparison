@@ -118,15 +118,17 @@ The remainder of this paper is structured as follows...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Cell-based models of biological tissues }\label{sec:discrete_models}
-\highlight{This section should contain all the mathematics of the models.}
-
+\section{Cell-based models of biological tissues}\label{sec:discrete_models}
 The multiscale modelling framework consists of three main interacting scales: the cellular scale; the subcellular scale; and the tissue scale.
 
 \highlight{We need to make some kind of justification for this distinction of spatial scales. Who first did this, from a modelling point of view? Clarify that we know that, really, biology is the integration of these processes but that this framework seems like a resonable way forward.}
 
 %%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
 \subsection{Discrete representations of cells} \label{sec:cell_level}
+Various different model for interacting populations of cells have been proposed. The main ones are given here.
+
+\highlight{This section should contain all the mathematics of the models. Not the full detail as can refernce papers but enought to give a feel for similarities and differences. This text is availiable in Ozzy's thesis and Junked sections from older papers.}
+
 
 \highlight{Go through each of the modelling approaches listed below and provide a brief overview. 
 Typical biological systems studied with each model, with relevant references, and give some details of the underlying equations, geometric representation, etc. Dont discuss coupling with other scales till next section.}
@@ -212,18 +214,8 @@ The Cell Based component of Chaste utilises the core functionality of Chaste det
 %%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
 \subsection{Structure of code} \label{sec:code}
 To set up a cell-based simulation within Chaste you need to instantiate a collection of objects, which specify the properties of the simulation. 
-The following eight objects can be defined for a simulation to be undertaken:
-\begin{description}
-  \item [Mesh,] 
-  \item [Cells,] 
-  \item [Cell Population,] 
-  \item [Simulation,] 
-  \item [Forces/ Update Rules,] 
-  \item [*Cell Killers,] 
-  \item [*Boundary Conditions (BCS),] 
-  \item [*External Factors,]
-\end{description}
-The starred objects are optional as you may not want to have cells being removed from the simulation and the growth may be unconstrained. 
+The following eight objects can be defined for a simulation to be undertaken: \textbf{Mesh; Cells; Cell Population; Simulation; Forces/ Update Rules; *Cell Killers; *Boundary Conditions (BCS); and *External Factors}.
+The starred objects are optional as you may not want to have cells being removed from the simulation and the growth may be unconstrained. Technicaly Forces and Update rules are optional as a simulation will run without them and cells can divide and die, however the cells will not move.
 
 \begin{figure}[tbhp]
         \centering
@@ -232,6 +224,7 @@ The starred objects are optional as you may not want to have cells being removed
        \label{fig:SimulationComponents}
 \end{figure}
 
+In the following sections we detail each of these components and how they relate to elemets of the simulatiosn discussed in Section~\ref{sec:discrete_models}. \highlight{Go through these sections and add more detail including the links beween them.}
 
 %%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
 \subsection{Mesh} \label{sec:structure:mesh}
@@ -288,13 +281,17 @@ These are cell-level model independent.
 
 
 
+In order to create and run a simulation these objects are combined together. To show how this works we now present a series of example simulations using chaste. In addition we will use these examples to compare and contrast the different cell-level models.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Example simulations} \label{sec:example_simulations}
 
-Will have all Potts Mesh Node and Vertex-Based simulations
+The simulations to be undertaken are...
+
+\noindent Will have all Potts Mesh Node and Vertex-Based simulations:
 \begin{itemize}
   \item Monolayer \highlight{- if background needed, we can add some text from AGF thesis and some text that was cut out of the vertex paper}
   \item crypt \highlight{- what will be novel, i.e. how will we progress beyond \citet{Osborne2010Hybrid} in our comparison? 1) Have all 4 models 2) show how it evolves from Monolayer.}

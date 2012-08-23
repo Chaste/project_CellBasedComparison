@@ -27,6 +27,10 @@
 #include "StochasticDurationGenerationBasedCellCycleModel.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "NagaiHondaForce.hpp"
+#include "Cylindrical2dNodesOnlyMesh.hpp"
+
+#include "PeriodicNodeBasedBoundaryCondition.hpp"
+#include "StemCellRetainerForce.hpp"
 
 #include "PottsMeshGenerator.hpp"
 #include "SimpleWntCellCycleModel.hpp"
@@ -35,9 +39,12 @@
 #include "VolumeConstraintPottsUpdateRule.hpp"
 #include "AdhesionPottsUpdateRule.hpp"
 
+#include "Debug.hpp"
+
 class TestCryptSimulationcomparison : public AbstractCellBasedTestSuite
 {
 private:
+
 
     double mLastStartTime;
     void setUp()
@@ -55,20 +62,21 @@ private:
 
 public:
 
-    void TestSimpleVertexCryptforComparison() throw (Exception)
+    void nTestSimpleVertexCryptforComparison() throw (Exception)
     {
         double crypt_length = 12;
+        double crypt_width = 6.0;
 
         // Create mesh
         unsigned cells_across = 6;
         unsigned cells_up = 14;
-        CylindricalHoneycombVertexMeshGenerator generator(cells_across, cells_up);
+        CylindricalHoneycombVertexMeshGenerator generator(cells_across, cells_up, crypt_width/cells_across);
         Cylindrical2dVertexMesh* p_mesh = generator.GetCylindricalMesh();
 
         // Set up cells
         std::vector<CellPtr> cells;
         CryptCellsGenerator<StochasticDurationGenerationBasedCellCycleModel> cells_generator;
-        cells_generator.Generate(cells, p_mesh, std::vector<unsigned>(), true, 0.5, 2.0, 4.0, 5.8);
+        cells_generator.Generate(cells, p_mesh, std::vector<unsigned>(), true, 1.0, 2.5, 4.5, 6.0);
 
         // Create tissue
         VertexBasedCellPopulation<2> crypt(*p_mesh, cells);
@@ -76,7 +84,7 @@ public:
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(crypt);
         simulator.SetSamplingTimestepMultiple(50);
-        simulator.SetEndTime(1);
+        simulator.SetEndTime(100);
         simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
 
         // Add Crypt BCS
@@ -96,14 +104,14 @@ public:
         TS_ASSERT_THROWS_NOTHING(simulator.Solve());
     }
 
-    void TestSimpleMeshBasedCryptforComparison() throw (Exception)
+    void nTestSimpleMeshBasedCryptforComparison() throw (Exception)
     {
-        double crypt_length = 12;
+        double crypt_length = 12-0.5;
+        double crypt_width = 6.0;
 
         // Create mesh
         unsigned cells_across = 6;
-        unsigned cells_up = 12;
-        double crypt_width = 5.0;
+        unsigned cells_up = 14;
         unsigned thickness_of_ghost_layer = 1;
 
         CylindricalHoneycombMeshGenerator generator(cells_across, cells_up, thickness_of_ghost_layer, crypt_width/cells_across);
@@ -115,7 +123,7 @@ public:
         // Set up cells
         std::vector<CellPtr> cells;
         CryptCellsGenerator<StochasticDurationGenerationBasedCellCycleModel> cells_generator;
-        cells_generator.Generate(cells, p_mesh, location_indices, true, 0.5, 2.0, 4.0, 5.8);
+        cells_generator.Generate(cells, p_mesh, location_indices, true, 1.0-0.5, 2.5-0.5, 4.5- 0.5, 6.0 -0.5);
 
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> crypt(*p_mesh, cells, location_indices);
@@ -123,7 +131,7 @@ public:
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(crypt);
         simulator.SetSamplingTimestepMultiple(12);
-        simulator.SetEndTime(10);
+        simulator.SetEndTime(100);
         simulator.SetOutputDirectory("CylindricalCrypt/Mesh");
 
         // Add Crypt BCS
@@ -132,8 +140,8 @@ public:
         simulator.AddCellPopulationBoundaryCondition(p_crypt_bcs);
 
         // Create a force law and pass it to the simulation
-        GeneralisedLinearSpringForce<2> linear_force;
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(30.0); //normally 15.0 but 30 in all CellBased Papers Modified to stop crowding at base of crypt        simulator.AddForce(p_linear_force);
         simulator.AddForce(p_linear_force);
 
         // Make crypt shorter for sloughing
@@ -147,17 +155,18 @@ public:
 
     void TestNodeBasedCrypt() throw (Exception)
     {
-        double crypt_length = 12;
+        double crypt_length = 12-0.5;
+        double crypt_width = 6.0;
 
         // Create a simple mesh
-        unsigned num_cells_depth = 14;
-        unsigned num_cells_width = 5;
-        HoneycombMeshGenerator generator(num_cells_width, num_cells_depth, 0);
+        unsigned cells_across = 6;
+        unsigned cells_up = 14;
+        HoneycombMeshGenerator generator(cells_across, cells_up, 0, crypt_width/cells_across);
         TetrahedralMesh<2,2>* p_generating_mesh = generator.GetMesh();
 
-        // Convert this to a NodesOnlyMesh
-        NodesOnlyMesh<2> mesh;
-        mesh.ConstructNodesWithoutMesh(*p_generating_mesh);
+        // Convert this to a Cylindrical2dNodesOnlyMesh
+        Cylindrical2dNodesOnlyMesh* p_mesh = new Cylindrical2dNodesOnlyMesh(crypt_width);
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh);
 
         // Get location indices corresponding to real cells
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();
@@ -165,54 +174,76 @@ public:
         // Create cells
         std::vector<CellPtr> cells;
         CryptCellsGenerator<StochasticDurationGenerationBasedCellCycleModel> cells_generator;
-        cells_generator.Generate(cells, &mesh, location_indices, true, 0.5, 2.0, 4.0, 5.8);
-
-
-        for (unsigned index = 0; index < cells.size(); index++)
-        {
-            //dynamic_cast<AbstractSimpleGenerationBasedCellCycleModel*>(cells[index]->GetCellCycleModel())->SetMaxTransitGenerations(2u);
-        }
+        cells_generator.Generate(cells, p_mesh, location_indices, true, 1.0-0.5, 2.5-0.5, 4.5- 0.5, 6.0 -0.5);
+        //cells_generator.Generate(cells, p_mesh, location_indices, true, 0.0, 0.0, 0.0,0.0,0.0);
 
         // Create a node-based cell population
-        NodeBasedCellPopulation<2> crypt(mesh, cells);
-        crypt.SetMechanicsCutOffLength(1.5);
+        NodeBasedCellPopulation<2> crypt(*p_mesh, cells);
+        crypt.SetMechanicsCutOffLength(crypt_width/2.0);
+
+        for (unsigned index = 0; index < crypt.rGetMesh().GetNumNodes(); index++)
+        {
+            PRINT_VARIABLE(index);
+            crypt.rGetMesh().SetCellRadius(index,0.53);
+        }
+        TS_ASSERT_DELTA(crypt.rGetMesh().GetCellRadius(0),0.53,1e-6);
 
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(crypt);
-        simulator.SetDt(0.001);
-        simulator.SetSamplingTimestepMultiple(100);
-        simulator.SetEndTime(1.0);
+        //simulator.SetDt(0.001);
+        simulator.SetSamplingTimestepMultiple(12);
+        simulator.SetEndTime(100.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Node");
 
         // Create a force law and pass it to the simulation
-        GeneralisedLinearSpringForce<2> linear_force;
-        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
-        simulator.AddForce(p_linear_force);
+        MAKE_PTR(RepulsionForce<2>, p_repulsion_force);
+        p_repulsion_force->SetMeinekeSpringStiffness(30.0); //normally 15.0 but 30 in all CellBased Papers Modified to stop crowding at base of crypt
+        simulator.AddForce(p_repulsion_force);
 
         // Make crypt shorter for sloughing
         MAKE_PTR_ARGS(SloughingCellKiller<2>, p_killer, (&crypt, crypt_length));
         simulator.AddCellKiller(p_killer);
 
+        // Add Periodic BCS to move nodes round periodic boundary
+        MAKE_PTR_ARGS(PeriodicNodeBasedBoundaryCondition, p_bcs,(&crypt, crypt_width));
+        simulator.AddCellPopulationBoundaryCondition(p_bcs);
+
+        // Add Crypt BCS
+        MAKE_PTR_ARGS(CryptSimulationBoundaryCondition<2>, p_crypt_bcs,(&crypt));
+        p_crypt_bcs->SetUseJiggledBottomCells(true);
+        simulator.AddCellPopulationBoundaryCondition(p_crypt_bcs);
+
+        // Create a force law to retain stem cells niche and pass it to the simulation
+        MAKE_PTR(StemCellRetainerForce<2>, p_retainer_force);
+        p_retainer_force->SetForceMagnitudeParameter(50.0);
+        simulator.AddForce(p_retainer_force);
+
         // Run simulation
         simulator.Solve();
+
+        // Clear memory
+        delete p_mesh;
     }
 
     void TestPottsCrypt() throw (Exception)
     {
-        double crypt_length = 40;
+        double crypt_length = 12*4;
 
         // Create a simple 2D PottsMesh
-        PottsMeshGenerator<2> generator(20, 5, 4, 45, 10, 4, 1, 1, 1, true);
+        PottsMeshGenerator<2> generator(6*4, 6, 4, 13*4, 12, 4, 1, 1, 1, true);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         // Create cells
         std::vector<CellPtr> cells;
         CryptCellsGenerator<StochasticDurationGenerationBasedCellCycleModel> cells_generator;
-        cells_generator.Generate(cells, p_mesh, std::vector<unsigned>(), true, 2.5, 8.0, 16.0, 36);
+        //cells_generator.Generate(cells, p_mesh, std::vector<unsigned>(), true, 2.5, 8.0, 16.0, 36);
+        cells_generator.Generate(cells, p_mesh, std::vector<unsigned>(), true, 4.0*1.0, 4.0*2.5, 4.0*4.5, 4.0*6.0);
 
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.SetOutputCellVolumes(true);
+        cell_population.SetNumSweepsPerTimestep(10);
+        cell_population.SetTemperature(0.01);
 
         // Create an instance of a Wnt concentration
 //        WntConcentration<2>::Instance()->SetType(LINEAR);
@@ -224,7 +255,7 @@ public:
         simulator.SetOutputDirectory("CylindricalCrypt/Potts");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(1);
-        simulator.SetEndTime(10.0);
+        simulator.SetEndTime(100.0);
         simulator.SetOutputCellVelocities(true);
 
         // Create cell killer and pass in to simulation
@@ -240,7 +271,6 @@ public:
         // Run simulation
         simulator.Solve();
     }
-
 };
 
 #endif /*TESTCRYPTSIMULATIONCOMPARISON_HPP_*/
