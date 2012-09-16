@@ -1,4 +1,4 @@
-\documentclass{siamltex}
+\documentclass{article}
 
 % Include useful packages
 \usepackage{fullpage}
@@ -13,20 +13,7 @@
 
 \linespread{1.4}
 
-% Helpful commands for mathematical expressions
-\newcommand{\dd}[2]{\dfrac{\textrm{d} #1}{\textrm{d} #2}}
-\newcommand{\pdd}[2]{\dfrac{\partial#1}{\partial#2}}
-\newcommand{\pddb}[2]{\left( \dfrac{\partial#1}{\partial#2} \right)}
-\newcommand{\boldnabla}{\mbox{\boldmath$\nabla$}}
-\renewcommand{\vec}[1]{\mathbf{#1}}
-\newcommand{\uvec}[1]{\mathbf{#1}}
-%\renewcommand{\and}{ \text{and} }
-\newcommand{\for}{ \text{for} }
-
 % Helpful commands for authors' notes
-\newcommand{\completed}{[Completed]}
-\newcommand{\todo}{[Started]}
-\newcommand{\tostart}{[Still to do]}
 \newcommand{\authornote}[2]{{\bf [#1: #2]}}
 \newcommand{\alex}[1]{\authornote{Alex}{#1}}
 \newcommand{\ozzy}[1]{\authornote{Ozzy}{#1}}
@@ -36,317 +23,232 @@
 
 % Make title
 
-\title{The influence of cell-based modelling paradigm on the outcome of multiscale simulations of cell populations}
+\title{Individual-based approaches to modelling cellular properties and interactions}
 
-\author{J.M. Osborne\footnotemark[2]\ \footnotemark[4]\ \thanks{Corresponding author ({\tt James.Osborne@cs.ox.ac.uk})}\ \and A.G. Fletcher\footnotemark[3]\ \footnotemark[4] \and OTHER AUTHORS\and P.K. Maini\footnotemark[3] \and D.J. Gavaghan\footnotemark[2]}
+\author{James M. Osborne\footnotemark[3]\ \footnotemark[2]\ \thanks{Corresponding author ({\tt James.Osborne@cs.ox.ac.uk})}\ 
+\and Alexander G. Fletcher\footnotemark[4]\ \footnotemark[2] 
+\and Yohan Davit\footnotemark[5]
+\and Sara-Jane Dunn\footnotemark[6]
+\and P.K. Maini\footnotemark[4] 
+\and Daniel G. Harvey\footnotemark[3]
+\and Joseph M. Pitt-Francis\footnotemark[3]
+\and D.J. Gavaghan\footnotemark[3]}
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
-\footnotetext[2]{Computational Biology Group, Department of Computer Science, Wolfson Building, Parks Road, Oxford OX1 3QD, UK}
-\footnotetext[3]{Centre for Mathematical Biology, Mathematical Institute, 24-29 St Giles', Oxford OX1 3LB, UK}
-\footnotetext[4]{Joint first authors}
+\footnotetext[2]{Joint first authors}
+\footnotetext[3]{Computational Biology Group, Department of Computer Science, Wolfson Building, Parks Road, Oxford OX1 3QD, UK}
+\footnotetext[4]{Centre for Mathematical Biology, Mathematical Institute, 24-29 St Giles', Oxford OX1 3LB, UK}
+\footnotetext[5]{Oxford Centre for Collaborative Applied Mathematics, Mathematical Institute, 24-29 St Giles', Oxford OX1 3LB, UK}
+\footnotetext[6]{Computational Science Laboratory, Microsoft Research, Needham Building, 7 JJ Thomson Avenue, Cambridge CB3 0FB, UK}
 \renewcommand{\thefootnote}{\arabic{footnote}}
 
-% Notice that the footnote marks begin with [2] because the first mark (the asterisk) will be used in the title for date-recieved information by SIAM, even if not already used for support data.
-
-%\ead{alexander.fletcher@maths.ox.ac.uk}
-%\cortext[cor1]{Corresponding author}
-%\fntext[fn1]{Joint first authors}
+% Notice that the footnote marks begin with [2] because the first mark (the asterisk) will be used in the title for date-received information by SIAM, even if not already used for support data.
 
 \maketitle
 
 \begin{abstract}
-The key results intended for this paper are: a comparison of different cell-level modelling approaches (cellular Potts model, centre dynamics models and vertex dynamics models); a brief discussion of the implementation of these approaches within the Chaste framework; and a comparison of the different Chaste codes used to create example simulations. 
-
-\highlight{Some notes:
 \begin{itemize}
-\item We will aim to submit this manuscript to Multiscale Modeling and Simulation: A SIAM Interdisciplinary Journal, so need to check that journal's submission requirements.
-\item We need to carefully define what is novel in this paper, and what will have already been covered in the other recent Chaste papers.
-\item Once a rough first draft is in place, we should send round to people and decide on authorship: presumably, those developers that have helped to develop the cell-based functionality exhibited in this paper.
-\item We need to ensure consistency in naming and terminology throughout, e.g. `cell-based model' versus `individual-based model'.
-\item Is the plan to release all this code in a new release, or base all code on e.g. release 3.0?
+\item This paper is intended to exploit the functionality implemented within cell-based Chaste over the last three or so years; this is reflected in the proposed authorship.
+\item Our aim is to have a rough draft of this paper ready by the end of October.
+\item When cell-based Chaste iterations resume during full term, we will focus on the addition of new functionality required for the examples in this paper.
+\item We may wish to wait until the vertex comparison paper, PLoS Comput. Biol. paper and CPC paper have all been accepted or rejected before submitting this paper.
+\item We should think about which journal would be most suitable for this paper.
+\item All results figures are to be generated in both .png and .eps formats.
 \end{itemize}
-}
 \end{abstract}
 
-\begin{keywords}
-\highlight{To do}
-\end{keywords}
-
-\begin{AMS}
-\highlight{To do}
-\end{AMS}
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction \tostart} \label{sec1}
 
-\subsection{A short review of cell-based models}
+\section{Introduction} \label{sec:intro}
 
+General motivation:
 \begin{itemize}
-\item Conclude by discussing recent multiscale models, which couple the biomechanical behaviour of a cell aggregate or tissue to other processes such as fluid or solute transport.
-\end{itemize}
-
-\subsection{Where models come from}
-
-\subsection{Simulation methods}
-
-\begin{itemize}
-\item Deterministic: solving equations of motion
-\item Stochastic: (a)synchronous updating; Gillespie algorithm and variations; Monte Carlo simulation
-\item Hybrid simulations
-\end{itemize}
-
-\subsection{Comparing models; why we need a consistent simulation framework}
-
-\begin{itemize}
-\item Technical considerations
-\item To date there has been very little comparative study of different cell-based modelling paradigms.
-\item Clearly, each approach has general strengths and weaknesses (see next section for further details).
-\item To what extent are the results of model simulations artifacts of the modelling approach used or method of simulation?
-\item It is difficult to make an accurate quantitative comparison between different models and thus assess the influence of mode choice on the behaviour of simulations.
-\item This difficulty is compounded in hybrid or multiscale models.
-\item If we use a consistent computational framework within which to simulate these models, then we can compare different constitutive assumptions by altering model details in a straightforward manner.
-\end{itemize}
-
-\highlight{What other attempts have been made to compare different models? By us \cite{Osborne2010Hybrid} as well as others.}
-
-The remainder of this paper is structured as follows...
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Cell-based models of biological tissues \tostart} \label{sec:cell_level_models}
-
-\highlight{Go through each of the modelling approaches listed below and provide a brief overview. Typical biological systems studied with each model, with relevant references, and give some details of the underlying equations, geometric representation, etc. Bring some of the `cellular scale' text from the next section into this section?}
-
-\begin{itemize}
-  \item CA
-  \item Cellular Potts Model \highlight{ - can we refer to the `Potts in Chaste' paper here - how far along is this?}
-  \item Cell centre
-  \item Cell vertex \highlight{ - hopefully refer to our vertex paper here!}
+\item Discuss the importance of understanding how cells behave and self-organise within biological tissues.
+\item Describe how during morphogenesis and homeostasis, the repertoire of cell behaviours in response to biochemical and biophysical cues is limited to processes such as division, `respecification' (including differentiation and senescence), death, growth, migration, shape changes, and secretion or surface presentation of signalling molecules. Briefly discuss each of these processes in turn, providing concrete examples in each case.
+\item Introduce the concept of individual-based models of cell populations and discuss merits over other `traditional' (i.e. continuum mean-field) models. Highlight past successes of this approach in advancing understanding of biological systems.
+\item Spell out the huge variety of individual-based models and the lack of comparisons between approaches; the few examples of this include \citet{Galle2006Individual} and \citet{Osborne2010Hybrid}. How do the different individual-based models compare to one another?
+\item Motivate the implementation of such models within a consistent computational framework when undertaking such a comparison, to avoid artifacts associated with different methods of numerical solution. Emphasize the lack of `benchmarks' for comparison.
+\item Provide overview of structure of rest of paper.
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Framework structure \todo} \label{sec:computational_framework}
+\section{Review of different modelling approaches}\label{sec:discrete_models}
+Review the various individual-based approaches to modelling cell populations:
+\begin{itemize}
+\item Lattice-based models: cellular automata and the cellular Potts model. Off-lattice models: centre-based models (`overlapping spheres' and Voronoi tessellation) and vertex-based models. Other models, such as the subcellular element model; it might be worth highlighting the `symmetry' of the four types of model we consider in this paper (centre-based as an off-lattice analogue of CA, vertex-based as an off-lattice analogue of CPM), since this indicates why we haven't also considered e.g. the SEM. Relevant references: \citet{Fletcher2012Implementing} for vertex-based models, perhaps \citet{VossBohme2012Mulit-scale} for the cellular Potts model.
+\item Approaches to coupling such models to processes at different spatial scales: models that are coupled to continuum descriptions of transport processes; and models that are coupled to detailed representations of subcellular phenomena.
+\item Include the underlying mathematics at a level sufficient to allow comparison, but wherever possible refer to relevant literature for full details.
+\end{itemize} 
 
-The multiscale modelling framework consists of three main interacting scales: the cellular scale; the subcellular scale; and the tissue scale.
-
-\highlight{We need to make some kind of justification for this distinction of spatial scales. Who first did this, from a modelling point of view? Clarify that we know that, really, biology is the integration of these processes but that this framework seems like a resonable way forward.}
-
-\begin{description}
-\item [The cellular (meso) scale.] {The cell is the central element of the framework.} 
-
-    \begin{description}
-	    \item [Cellular Automata.]{ The simplest form of cellular modelling,
-    cells are represented as points on a lattice and rules constructed in order for
-    each cell to divide, move or die. Cells can only divide in to neighbouring spaces
-    on the lattice. Some of the issues with this type of modelling include: effects felt at distance; 
-    fixed regular lattice
-    geometry; growth is lattice dependent -- 4 point $\rightarrow$ star and 8 point
-    $\rightarrow$ octagon; and finally you can't consider stress in the tissue.}
-
-	    \item [Cellular Potts.]{An extension of cellular automata model is the
-    Cellular Potts Model, in which cells are composed of a number of lattice points, and
-    the cell shape is evolved by minimizing the energy which is calculated by
-    imposing constraints due to chemotaxis etc. This form of modelling is utilised
-    in the CompuCell3D modelling package produced at Indiana University.}
-
-	    \item [Overlapping sphere models.]
-	    {See the work of Drasdo \emph{et al}, for example \citep{Drasdo2007Role}.
-    Cells are modelled as overlapping spheres and energy minimization is used to
-    evolve the system, cells can divide depending on binary rules or by using a
-    cell cycle model. The software package MASON from UCSF deals with this type of modelling. 
-    Extensions include ellipses with varying radii and orientation. 
-    Chaste functionality for this is discussed in a recent computational study by 
-    \citet{Pathmanathan2009Computational} of the mechanical properties of this class of model.}
-
-	    \item [Subcellular Element Model.]{This is an extension of the
-    overlapping spheres approach and treats cells as being composed of subcellular
-    elements with different interactions between inter-cell and intra-cell elements 
-    \citep{Newman2005Modeling,Sandersius2008Modeling} }
-
-	    \item[Centre Dynamics Tessellation Models.] This was the first class of cell-based model 
-	    added to Chaste \citep{Leeuwen2009Integrative} and are based on the model 
-	    presented by \citet{Meineke2001Cell}.
-
-	    \item[Vertex Dynamics Models.] Cells defined by polygons
-    and movement determined by energy minimization. Currently implemented in Chaste in two 
-    dimensions \citep{Osborne2010Hybrid}.
-
-	    \item[Finite Element Models.] Generalization of vertex where cell
-    represented as collections of moving and deforming elements -- tetrahedra for
-    example.	
-
-    \end{description}
-
-    \item [The subcellular (micro) scale.] {The behaviour of cells is dictated by modelling 
-    the numerous subcellular processes occurring within the cell. The main modelling paradigm 
-    is to use reaction networks rendered into ODEs which interacting with cell level through 
-    the cell cycle and also directly through properties such as cell size, shape and motility 
-    etc. Other methods include: stochastic ODEs; PDEs; or fully stochastic networks which 
-    representing the transport and use of substrates within cells.}
-
-    \item [The tissue (macro) scale.] {Modelling of inter-cellular signalling, or nutrient 
-    transfer can be considered by using reaction diffusion equations, 
-    which are solved on the growing domain (defined by the cells) with cells acting as sinks 
-    and sources \ozzy{We don't have PDEs for vertex yet: we should 
-    reference Aaron's paper here \citep{Smith2011Incorporating}}.}
-\end{description}
-
-The advantage of such a framework is that once you have implemented a particular subcellular 
-model you can use it in all possible cell level models.
-
-%%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
-\subsection{Computational structure \todo} \label{sec:computational_structure}
-Chaste (Cancer, Heart and Soft Tissue Environment) is a collaborative software
-development project, which is designed to act as a high-quality multi-purpose library
-supporting computational simulations for a wide range of biological problems \citep{Pitt-Francis2008Chaste}. 
-In this context, ‘high-quality’ means that the software is extensible, robust, fast, accurate and
-maintainable and uses state-of-the-art numerical techniques. It is also open-source, so
-can be adapted by other developers. Chaste has been developed by a multidisciplinary
-team including mathematicians and software engineers. This ensures that the code is
-well-structured as a piece of software, while at the same time practical and useful as a
-computational modelling tool. While it is a generic extensible library, to date attention
-has focused on the fields of cardiac electrophysiology and tumor growth \citep{Pitt-Francis2009Chaste}. 
-Further details on Chaste are available at \url{http://www.cs.ox.ac.uk/chaste}.
-
-
-\begin{figure}[tbhp]
-        \centering
-        \setlength{\unitlength}{1cm}
-        \begin{picture}(10,10)
-              \put(0,0){\includegraphics[width=10cm]{Figs/ChasteStructure}}
-	      \put(1.5,5.0){\huge{Need to change this and}}
-              \put(0.0,3.5){\huge{add Crypt and projects folders.}}
-        \end{picture}
-        \caption{Schematic diagram of Chaste code base.} 
-       \label{fig:ChasteStructure}
-\end{figure}
-
-%%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
-\subsection{Structure of code \todo} \label{sec:code}
-To set up a cell-based simulation within Chaste you need to instantiate a collection of objects, which specify the properties of the simulation. 
-The following seven objects can be defined for a simulation to be undertaken:
-\begin{description}
-  \item [Mesh,] the structural information for the simulation, the initial epithelial layer 
-  layout is defined here.
-  \item [Cells,] a collection of cells to be associated with the mesh. Contain all the subcellular 
-  machinery. The initial conditions for  subcellular models are defined here.
-  \item [Cell population,] associated the cells with the mesh and provides a mechanism for 
-  cells to know their location.
-  \item [Simulation,] takes in the cell population and implements the rules for evolution of 
-  the system.
-  \item [Forces,] these are passed in to the simulation and dictate the way the vertices move. 
-  This is the mechanism for selection of the type of vertex dynamics model. Multiple forces 
-  can be applied allowing the introduction of processes like chemotaxis. \highlight{What about update rules, in the case of on-lattice simulations?}
-  \item [*Cell killers,] these are passed to the simulation and define how cells die. Multiple 
-  killers can be used at the same time for example to represent random death and death due to 
-  sloughing.
-  \item [*Boundary Conditions (BCS),] these are passed to the simulation and define any fixed 
-  restrictions on how the cells can move. Multiple conditions can be used at the same time.
-\end{description}
-The starred objects are optional as you may not want to have cells being removed from the simulation and the growth may be unconstrained. 
-
-\begin{figure}[tbhp]
-        \centering
-        \includegraphics[width=10cm]{Figs/CellBasedStructure}
-        \caption{Schematic diagram of the framework showing the separate components of the simulations and the communication between the classes.} 
-       \label{fig:SimulationComponents}
-\end{figure}
-
+\noindent Discuss the technical implementation of such models:
+\begin{itemize}
+\item To what extent are the codes used to simulate such models open source, well documented, fully validated, or able to link against other software?
+\item Reiterate that to accurately compare these models we need to implement them in a consistent simulation framework.
+\item Lead in to brief discussion of Chaste, relying on the recent technical papers as key references for further implementation details. We won't put any code or structure details as these are in the technical papers.
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Example simulations \todo} \label{sec:example_simulations}
-\begin{itemize}
-  \item Monolayer \highlight{- if background needed, we can add some text from AGF thesis and some text that was cut out of the vertex paper}
-  \item Spheroid \highlight{- if background needed, we can add some text from AGF thesis}
-  \item crypt \highlight{- what will be novel, i.e. how will we progress beyond \citet{Osborne2010Hybrid} in our comparison?}
-\end{itemize}
+\section{Model comparison}\label{sec:model_comparison}
+We now present a series of exemplar simulations to compare how the processes discussed in Section~\ref{sec:intro} are represented in each modelling framework.
+More importantly we discuss how the differences in representation influence the results of the simulation. 
+We use cell-based Chaste; see \citet{Mirams2012Chaste} and \citet{Pitt-Francis2012} if these are published.
 
 %%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
-\subsection{Demonstration of growing monolayer \todo} \label{sec:growing_domain}
+\subsection{Adhesion} \label{sec:adhesion}
+
+Discuss biological background:
 \begin{itemize}
-  \item Demonstrate basic functionality
-  \item Example of growing monolayer with void removal, sloughing? etc. 
-  \item Show differences in code from model to model
+\item Discuss how if embryonic cells of two or more histological types are placed into contact with each other, they can undergo spontaneous reproducible patterns of rearrangement; this process of cell sorting can generate checkerboard patterns, engulfment of one cell type by another, or other more complex patterns. Describe the differential adhesion hypothesis, which states that cells tend to prefer cell-cell contact with certain cell types rather than others due to type-specific differential intercellular adhesion, and the differential surface contraction hypothesis, which states that each cell exhibits surface contraction and cells of different types exert different degrees of surface contraction when in contact with other cell types or any surrounding medium.
 \end{itemize}
-\begin{small}
-\begin{Verbatim}[frame=single, numbers=left, numbersep=2pt]
-void TestVertexMonolayerWithRandomBirthAndDeath() throw (Exception)
-{
-    // Create a simple 2D vertex mesh
-    HoneycombVertexMeshGenerator generator(5, 5);
-    MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
 
-    // Set up cells, one for each element in the vertex mesh
-    std:vector<CellPtr> cells;
-    CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2>
-        cells_generator;
-    cells_generator.GenerateBasic(cells,p_mesh->GetNumElements());
+\noindent Summarize existing models:
+\begin{itemize}
+\item There are lots of cellular Potts model references for cell sorting. We may also want to touch on the crypt paper by \citet{Wong2010Computational}, which considers differential adhesion between crypt cells caused by the differential activation of EphB receptors and ephrinB ligands along the crypt axis, and sets up the crypt as a common thread running through the paper.
+\end{itemize}
 
-    // Create cell population
-    VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+\noindent Describe an example model of differential adhesion in a monolayer in the absence of proliferation or respecification:
+\begin{itemize}
+\item Compare results for each of the individual-based models using statistics such as fractional boundary length (the number of mismatched bonds between cells of type A and cells of type B, divided by the total number of mismatched bonds, as a function of time), total boundary length (the total number of mismatched bonds between neighbouring lattice sites, or off-lattice equivalent), total time needed for aggregates to sort completely as a function of the proportion of cells of type A (conditional on this happening), and the average fraction of type A neighbours around type B cells, as a function of time.
+\item The idea behind this example is that the centre- and vertex-based models will evolve to a local minimum in the total energy of the system as they are updated deterministically. In contrast, the cellular automaton and cellular Potts model undergo repeated annealing due to their stochastic updating, and will eventually end up at the global minimum, even if it may not be biologically realistic.
+\item This example demonstrates how Chaste deals with cell sorting, a process occurring at the cellular level.
+\end{itemize}
 
-    // Set up cell-based simulation
-    CellBasedSimulation<2> simulator(cell_population);
-    simulator.SetOutputDirectory("TestVertexMonolayer");
-    simulator.SetEndTime(40);
+\noindent Extra functionality required for this example:
+\begin{itemize}
+\item Cell sorting in centre-based simulations - a new force class.
+\item Cell sorting in CA simulations - a new update rule.
+\item Output fractional boundary length - either new simulation classes or as part of developing a better way of outputting summary statistics.
+\end{itemize}
 
-    // Create a force law and pass it to the simulation
-    NagaiHondaForce<2> force_law;
-    simulator.AddForce(&force_law);
-
-    // Create cell killer and pass it to the simulation
-    RandomCellKiller<2> random_cell_killer(&cell_population, 0.01);
-    simulator.AddCellKiller(&random_cell_killer);
-
-    // Run simulation
-    simulator.Solve();
-}
-\end{Verbatim}
-\end{small}
 
 %%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
-\subsection{Demonstration of cell sorting \tostart} \label{sec:cell_sorting}
+\subsection{Proliferation, death and differentiation} \label{sec:proliferation}
+
+Discuss biological background:
 \begin{itemize}
- \item Potts and Vertex comparison. \highlight{we can add some text that was cut out of the vertex paper}
+\item Discuss patterns of cell proliferation, differentiation and apoptosis during development and homeostasis. Touch on intestinal homeostasis as a prime example of this.
+\item Describe the phenomenon of contact inhibition (or density-dependent inhibition) of cell division, i.e. growth saturation at high cell densities, which is believed to protect the viability of cells in tissues by preventing over-proliferation. Briefly discuss how contact inhibition is governed by transmembrane proteins called cadherins, which act as mechanotransducers.
+\item Explain how in the intestinal crypt some form of contact inhibition may operate, in which cells at the base of the crypt do not proliferate at their maximal rate due to overcrowding, giving rise to a complex pattern of cell proliferation up the crypt.
 \end{itemize}
+
+\noindent Summarize existing models:
+\begin{itemize}
+\item Lots of individual-based models consider the effect of spatial structure on patterns of cell proliferation and differentiation. In the context of the crypt, there are all the models stemming from Meineke et al. (2003).
+\item Discrete models that consider the role of contact inhibition include Drasdo and H\"{o}hme (2003), Drasdo et al. (2007), Galle et al. (2005), and Fletcher (2010).
+\end{itemize}
+
+\noindent Describe an example model of contact inhibition in a simple model of a colonic crypt:
+\begin{itemize}
+\item Describe the simple cylindrical crypt geometry used in van Leeuwen et al. (2009), Osborne et al. (2010) and Mirams et al. (2012).  Relate this to Sara-Jane's crypt model, which includes contact inhibition of cell proliferation.
+\item Compare results for each of the individual-based models using velocity profiles, as done in the case of centre- and vertex-based models by Osborne et al. (2010).
+\item The idea behind this example is that all individual-based models should be very similar when considering a `position-based' cell-cycle model (in which cell proliferation occurs below a threshold height up the crypt, corresponding to a threshold Wnt stimulus). However the individual-based models should exhibit different behaviour when incorporating contact inhibition of cell proliferation into the cell-cycle model.
+\item This example demonstrates how Chaste includes coupling of cell-level processes to simple subcellular processes and deals with cell proliferation, death and differentiation.
+\end{itemize}
+
+\noindent Extra functionality required for this example:
+\begin{itemize}
+\item Set up a CA simulation of a crypt; see also the model by Paulus et al. (19??). 
+\item Decide on how to implement contact inhibition in a CA model as the area is always 1; we could consider multiple occupancy CA or use the density of neighbours to specify contact inhibition.
+\item Extend \texttt{ContactInhibitionCellCycleModel} to work with on-lattice simulations. This will require a \texttt{VolumeTrackedOnLatticeSimulation} analagous to the \texttt{VolumeTrackedOffLatticeSimulation} class.
+\end{itemize}
+
 
 %%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
-\subsection{Demonstration of spheroid \tostart} \label{sec:spheroid}
+\subsection{Short-range signalling} \label{sec:juxtacrine}
+
+Discuss biological background:
 \begin{itemize}
- \item Include nutrient diffusion. \highlight{Talk about Dan's stuff; this example illustrates PDE handling.}
+\item Brief description of lateral inhibition as a juxtacrine pattern-forming mechanism employed during morphogenesis. Focus on the action of the transmembrane proteins Notch and Delta, and their homologues, in mediating lateral inhibition and determining cell fate.
+\item List particular biological systems featuring this process, e.g. {\it Drosophila} eye development, somitogenesis in vertebrates, and cell lineage specification in the mammalian gut.
 \end{itemize}
+
+\noindent Summarize existing models:
+\begin{itemize}
+\item Focus on discrete models of lateral inhibition: Collier et al. (1996), Owen and Sherratt (1998), Wearing and Sherratt (2001), Webb and Owen (2004). These models study conditions for fine-grained patterns in a fixed cell population; proliferation and differentiation are not considered. Possible aside on continuum and coarse-grained models, e.g. O'Dea and King (2011).
+\item More detailed models focusing on the intestine: Buske et al. (2011), Pin et al. (2012). These models couple cell fate determination to Notch activity. Opportunity for linking back to previous crypt example (and mentioning Sophie's work if published and relevant).
+\item Need to check if any cellular Potts models have considered Delta/Notch signalling.
+\end{itemize}
+
+\noindent Describe an example model of Delta/Notch signalling in a growing monolayer, with cell proliferation dependent on Delta levels:
+\begin{itemize}
+\item Compare results for each of the individual-based models using spatial descriptive statistics.
+\item The idea is that the tissue level statistics will be different due to connectivity in models; this should result in different growth rates for the tissues.
+\item The example demonstrates the inclusion of ODE-based subcellular models and also how to sense the local environment within the cell-based Chaste framework.
+\end{itemize}
+
+\noindent All the functionality needed for this example already exists in Chaste.
 
 %%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
-\subsection{Demonstration of crypt \tostart} \label{sec:crypt}
+\subsection{Long-range signalling} \label{sec:morphagens}
+
+Discuss biological background:
 \begin{itemize}
-  \item 2D cylindrical crypt in each modality. 
-  \item 3D node-based crypt.
-  \item Sara-Jane's work?
+\item Describe how morphgens are secreted signalling molecules that provide positional information to cells in a developing tissue and act as a trigger for cell growth, proliferation or differentiation. There are lots of examples and reviews relevant to this; see e.g. the recent review by Wartlick et al. (2011) discussing the insight that has been gained from studying the imaginal wing disc in {\it Drosophila}.
 \end{itemize}
 
+\noindent Summarize existing models:
+\begin{itemize}
+\item Again, lots of previous models; in terms of multiscale models, we should include references such as Schilling et al. (2011) and Smith et al. (2011).
+\end{itemize}
+
+\noindent Describe an example model of a morphogen gradient influencing the development of an epithelial tissue: respecification:
+\begin{itemize}
+\item The idea behind this example is to set up a realistic geometry of e.g. an imaginal wing disc and to couple a reaction-diffusion PDE to cells secreting and taking up morphogen. Cells will proliferate based on morphogen level.
+\item Compare results for each of the individual-based models using the resulting shapes of the tissue.
+\item This example demonstrates morphogens being represented as reaction-diffusion systems coupled to the discrete cell level models in Chaste.
+\end{itemize}
+
+\noindent Extra functionality required for this example:
+\begin{itemize}
+\item Solving a single PDE on a vertex mesh - use cell centre to allow specification of a triangular mesh at each time step (see also Smith et al. (2012)).
+\item Solving a single PDE in an on-lattice simulation:
+\begin{itemize}
+\item either use lattice sites to specify a FE mesh and use this to solve the PDE;
+\item or else implement a finite difference method for on-lattice simulations (this won't need the same level of detail as the FE solvers, just an \texttt{UpdateAfterSolve()} method in a new simulation class.
+\end{itemize}
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Discussion \tostart} \label{sec:discussion}
+\section{Discussion} \label{sec:discussion}
+
+Review the work done and results of this paper and generate a table summarizing the different properties exhibited by each of the models considered:
+
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|}
+\hline Model & Adhesion & Proliferation/death & Short-range signalling & Long-range signalling \\ 
+\hline Cellular automata &  &  &  &  \\ 
+\hline Cellular Potts model &  &  &  &  \\ 
+\hline Overlapping spheres &  &  &  &  \\ 
+\hline Voronoi tessellation &  &  &  &  \\ 
+\hline Vertex-based &  &  &  &  \\ 
+\hline 
+\end{tabular}
+\end{center}
+
+\noindent Briefly discuss further avenues for research:
+\begin{itemize}
+\item The need for tools with which to easily perform quantitative model comparisons; suggested metrics inspired by each of the case studies considered in this paper.
+\item Emphasize that for many of the sorts of questions these types of model are currently being used to address, there is likely to be little difference in model predictions (i.e. model outputs are usually considered in a qualitative manner). However we are moving toward a more quantitative footing, particularly as the quality/resolution of experimental data at this scale improves.
+\item Opportunities to automate the process of model specification and implementation, for example through extended use of mark-up languages.
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
 
+The authors gratefully acknowledge funding through the OCISB project (BB/D020190/1).
 JMO is supported by the Life Sciences Interface and Systems Biology Doctoral Training Centres (EP/E501605/1 and EP/G50029/1 respectively) and Microsoft Research, Cambridge. 
 AGF is supported by EPSRC (EP/I017909/1) and Microsoft Research, Cambridge. 
-\highlight{Add acknowledgements from any other authors.}
-
-\clearpage
+This publication was based on work supported in part by Award No. KUK-C1-013-04, made by King Abdullah University of Science and Technology (KAUST).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
@@ -355,3 +257,4 @@ AGF is supported by EPSRC (EP/I017909/1) and Microsoft Research, Cambridge.
 \bibliographystyle{apalike}
 
 \end{document}
+

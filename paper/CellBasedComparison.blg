@@ -1,45 +1,52 @@
-This is BibTeX, Version 0.99c (Web2C 7.5.6)
+This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
 The top-level auxiliary file: CellBasedComparison.aux
 The style file: apalike.bst
 Database file #1: comparison_refs.bib
-You've used 10 entries,
+I was expecting a `,' or a `}'---line 789 of file comparison_refs.bib
+ : 
+ : @ARTICLE{Wartlick2011Understanding,
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Warning--I didn't find a database entry for "Pitt-Francis2012"
+You've used 23 entries,
             1935 wiz_defined-function locations,
-            545 strings with 6514 characters,
-and the built_in function-call counts, 5837 in all, are:
-= -- 522
-> -- 439
-< -- 2
-+ -- 164
-- -- 164
-* -- 586
-:= -- 1056
-add.period$ -- 30
-call.type$ -- 10
-change.case$ -- 132
-chr.to.int$ -- 10
-cite$ -- 10
-duplicate$ -- 140
-empty$ -- 292
-format.name$ -- 176
-if$ -- 1067
-int.to.chr$ -- 1
+            636 strings with 9207 characters,
+and the built_in function-call counts, 11072 in all, are:
+= -- 1048
+> -- 643
+< -- 6
++ -- 237
+- -- 230
+* -- 1063
+:= -- 1964
+add.period$ -- 69
+call.type$ -- 23
+change.case$ -- 230
+chr.to.int$ -- 22
+cite$ -- 23
+duplicate$ -- 320
+empty$ -- 661
+format.name$ -- 263
+if$ -- 2071
+int.to.chr$ -- 2
 int.to.str$ -- 0
-missing$ -- 10
-newline$ -- 53
-num.names$ -- 30
-pop$ -- 110
+missing$ -- 23
+newline$ -- 118
+num.names$ -- 69
+pop$ -- 178
 preamble$ -- 1
-purify$ -- 132
+purify$ -- 230
 quote$ -- 0
-skip$ -- 103
+skip$ -- 238
 stack$ -- 0
-substring$ -- 358
-swap$ -- 10
+substring$ -- 794
+swap$ -- 23
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 60
+type$ -- 138
 warning$ -- 0
-while$ -- 37
+while$ -- 84
 width$ -- 0
-write$ -- 132
+write$ -- 301
+(There was 1 error message)
