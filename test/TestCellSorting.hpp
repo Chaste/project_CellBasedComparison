@@ -11,7 +11,7 @@
 #include "StochasticDurationCellCycleModel.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
 
-#include "OffLatticeSimulation.hpp"
+#include "FractionalLengthOffLatticeSimulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaDifferentialAdhesionForce.hpp"
@@ -97,7 +97,7 @@ public:
         population.SetOutputCellVolumes(true);
 
         // Set up cell-based simulation and output directory
-        OffLatticeSimulation<2> simulator(population);
+        FractionalLengthOffLatticeSimulation<2> simulator(population);
         simulator.SetOutputDirectory("CellSorting/Vertex");
 
         // Set time step and end time for simulation
@@ -169,7 +169,7 @@ public:
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CellSorting/Potts");
         simulator.SetDt(0.1); // This is the default value
-        simulator.SetEndTime(100.0); // i.e 1000 MCS
+        simulator.SetEndTime(10.0); // i.e 1000 MCS
 
         // Only record results every 100 time steps
         simulator.SetSamplingTimestepMultiple(100);
