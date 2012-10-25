@@ -9,6 +9,7 @@
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
 #include "StochasticDurationCellCycleModel.hpp"
+#include "DifferentiatedCellProliferativeType.hpp"
 
 #include "OffLatticeSimulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
@@ -74,8 +75,9 @@ public:
 
         // Set up cells, one for each VertexElement
         std::vector<CellPtr> cells;
+        MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells,p_mesh->GetNumElements(), DIFFERENTIATED);
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
 
         // Randomly label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
@@ -100,7 +102,7 @@ public:
 
         // Set time step and end time for simulation
         simulator.SetDt(0.001);
-        simulator.SetEndTime(10.0);
+        simulator.SetEndTime(1.0);
 
         // Only record results every 100 time steps
         simulator.SetSamplingTimestepMultiple(100);
@@ -139,7 +141,7 @@ public:
      */
     void TestPottsMonolayerCellSorting() throw (Exception)
     {
-        // Create a simple 3D PottsMesh
+        // Create a simple 2D PottsMesh
         unsigned domain_size = 80;
         unsigned element_number = 10;
         unsigned element_size = 4;
@@ -149,8 +151,10 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
+        MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), DIFFERENTIATED);
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
+
 
         // Randomly label some cells
         boost::shared_ptr<AbstractCellProperty> p_label(CellPropertyRegistry::Instance()->Get<CellLabel>());
@@ -166,6 +170,9 @@ public:
         simulator.SetOutputDirectory("CellSorting/Potts");
         simulator.SetDt(0.1); // This is the default value
         simulator.SetEndTime(100.0); // i.e 1000 MCS
+
+        // Only record results every 100 time steps
+        simulator.SetSamplingTimestepMultiple(100);
 
         // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
