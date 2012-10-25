@@ -34,10 +34,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "FractionalLengthOffLatticeSimulation.hpp"
-#include "NodeBasedCellPopulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
-#include "MeshBasedCellPopulation.hpp"
-#include "DeltaNotchCellCycleModel.hpp"
+
 
 template<unsigned DIM>
 FractionalLengthOffLatticeSimulation<DIM>::FractionalLengthOffLatticeSimulation(AbstractCellPopulation<DIM>& rCellPopulation,
@@ -94,7 +92,6 @@ void FractionalLengthOffLatticeSimulation<DIM>::CalculateFractionalLength()
 
     if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&this->mrCellPopulation))
     {
-        //VertexBasedCellPopulation<DIM>* p_static_cast_cell_population = static_cast<VertexBasedCellPopulation<DIM>*>(this->mpCellPopulation);
         MutableVertexMesh<DIM,DIM>* p_vertex_mesh = (&(dynamic_cast<VertexBasedCellPopulation<DIM>*>(&(this->mrCellPopulation))->rGetMesh()));
 
         // Loop over vertex elements
@@ -122,8 +119,11 @@ void FractionalLengthOffLatticeSimulation<DIM>::CalculateFractionalLength()
                 CellPtr p_neighbour_cell = this->mrCellPopulation.GetCellUsingLocationIndex(neighbour_index);
 
                 if ( (p_cell->template HasCellProperty<CellLabel>() && !(p_neighbour_cell->template HasCellProperty<CellLabel>())) ||
-                     !(p_cell->template HasCellProperty<CellLabel>() && (p_neighbour_cell->template HasCellProperty<CellLabel>())) )
+                     (!(p_cell->template HasCellProperty<CellLabel>()) && p_neighbour_cell->template HasCellProperty<CellLabel>()) )
                 {
+                    //Paranoia
+                    assert((unsigned)(p_cell->template HasCellProperty<CellLabel>())+(unsigned)(p_neighbour_cell->template HasCellProperty<CellLabel>())==1);
+
                     fractional_length += p_vertex_mesh->GetEdgeLength(element_index,neighbour_index);
                 }
 

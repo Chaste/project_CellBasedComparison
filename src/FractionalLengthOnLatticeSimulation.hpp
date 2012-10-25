@@ -33,19 +33,19 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef FRACTIONALLENGTHOFFLATTICESIMULATION_HPP_
-#define FRACTIONALLENGTHOFFLATTICESIMULATION_HPP_
+#ifndef FRACTIONALLENGTHONLATTICESIMULATION_HPP_
+#define FRACTIONALLENGTHONLATTICESIMULATION_HPP_
 
 #include <map>
 #include "ChasteSerialization.hpp"
-#include "OffLatticeSimulation.hpp"
+#include "OnLatticeSimulation.hpp"
 #include "PetscTools.hpp"
 
 /**
- * Subclass of OffLatticeSimulation to calculate and output the fractional length (the perimeter around labelled cells)
+ * Subclass of OnLatticeSimulation to calculate and output the fractional length (the perimeter around labelled cells)
  */
 template<unsigned DIM>
-class FractionalLengthOffLatticeSimulation : public OffLatticeSimulation<DIM>
+class FractionalLengthOnLatticeSimulation : public OnLatticeSimulation<DIM>
 {
 private :
 
@@ -60,7 +60,7 @@ private :
     template<class Archive>
     void serialize(Archive & archive, const unsigned int version)
     {
-        archive & boost::serialization::base_object<OffLatticeSimulation<DIM> >(*this);
+        archive & boost::serialization::base_object<OnLatticeSimulation<DIM> >(*this);
     }
 
     /**
@@ -96,18 +96,18 @@ public:
      *     free up memory (defaults to false)
      * @param initialiseCells whether to initialise cells (defaults to true, set to false when loading from an archive)
      */
-     FractionalLengthOffLatticeSimulation(AbstractCellPopulation<DIM>& rCellPopulation,
+     FractionalLengthOnLatticeSimulation(AbstractCellPopulation<DIM>& rCellPopulation,
                                    bool deleteCellPopulationInDestructor=false,
                                    bool initialiseCells=true);
 
      /**
       * Destructor.
       */
-    ~FractionalLengthOffLatticeSimulation();
+    ~FractionalLengthOnLatticeSimulation();
 };
 
 #include "SerializationExportWrapper.hpp"
-EXPORT_TEMPLATE_CLASS_SAME_DIMS(FractionalLengthOffLatticeSimulation)
+EXPORT_TEMPLATE_CLASS_SAME_DIMS(FractionalLengthOnLatticeSimulation)
 
 namespace boost
 {
@@ -115,7 +115,7 @@ namespace serialization
 {
 template<class Archive, unsigned DIM>
 inline void save_construct_data(
-    Archive & ar, const FractionalLengthOffLatticeSimulation<DIM> * t, const BOOST_PFTO unsigned int file_version)
+    Archive & ar, const FractionalLengthOnLatticeSimulation<DIM> * t, const BOOST_PFTO unsigned int file_version)
 {
     const AbstractCellPopulation<DIM> * p_cell_population = &(t->rGetCellPopulation());
     ar & p_cell_population;
@@ -123,14 +123,14 @@ inline void save_construct_data(
 
 template<class Archive, unsigned DIM>
 inline void load_construct_data(
-    Archive & ar, FractionalLengthOffLatticeSimulation<DIM> * t, const unsigned int file_version)
+    Archive & ar, FractionalLengthOnLatticeSimulation<DIM> * t, const unsigned int file_version)
 {
     AbstractCellPopulation<DIM>* p_cell_population;
     ar >> p_cell_population;
 
-    ::new(t)FractionalLengthOffLatticeSimulation<DIM>(*p_cell_population, true, false);
+    ::new(t)FractionalLengthOnLatticeSimulation<DIM>(*p_cell_population, true, false);
 }
 }
 } // namespace ...
 
-#endif /*FRACTIONALLENGTHOFFLATTICESIMULATION_HPP_*/
+#endif /*FRACTIONALLENGTHONLATTICESIMULATION_HPP_*/
