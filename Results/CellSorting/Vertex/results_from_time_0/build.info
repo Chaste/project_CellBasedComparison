@@ -3,12 +3,12 @@
 		<VersionString>3.1.17178</VersionString> <!-- build specific -->
 		<IsWorkingCopyModified>1</IsWorkingCopyModified>
 		<BuildInformation>GccOpt, no Chaste libraries</BuildInformation>
-		<BuildTime>Thu, 25 Oct 2012 10:00:13 +0000</BuildTime>
-		<CurrentTime>Thu, 25 Oct 2012 10:00:51 +0000</CurrentTime>
+		<BuildTime>Thu, 25 Oct 2012 14:43:12 +0000</BuildTime>
+		<CurrentTime>Thu, 25 Oct 2012 14:43:25 +0000</CurrentTime>
 		<BuilderUnameInfo>Linux chaste 2.6.35-32-generic #67-Ubuntu SMP Mon Mar 5 19:39:49 UTC 2012 x86_64</BuilderUnameInfo>
 		<Projects>
 			<Name>2020Science</Name><Version>16337:16912</Version>
-			<Name>CellBasedComparison</Name><Version>17178:17180M</Version>
+			<Name>CellBasedComparison</Name><Version>17178:17186M</Version>
 			<Name>CpcPaper2012</Name><Version>16350</Version>
 			<Name>CryptMigration2012</Name><Version>16898:16904</Version>
 			<Name>FC-cell-based</Name><Version>16330:16369</Version>
