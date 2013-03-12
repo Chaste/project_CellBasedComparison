@@ -30,7 +30,7 @@
 #include "Cylindrical2dNodesOnlyMesh.hpp"
 
 #include "PeriodicNodeBasedBoundaryCondition.hpp"
-#include "StemCellRetainerForce.hpp"
+#include "CellRetainerForce.hpp"
 
 #include "PottsMeshGenerator.hpp"
 #include "SimpleWntCellCycleModel.hpp"
@@ -62,7 +62,7 @@ private:
 
 public:
 
-    void nTestSimpleVertexCryptforComparison() throw (Exception)
+    void TestVertexCrypt() throw (Exception)
     {
         double crypt_length = 12;
         double crypt_width = 6.0;
@@ -84,7 +84,7 @@ public:
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(crypt);
         simulator.SetSamplingTimestepMultiple(50);
-        simulator.SetEndTime(100);
+        simulator.SetEndTime(1.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
 
         // Add Crypt BCS
@@ -104,7 +104,7 @@ public:
         TS_ASSERT_THROWS_NOTHING(simulator.Solve());
     }
 
-    void nTestSimpleMeshBasedCryptforComparison() throw (Exception)
+    void TestMeshBasedCrypt() throw (Exception)
     {
         double crypt_length = 12-0.5;
         double crypt_width = 6.0;
@@ -131,7 +131,7 @@ public:
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(crypt);
         simulator.SetSamplingTimestepMultiple(12);
-        simulator.SetEndTime(100);
+        simulator.SetEndTime(1.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Mesh");
 
         // Add Crypt BCS
@@ -166,7 +166,7 @@ public:
 
         // Convert this to a Cylindrical2dNodesOnlyMesh
         Cylindrical2dNodesOnlyMesh* p_mesh = new Cylindrical2dNodesOnlyMesh(crypt_width);
-        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh);
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh,crypt_width/2.);
 
         // Get location indices corresponding to real cells
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();
@@ -179,20 +179,19 @@ public:
 
         // Create a node-based cell population
         NodeBasedCellPopulation<2> crypt(*p_mesh, cells);
-        crypt.SetMechanicsCutOffLength(crypt_width/2.0);
 
         for (unsigned index = 0; index < crypt.rGetMesh().GetNumNodes(); index++)
         {
-            PRINT_VARIABLE(index);
-            crypt.rGetMesh().SetCellRadius(index,0.53);
+            //PRINT_VARIABLE(index);
+            crypt.rGetMesh().GetNode(index)->SetRadius(0.53);
         }
-        TS_ASSERT_DELTA(crypt.rGetMesh().GetCellRadius(0),0.53,1e-6);
+        TS_ASSERT_DELTA(crypt.rGetMesh().GetNode(0)->GetRadius(),0.53,1e-6);
 
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(crypt);
         //simulator.SetDt(0.001);
         simulator.SetSamplingTimestepMultiple(12);
-        simulator.SetEndTime(100.0);
+        simulator.SetEndTime(1.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Node");
 
         // Create a force law and pass it to the simulation
@@ -214,8 +213,8 @@ public:
         simulator.AddCellPopulationBoundaryCondition(p_crypt_bcs);
 
         // Create a force law to retain stem cells niche and pass it to the simulation
-        MAKE_PTR(StemCellRetainerForce<2>, p_retainer_force);
-        p_retainer_force->SetForceMagnitudeParameter(50.0);
+        MAKE_PTR(CellRetainerForce<2>, p_retainer_force);
+        p_retainer_force->SetStemCellForceMagnitudeParameter(50.0);
         simulator.AddForce(p_retainer_force);
 
         // Run simulation
@@ -255,7 +254,7 @@ public:
         simulator.SetOutputDirectory("CylindricalCrypt/Potts");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(1);
-        simulator.SetEndTime(100.0);
+        simulator.SetEndTime(1.0);
         simulator.SetOutputCellVelocities(true);
 
         // Create cell killer and pass in to simulation

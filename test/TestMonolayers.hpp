@@ -3,6 +3,7 @@
 #include "SmartPointers.hpp"
 #include "AbstractCellBasedTestSuite.hpp"
 
+#include "TransitCellProliferativeType.hpp"
 
 #include "StochasticDurationCellCycleModel.hpp"
 #include "OffLatticeSimulation.hpp"
@@ -40,10 +41,12 @@ public:
         HoneycombVertexMeshGenerator generator(2, 2);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
 
+        MAKE_PTR(TransitCellProliferativeType, p_transit_type);
+
         // Create Cells
         std::vector<CellPtr> cells;
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), TRANSIT);
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_transit_type);
 
         // Create Population
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -70,14 +73,16 @@ public:
         HoneycombMeshGenerator generator(2, 2);
         MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
         NodesOnlyMesh<2>* p_mesh = new NodesOnlyMesh<2>;
-        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh);
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh, 1.5);
+
+
+        MAKE_PTR(TransitCellProliferativeType, p_transit_type);
 
         std::vector<CellPtr> cells;
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumNodes(), TRANSIT);
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumNodes(), p_transit_type);
 
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.SetMechanicsCutOffLength(1.5);
 
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("Monolayers/Node");
@@ -97,9 +102,11 @@ public:
         HoneycombMeshGenerator generator(2, 2);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
+        MAKE_PTR(TransitCellProliferativeType, p_transit_type);
+
         std::vector<CellPtr> cells;
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumNodes(), TRANSIT);
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumNodes(), p_transit_type);
 
         MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
 
@@ -119,9 +126,11 @@ public:
         PottsMeshGenerator<2> generator(20, 2, 4, 20, 2, 4);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
+        MAKE_PTR(TransitCellProliferativeType, p_transit_type);
+
         std::vector<CellPtr> cells;
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), TRANSIT);
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_transit_type);
 
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.SetTemperature(1.0);
@@ -153,9 +162,11 @@ public:
         location_indices.push_back(54u);
         location_indices.push_back(55u);
 
+        MAKE_PTR(TransitCellProliferativeType, p_transit_type);
+
         std::vector<CellPtr> cells;
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells, location_indices.size(), TRANSIT);
+        cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_transit_type);
 
         // Create cell population
         MultipleCaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);

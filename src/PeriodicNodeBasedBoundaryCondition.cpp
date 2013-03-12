@@ -45,7 +45,7 @@ PeriodicNodeBasedBoundaryCondition::PeriodicNodeBasedBoundaryCondition(AbstractC
 {
 }
 
-void PeriodicNodeBasedBoundaryCondition::ImposeBoundaryCondition(const std::vector< c_vector<double, 2> >& rOldLocations)
+void PeriodicNodeBasedBoundaryCondition::ImposeBoundaryCondition(const std::map<Node<2>*, c_vector<double, 2> >& rOldLocations)
 {
     assert (dynamic_cast<AbstractCentreBasedCellPopulation<2>*>(this->mpCellPopulation));
 

@@ -102,7 +102,7 @@ public:
 
         // Set time step and end time for simulation
         simulator.SetDt(0.001);
-        simulator.SetEndTime(10.0);
+        simulator.SetEndTime(0.1);//10.0);
 
         // Only record results every 100 time steps
         simulator.SetSamplingTimestepMultiple(100);
@@ -112,10 +112,10 @@ public:
         p_force->SetNagaiHondaDeformationEnergyParameter(55.0);
         p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
         p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
-        p_force->SetNagaiHondaLabeledCellCellAdhesionEnergyParameter(6.0);
-        p_force->SetNagaiHondaLabeledCellLabeledCellAdhesionEnergyParameter(3.0);
+        p_force->SetNagaiHondaLabelledCellCellAdhesionEnergyParameter(6.0);
+        p_force->SetNagaiHondaLabelledCellLabelledCellAdhesionEnergyParameter(3.0);
         p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(12.0);
-        p_force->SetNagaiHondaLabeledCellBoundaryAdhesionEnergyParameter(40.0);
+        p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(40.0);
         simulator.AddForce(p_force);
 
 //      you need to check for internal intersections if running with diffusion.
@@ -169,7 +169,7 @@ public:
         FractionalLengthOnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CellSorting/Potts");
         simulator.SetDt(0.1); // This is the default value
-        simulator.SetEndTime(1000.0); // i.e 10000 MCS
+        simulator.SetEndTime(1);//000.0); // i.e 10000 MCS
 
         // Only record results every 100 time steps
         simulator.SetSamplingTimestepMultiple(100);

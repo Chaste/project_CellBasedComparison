@@ -80,13 +80,14 @@ public:
     PeriodicNodeBasedBoundaryCondition(AbstractCellPopulation<2>* pCellPopulation, double width = DOUBLE_UNSET);
 
     /**
-     * Overridden ImposeBoundaryCondition() method.
-     *
-     * Apply the cell population boundary conditions.
-     *
-     * @param rOldLocations the node locations before any boundary conditions are applied
-     */
-    void ImposeBoundaryCondition(const std::vector< c_vector<double, 2> >& rOldLocations);
+	 * Overridden ImposeBoundaryCondition() method.
+	 *
+	 * Apply the cell population boundary conditions.
+	 *
+	 * @param rOldLocations the node locations before any boundary conditions are applied
+	 */
+	void ImposeBoundaryCondition(const std::map<Node<2>*, c_vector<double, 2> >& rOldLocations);
+
 
     /**
      * Overridden VerifyBoundaryCondition() method.
