@@ -11,18 +11,21 @@
 #include "StochasticDurationCellCycleModel.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
 
-#include "FractionalLengthOffLatticeSimulation.hpp"
+#include "OffLatticeSimulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaDifferentialAdhesionForce.hpp"
 #include "VertexDiffusionForce.hpp"
 
-#include "FractionalLengthOnLatticeSimulation.hpp"
+#include "OnLatticeSimulation.hpp"
+#include "FractionalLengthOutputModifier.hpp"
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
 #include "VolumeConstraintPottsUpdateRule.hpp"
 #include "AdhesionPottsUpdateRule.hpp"
 #include "DifferentialAdhesionPottsUpdateRule.hpp"
+
+#include "PetscSetupAndFinalize.hpp"
 
 class TestCellSorting: public AbstractCellBasedTestSuite
 {
@@ -97,12 +100,16 @@ public:
         population.SetOutputCellVolumes(true);
 
         // Set up cell-based simulation and output directory
-        FractionalLengthOffLatticeSimulation<2> simulator(population);
+        OffLatticeSimulation<2> simulator(population);
         simulator.SetOutputDirectory("CellSorting/Vertex");
 
         // Set time step and end time for simulation
         simulator.SetDt(0.001);
         simulator.SetEndTime(0.1);//10.0);
+
+        // Add Fractional Length Output modifier
+        MAKE_PTR(FractionalLengthOutputModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
 
         // Only record results every 100 time steps
         simulator.SetSamplingTimestepMultiple(100);
@@ -166,10 +173,14 @@ public:
         cell_population.SetNumSweepsPerTimestep(1); // This is the default value
 
         // Set up cell-based simulation
-        FractionalLengthOnLatticeSimulation<2> simulator(cell_population);
+        OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CellSorting/Potts");
         simulator.SetDt(0.1); // This is the default value
         simulator.SetEndTime(1);//000.0); // i.e 10000 MCS
+
+        // Add Fractional Length Output modifier
+        MAKE_PTR(FractionalLengthOutputModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
 
         // Only record results every 100 time steps
         simulator.SetSamplingTimestepMultiple(100);
