@@ -36,6 +36,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FractionalLengthOutputModifier.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "PottsBasedCellPopulation.hpp"
+#include "NodeBasedCellPopulation.hpp"
+#include "AbstractCentreBasedCellPopulation.hpp"
 
 template<unsigned DIM>
 FractionalLengthOutputModifier<DIM>::FractionalLengthOutputModifier()
@@ -192,9 +194,73 @@ void FractionalLengthOutputModifier<DIM>::CalculateFractionalLength(AbstractCell
 			}
 		}
 	}
+    else if (dynamic_cast<NodeBasedCellPopulation<DIM>*>(&rCellPopulation))
+	{
+		// Loop over Cells
+		for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+			 cell_iter != rCellPopulation.End();
+			 ++cell_iter)
+		{
+			// Get the location index corresponding to this cell
+			unsigned index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
+
+			// Get the set of neighbouring location indices
+			std::set<unsigned> neighbour_indices;
+			assert(dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&rCellPopulation));
+			{
+				neighbour_indices = rCellPopulation.GetNeighbouringNodeIndices(index);
+			}
+
+			if (!neighbour_indices.empty())
+			{
+				for (std::set<unsigned>::iterator iter = neighbour_indices.begin();
+					 iter != neighbour_indices.end();
+					 ++iter)
+				{
+					CellPtr p_neighbour_cell = rCellPopulation.GetCellUsingLocationIndex(*iter);
+
+					//Use number of connections between neighbours as proxy for fractional length
+					total_length +=1;
+
+					if ( (cell_iter->template HasCellProperty<CellLabel>() && !(p_neighbour_cell->template HasCellProperty<CellLabel>())) ||
+						 (!(cell_iter->template HasCellProperty<CellLabel>()) && p_neighbour_cell->template HasCellProperty<CellLabel>()) )
+					{
+						//Paranoia
+						assert((unsigned)(cell_iter->template HasCellProperty<CellLabel>())+(unsigned)(p_neighbour_cell->template HasCellProperty<CellLabel>())==1);
+						fractional_length += 1;
+					}
+
+
+//					//Approximate contact area between cells
+//					double cell_seperation = norm_2(rCellPopulation.GetLocationOfCellCentre(*cell_iter) - rCellPopulation.GetLocationOfCellCentre(p_neighbour_cell));
+//					double effective_cell_radius = 0.6;
+//					double contact_area = 0.0;
+//
+//					if 	(cell_seperation < 2.0*	effective_cell_radius)
+//					{
+//						contact_area = 2.0*sqrt(effective_cell_radius*effective_cell_radius - cell_seperation*cell_seperation/4.0 );
+//					}
+//					// else not in contact so zero
+//
+//					total_length += contact_area;
+//
+//					if ( (cell_iter->template HasCellProperty<CellLabel>() && !(p_neighbour_cell->template HasCellProperty<CellLabel>())) ||
+//						 (!(cell_iter->template HasCellProperty<CellLabel>()) && p_neighbour_cell->template HasCellProperty<CellLabel>()) )
+//					{
+//						//Paranoia
+//						assert((unsigned)(cell_iter->template HasCellProperty<CellLabel>())+(unsigned)(p_neighbour_cell->template HasCellProperty<CellLabel>())==1);
+//						fractional_length += contact_area;
+//					}
+
+				}
+
+			}
+		}
+	}
+
     else
     {
-        EXCEPTION("FractionalLengthOffLatticeSimulation only works for Vertex and Potts simulations at present");
+        EXCEPTION("FractionalLengthOffLatticeSimulation only works for Vertex Potts and Node based simulations at present");
     }
 
     // each edge is counted twice so divide by 2

@@ -16,6 +16,11 @@
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaDifferentialAdhesionForce.hpp"
 #include "VertexDiffusionForce.hpp"
+#include "SimpleTargetAreaModifier.hpp"
+
+#include "HoneycombMeshGenerator.hpp"
+#include "DifferentialAdhesionSpringForce.hpp"
+#include "SensibleDiffusionForce.hpp"
 
 #include "OnLatticeSimulation.hpp"
 #include "FractionalLengthOutputModifier.hpp"
@@ -24,6 +29,9 @@
 #include "VolumeConstraintPottsUpdateRule.hpp"
 #include "AdhesionPottsUpdateRule.hpp"
 #include "DifferentialAdhesionPottsUpdateRule.hpp"
+
+#include "CellIdWriter.hpp"
+#include "CellMutationStatesWriter.hpp"
 
 #include "PetscSetupAndFinalize.hpp"
 
@@ -87,20 +95,14 @@ public:
         RandomlyLabelCells(cells, p_state, 0.5);
 
         // Create cell population
-        VertexBasedCellPopulation<2> population(*p_mesh, cells);
+        VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
 
         // Set population to output all data to results files
-        population.SetOutputCellIdData(true);
-        population.SetOutputCellMutationStates(true);
-        population.SetOutputCellAncestors(true);
-        population.SetOutputCellProliferativeTypes(true);
-        population.SetOutputCellVariables(true);
-        population.SetOutputCellCyclePhases(true);
-        population.SetOutputCellAges(true);
-        population.SetOutputCellVolumes(true);
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddPopulationWriter<CellMutationStatesWriter>();
 
         // Set up cell-based simulation and output directory
-        OffLatticeSimulation<2> simulator(population);
+        OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CellSorting/Vertex");
 
         // Set time step and end time for simulation
@@ -124,6 +126,10 @@ public:
         p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(12.0);
         p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(40.0);
         simulator.AddForce(p_force);
+
+        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
+        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
+        simulator.AddSimulationModifier(p_growth_modifier);
 
 //      you need to check for internal intersections if running with diffusion.
 //        MAKE_PTR_ARGS(VertexDiffusionForce<2>, p_random_force, (0.01));
@@ -169,7 +175,9 @@ public:
 
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.SetOutputCellMutationStates(true); // So outputs the labelled cells
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddPopulationWriter<CellMutationStatesWriter>();
+
         cell_population.SetNumSweepsPerTimestep(1); // This is the default value
 
         // Set up cell-based simulation
@@ -209,6 +217,72 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
+
+
+    void TestNodeBasedMonolayerCellSorting() throw (Exception)
+	{
+        // Create a simple mesh
+        unsigned num_cells_depth = 10;
+        unsigned num_cells_width = 10;
+        HoneycombMeshGenerator generator(num_cells_width, num_cells_depth, 0);
+        TetrahedralMesh<2,2>* p_generating_mesh = generator.GetMesh();
+
+        // Convert this to a NodesOnlyMesh
+        NodesOnlyMesh<2> mesh;
+        mesh.ConstructNodesWithoutMesh(*p_generating_mesh, 1.5);
+
+		// Set up cells, one for each Node
+		std::vector<CellPtr> cells;
+		MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
+		CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
+		cells_generator.GenerateBasicRandom(cells, mesh.GetNumNodes(), p_differentiated_type);
+
+		// Randomly label some cells
+		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
+		RandomlyLabelCells(cells, p_state, 0.5);
+
+		// Create cell population
+		NodeBasedCellPopulation<2> cell_population(mesh, cells);
+
+		// Set population to output all data to results files
+		cell_population.AddCellWriter<CellIdWriter>();
+		cell_population.AddPopulationWriter<CellMutationStatesWriter>();
+
+		// Set up cell-based simulation and output directory
+		OffLatticeSimulation<2> simulator(cell_population);
+		simulator.SetOutputDirectory("CellSorting/Node");
+
+		// Set time step and end time for simulation
+		simulator.SetDt(0.01);
+		simulator.SetEndTime(100.0);//10.0);
+
+		// Add Fractional Length Output modifier
+		MAKE_PTR(FractionalLengthOutputModifier<2>, p_modifier);
+		simulator.AddSimulationModifier(p_modifier);
+
+		// Only record results every 100 time steps
+		simulator.SetSamplingTimestepMultiple(100);
+
+        // Create a force law and pass it to the simulation
+        MAKE_PTR(DifferentialAdhesionSpringForce<2>, p_differntial_adhesion_force);
+        p_differntial_adhesion_force->SetCutOffLength(1.5);
+        simulator.AddForce(p_differntial_adhesion_force);
+
+        // Add some noise to avoid local minimum
+        MAKE_PTR(SensibleDiffusionForce<2>, p_random_force);
+        p_random_force->SetDiffusionConstant(0.01);
+        simulator.AddForce(p_random_force);
+
+		// Run simulation
+		simulator.Solve();
+
+		// Check that the same number of cells
+		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+
+		// Test no births or deaths
+		TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
+		TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
+   }
 
 
 };
