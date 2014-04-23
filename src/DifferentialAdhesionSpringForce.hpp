@@ -40,17 +40,16 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "NodeBasedCellPopulation.hpp"
 
 /**
- * A class for a simple two-body repulsion force law. Designed
- * for use in node-based simulations
+ * A class for a simple two-body diffeenttial adhesion force law. Designed
+ * for use in node and mesh-based simulations
  *
- * The force just creates a linear repulsive force between cells
- * with a nonlinear separation less than 2. This force does not
- * take a cell's age or cell cycle phase into account.
  */
 template<unsigned DIM>
 class DifferentialAdhesionSpringForce : public GeneralisedLinearSpringForce<DIM>
 {
 private :
+
+    double mDifferentialAdhesionFactor;
 
     /** Needed for serialization. */
     friend class boost::serialization::access;
@@ -64,6 +63,7 @@ private :
     void serialize(Archive & archive, const unsigned int version)
     {
         archive & boost::serialization::base_object<GeneralisedLinearSpringForce<DIM> >(*this);
+        archive & mDifferentialAdhesionFactor;
     }
 
 public :
@@ -76,8 +76,8 @@ public :
     /**
      *
      * Overridden VariableSpringConstantMultiplicationFactor() method.
-     * Taking account of Paneth cells. Paneth cells don't attract other paneth cells.
-     *
+     * Taking account of labeled cells. Non Lableed and Labeled cells have
+     * different interactions.
      *
      * @param nodeAGlobalIndex index of one neighbouring node
      * @param nodeBGlobalIndex index of the other neighbouring node
@@ -92,9 +92,11 @@ public :
                                                       bool isCloserThanRestLength);
 
     /**
-     * Overridden CalculateForceBetweenNodes() method. Only difference is alpha parameter (and things to get it to work)
+     * Overridden CalculateForceBetweenNodes() method.
      *
      * Calculates the force between two nodes.
+     *
+     * Ignores all growth and appoptosis.
      *
      * Note that this assumes they are connected and is called by AddForceContribution()
      *
@@ -106,6 +108,12 @@ public :
     c_vector<double, DIM> CalculateForceBetweenNodes(unsigned nodeAGlobalIndex,
                                                      unsigned nodeBGlobalIndex,
                                                      AbstractCellPopulation<DIM,DIM>& rCellPopulation);
+
+
+    double GetDifferentialAdhesionFactor();
+
+    void SetDifferentialAdhesionFactor(double differentialAdhesionFactor);
+
 
     /**
      * Outputs force Parameters to file

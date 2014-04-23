@@ -39,7 +39,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 template<unsigned DIM>
 DifferentialAdhesionSpringForce<DIM>::DifferentialAdhesionSpringForce()
-   : GeneralisedLinearSpringForce<DIM>()
+   : GeneralisedLinearSpringForce<DIM>(),
+     mDifferentialAdhesionFactor(0.5)
 {
 }
 
@@ -68,11 +69,11 @@ double DifferentialAdhesionSpringForce<DIM>::VariableSpringConstantMultiplicatio
 	{
 		if (isCloserThanRestLength)
 		{
-			return 0.5; //Repulsion is always the same.
+			return mDifferentialAdhesionFactor; //Repulsion
 		}
 		else
 		{
-			return 0.1;
+			return mDifferentialAdhesionFactor; // Attraction
 		}
 	}
 	else
@@ -82,8 +83,6 @@ double DifferentialAdhesionSpringForce<DIM>::VariableSpringConstantMultiplicatio
 	}
 }
 
-
-// The only diference here is the alpha parameter in the node based attraction!!!! (AND SPACE/ELEMEMENT_DIM => DIM and some this's)
 template<unsigned DIM>
 c_vector<double, DIM> DifferentialAdhesionSpringForce<DIM>::CalculateForceBetweenNodes(unsigned nodeAGlobalIndex,
                                                                                     unsigned nodeBGlobalIndex,
@@ -119,7 +118,6 @@ c_vector<double, DIM> DifferentialAdhesionSpringForce<DIM>::CalculateForceBetwee
      */
     unit_difference = rCellPopulation.rGetMesh().GetVectorFromAtoB(node_a_location, node_b_location);
 
-
     // Calculate the distance between the two nodes
     double distance_between_nodes = norm_2(unit_difference);
     assert(distance_between_nodes > 0);
@@ -140,121 +138,55 @@ c_vector<double, DIM> DifferentialAdhesionSpringForce<DIM>::CalculateForceBetwee
     }
 
     /*
-     * Calculate the rest length of the spring connecting the two nodes with a default
-     * value of 1.0.
+     * Use a default rest length of 1.0 for all springs
      */
-    double rest_length_final = 1.0;
-
-    if (dynamic_cast<MeshBasedCellPopulation<DIM,DIM>*>(&rCellPopulation))
-    {
-        rest_length_final = static_cast<MeshBasedCellPopulation<DIM,DIM>*>(&rCellPopulation)->GetRestLength(nodeAGlobalIndex, nodeBGlobalIndex);
-    }
-    else if (dynamic_cast<NodeBasedCellPopulation<DIM>*>(&rCellPopulation))
-    {
-        assert(node_a_radius > 0 && node_b_radius > 0);
-        rest_length_final = node_a_radius+node_b_radius;
-    }
-
-    double rest_length = rest_length_final;
-
-    CellPtr p_cell_A = rCellPopulation.GetCellUsingLocationIndex(nodeAGlobalIndex);
-    CellPtr p_cell_B = rCellPopulation.GetCellUsingLocationIndex(nodeBGlobalIndex);
-
-    double ageA = p_cell_A->GetAge();
-    double ageB = p_cell_B->GetAge();
-
-    assert(!std::isnan(ageA));
-    assert(!std::isnan(ageB));
-
-    /*
-     * If the cells are both newly divided, then the rest length of the spring
-     * connecting them grows linearly with time, until 1 hour after division.
-     */
-    if (ageA < this->mMeinekeSpringGrowthDuration && ageB < this->mMeinekeSpringGrowthDuration)
-    {
-        AbstractCentreBasedCellPopulation<DIM,DIM>* p_static_cast_cell_population = static_cast<AbstractCentreBasedCellPopulation<DIM,DIM>*>(&rCellPopulation);
-
-        std::pair<CellPtr,CellPtr> cell_pair = p_static_cast_cell_population->CreateCellPair(p_cell_A, p_cell_B);
-
-        if (p_static_cast_cell_population->IsMarkedSpring(cell_pair))
-        {
-            // Spring rest length increases from a small value to the normal rest length over 1 hour
-            double lambda = this->mMeinekeDivisionRestingSpringLength;
-            rest_length = lambda + (rest_length_final - lambda) * ageA/this->mMeinekeSpringGrowthDuration;
-        }
-        if (ageA + SimulationTime::Instance()->GetTimeStep() >= this->mMeinekeSpringGrowthDuration)
-        {
-            // This spring is about to go out of scope
-            p_static_cast_cell_population->UnmarkSpring(cell_pair);
-        }
-    }
-
-    /*
-     * For apoptosis, progressively reduce the radius of the cell
-     */
-    double a_rest_length = rest_length*0.5;
-    double b_rest_length = a_rest_length;
-
-    if (dynamic_cast<NodeBasedCellPopulation<DIM>*>(&rCellPopulation))
-    {
-        assert(node_a_radius > 0 && node_b_radius > 0);
-        a_rest_length = (node_a_radius/(node_a_radius+node_b_radius))*rest_length;
-        b_rest_length = (node_b_radius/(node_a_radius+node_b_radius))*rest_length;
-    }
-
-    /*
-     * If either of the cells has begun apoptosis, then the length of the spring
-     * connecting them decreases linearly with time.
-     */
-    if (p_cell_A->HasApoptosisBegun())
-    {
-        double time_until_death_a = p_cell_A->GetTimeUntilDeath();
-        a_rest_length = a_rest_length * time_until_death_a / p_cell_A->GetApoptosisTime();
-    }
-    if (p_cell_B->HasApoptosisBegun())
-    {
-        double time_until_death_b = p_cell_B->GetTimeUntilDeath();
-        b_rest_length = b_rest_length * time_until_death_b / p_cell_B->GetApoptosisTime();
-    }
-
-    rest_length = a_rest_length + b_rest_length;
-    //assert(rest_length <= 1.0+1e-12); ///\todo #1884 Magic number: would "<= 1.0" do?
+    double rest_length = 1.0;
 
 
-    // Although in this class the 'spring constant' is a constant parameter, in
-    // subclasses it can depend on properties of each of the cells
     double overlap = distance_between_nodes - rest_length;
     bool is_closer_than_rest_length = (overlap <= 0);
     double multiplication_factor = VariableSpringConstantMultiplicationFactor(nodeAGlobalIndex, nodeBGlobalIndex, rCellPopulation, is_closer_than_rest_length);
     double spring_stiffness = this->mMeinekeSpringStiffness;
 
-    if (dynamic_cast<MeshBasedCellPopulation<DIM,DIM>*>(&rCellPopulation))
-    {
-        return multiplication_factor * spring_stiffness * unit_difference * overlap;
-    }
-    else
     {
         // A reasonably stable simple force law
         if (is_closer_than_rest_length) //overlap is negative
         {
             //log(x+1) is undefined for x<=-1
-            assert(overlap > -rest_length_final);
-            c_vector<double, DIM> temp = multiplication_factor*spring_stiffness * unit_difference * rest_length_final* log(1.0 + overlap/rest_length_final);
+            assert(overlap > -	rest_length);
+            c_vector<double, DIM> temp = multiplication_factor*spring_stiffness * unit_difference * rest_length* log(1.0 + overlap/rest_length);
             return temp;
         }
         else
         {
             double alpha = 4;
-            c_vector<double, DIM> temp = multiplication_factor*spring_stiffness * unit_difference * overlap * exp(-alpha * overlap/rest_length_final);
+            c_vector<double, DIM> temp = multiplication_factor*spring_stiffness * unit_difference * overlap * exp(-alpha * overlap/rest_length);
             return temp;
         }
     }
 }
 
+
+template<unsigned DIM>
+double DifferentialAdhesionSpringForce<DIM>::GetDifferentialAdhesionFactor()
+{
+    return mDifferentialAdhesionFactor;
+}
+
+template<unsigned DIM>
+void DifferentialAdhesionSpringForce<DIM>::SetDifferentialAdhesionFactor(double differentialAdhesionFactor)
+{
+    assert(differentialAdhesionFactor > 0.0);
+    mDifferentialAdhesionFactor = differentialAdhesionFactor;
+}
+
+
 template<unsigned DIM>
 void DifferentialAdhesionSpringForce<DIM>::OutputForceParameters(out_stream& rParamsFile)
 {
-    // Call direct parent class
+	*rParamsFile << "\t\t\t<DifferentialAdhesionFactor>" << mDifferentialAdhesionFactor << "</DifferentialAdhesionFactor>\n";
+
+	// Call direct parent class
     GeneralisedLinearSpringForce<DIM>::OutputForceParameters(rParamsFile);
 }
 

@@ -38,6 +38,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PottsBasedCellPopulation.hpp"
 #include "NodeBasedCellPopulation.hpp"
 #include "AbstractCentreBasedCellPopulation.hpp"
+#include "MeshBasedCellPopulationWithGhostNodes.hpp"
+#include "Debug.hpp"
 
 template<unsigned DIM>
 FractionalLengthOutputModifier<DIM>::FractionalLengthOutputModifier()
@@ -83,6 +85,8 @@ void FractionalLengthOutputModifier<DIM>::CalculateFractionalLength(AbstractCell
 {
     double fractional_length = 0.0;
     double total_length = 0.0;
+    double fractional_neighbours = 0.0;
+    double total_neighbours = 0.0;
 
     // Make sure the cell population is updated
     rCellPopulation.Update();
@@ -100,9 +104,6 @@ void FractionalLengthOutputModifier<DIM>::CalculateFractionalLength(AbstractCell
 
             // Get cell associated with this element
             CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(element_index);
-
-
-
 
             std::set<unsigned> neighbouring_elem_indices  = p_vertex_mesh->GetNeighbouringElementIndices(element_index);
 
@@ -122,13 +123,11 @@ void FractionalLengthOutputModifier<DIM>::CalculateFractionalLength(AbstractCell
                     assert((unsigned)(p_cell->template HasCellProperty<CellLabel>())+(unsigned)(p_neighbour_cell->template HasCellProperty<CellLabel>())==1);
 
                     fractional_length += p_vertex_mesh->GetEdgeLength(element_index,neighbour_index);
+                    fractional_neighbours += 1.0;
                 }
 
                 total_length += p_vertex_mesh->GetEdgeLength(element_index,neighbour_index);
-
-
-
-
+                total_neighbours += 1.0;
             }
         }
     }
@@ -194,6 +193,55 @@ void FractionalLengthOutputModifier<DIM>::CalculateFractionalLength(AbstractCell
 			}
 		}
 	}
+    else if (dynamic_cast<MeshBasedCellPopulationWithGhostNodes<DIM>*>(&rCellPopulation))
+    {
+    	MeshBasedCellPopulationWithGhostNodes<DIM>* p_population = static_cast<MeshBasedCellPopulationWithGhostNodes<DIM>*>(&rCellPopulation);
+
+    	p_population->CreateVoronoiTessellation();
+
+        // Loop over Cells
+		for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+			 cell_iter != rCellPopulation.End();
+			 ++cell_iter)
+		{
+			// Get the location index corresponding to this cell
+			unsigned index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
+
+			// Get the set of neighbouring location indices
+			std::set<unsigned> neighbour_indices = rCellPopulation.GetNeighbouringNodeIndices(index);
+
+            // Iterate over these neighbours
+            for (std::set<unsigned>::iterator neighbour_iter = neighbour_indices.begin();
+                    neighbour_iter != neighbour_indices.end();
+                 ++neighbour_iter)
+            {
+                unsigned neighbour_index = *neighbour_iter;
+
+                //PRINT_2_VARIABLES(index,neighbour_index);
+                double edge_length = p_population->GetVoronoiEdgeLength(index,neighbour_index);
+
+				if ( p_population->IsGhostNode(neighbour_index) )
+				{
+					// On the edge so account for edge twice
+					total_length +=2.0*edge_length;
+				}
+				else
+				{
+					total_length +=edge_length;
+					total_neighbours +=1;
+
+					CellPtr p_neighbour_cell = rCellPopulation.GetCellUsingLocationIndex(neighbour_index);
+
+					if ( (cell_iter->template HasCellProperty<CellLabel>() && !(p_neighbour_cell->template HasCellProperty<CellLabel>())) ||
+						 (!(cell_iter->template HasCellProperty<CellLabel>()) && p_neighbour_cell->template HasCellProperty<CellLabel>()) )
+					{
+						fractional_length += edge_length;
+						fractional_neighbours += 1.0;
+					}
+				}
+            }
+		}
+    }
     else if (dynamic_cast<NodeBasedCellPopulation<DIM>*>(&rCellPopulation))
 	{
 		// Loop over Cells
@@ -219,39 +267,28 @@ void FractionalLengthOutputModifier<DIM>::CalculateFractionalLength(AbstractCell
 				{
 					CellPtr p_neighbour_cell = rCellPopulation.GetCellUsingLocationIndex(*iter);
 
-					//Use number of connections between neighbours as proxy for fractional length
-					total_length +=1;
+					//Approximate contact area between cells
+					double cell_seperation = norm_2(rCellPopulation.GetLocationOfCellCentre(*cell_iter) - rCellPopulation.GetLocationOfCellCentre(p_neighbour_cell));
+					double effective_cell_radius = 0.6;
+					double contact_area = 0.0;
+
+					if 	(cell_seperation < 2.0*	effective_cell_radius)
+					{
+						contact_area = 2.0*sqrt(effective_cell_radius*effective_cell_radius - cell_seperation*cell_seperation/4.0 );
+					}
+					// else not in contact so zero
+
+					total_length +=contact_area;
+					total_neighbours +=1;
 
 					if ( (cell_iter->template HasCellProperty<CellLabel>() && !(p_neighbour_cell->template HasCellProperty<CellLabel>())) ||
 						 (!(cell_iter->template HasCellProperty<CellLabel>()) && p_neighbour_cell->template HasCellProperty<CellLabel>()) )
 					{
 						//Paranoia
 						assert((unsigned)(cell_iter->template HasCellProperty<CellLabel>())+(unsigned)(p_neighbour_cell->template HasCellProperty<CellLabel>())==1);
-						fractional_length += 1;
+						fractional_length += contact_area;
+						fractional_neighbours += 1.0;
 					}
-
-
-//					//Approximate contact area between cells
-//					double cell_seperation = norm_2(rCellPopulation.GetLocationOfCellCentre(*cell_iter) - rCellPopulation.GetLocationOfCellCentre(p_neighbour_cell));
-//					double effective_cell_radius = 0.6;
-//					double contact_area = 0.0;
-//
-//					if 	(cell_seperation < 2.0*	effective_cell_radius)
-//					{
-//						contact_area = 2.0*sqrt(effective_cell_radius*effective_cell_radius - cell_seperation*cell_seperation/4.0 );
-//					}
-//					// else not in contact so zero
-//
-//					total_length += contact_area;
-//
-//					if ( (cell_iter->template HasCellProperty<CellLabel>() && !(p_neighbour_cell->template HasCellProperty<CellLabel>())) ||
-//						 (!(cell_iter->template HasCellProperty<CellLabel>()) && p_neighbour_cell->template HasCellProperty<CellLabel>()) )
-//					{
-//						//Paranoia
-//						assert((unsigned)(cell_iter->template HasCellProperty<CellLabel>())+(unsigned)(p_neighbour_cell->template HasCellProperty<CellLabel>())==1);
-//						fractional_length += contact_area;
-//					}
-
 				}
 
 			}
@@ -267,7 +304,14 @@ void FractionalLengthOutputModifier<DIM>::CalculateFractionalLength(AbstractCell
     fractional_length /= 2.0;
     total_length /= 2.0;
 
-    *mpFractionalLengthsResultsFile <<  SimulationTime::Instance()->GetTime() << "\t" << fractional_length << "\t" << total_length <<"\n";
+    // each neighbour is counted twice so divide by 2
+	fractional_neighbours /= 2.0;
+	total_neighbours /= 2.0;
+
+
+
+
+    *mpFractionalLengthsResultsFile <<  SimulationTime::Instance()->GetTime() << "\t" << fractional_length << "\t" << total_length << "\t" << fractional_neighbours << "\t" << total_neighbours <<"\n";
 }
 
 
