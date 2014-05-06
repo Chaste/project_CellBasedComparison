@@ -110,9 +110,9 @@ public:
 
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetDt(1.0/200.0);
-        simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(50.0);
+        simulator.SetDt(1.0/500.0);
+        simulator.SetSamplingTimestepMultiple(500);
+        simulator.SetEndTime(500.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
 
         // Create a force law and pass it to the simulation
@@ -166,7 +166,7 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/120.0);
         simulator.SetSamplingTimestepMultiple(120);
-        simulator.SetEndTime(50.0);
+        simulator.SetEndTime(500.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Mesh");
 
         // Create a force law and pass it to the simulation
@@ -227,7 +227,7 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(50.0);
+        simulator.SetEndTime(500.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Node");
 
         // Create a force law and pass it to the simulation
@@ -284,7 +284,7 @@ public:
         simulator.SetOutputDirectory("CylindricalCrypt/Potts");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(50.0);
+        simulator.SetEndTime(500.0);
         simulator.SetOutputCellVelocities(true);
 
         // Sloughing killer
