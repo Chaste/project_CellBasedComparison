@@ -37,7 +37,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "NodeBasedCellPopulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "MeshBasedCellPopulation.hpp"
-#include "DeltaNotchCellCycleModel.hpp"
+#include "PottsBasedCellPopulation.hpp"
+#include "MultipleCaBasedCellPopulation.hpp"
 #include "TetrahedralMesh.hpp"
 #include "VtkMeshWriter.hpp"
 #include "CellBasedPdeSolver.hpp"
@@ -78,14 +79,63 @@ void NeumannPDEModifier<DIM>::UpdateAtEndOfTimeStep(AbstractCellPopulation<DIM,D
 	{
 		mpFeMesh = &(static_cast<MeshBasedCellPopulation<DIM>*>(&rCellPopulation)->rGetMesh());
 	}
+	else if (dynamic_cast<NodeBasedCellPopulation<DIM>*>(&rCellPopulation))
+	{
+		std::vector<Node<DIM> *> nodes;
+
+		// Get the nodes of the NodesOnlyMesh
+		for (typename AbstractMesh<DIM,DIM>::NodeIterator node_iter = rCellPopulation.rGetMesh().GetNodeIteratorBegin();
+		         node_iter != rCellPopulation.rGetMesh().GetNodeIteratorEnd();
+		         ++node_iter)
+		{
+				nodes.push_back(new Node<DIM>(node_iter->GetIndex(), node_iter->rGetLocation()));
+	    }
+
+		mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
+		assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
+
+	}
 	else if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
 	{
 		mpFeMesh = static_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation)->GetTetrahedralMeshUsingVertexMesh();
+	}
+	else if (dynamic_cast<PottsBasedCellPopulation<DIM>*>(&rCellPopulation))
+	{
+		std::vector<Node<DIM> *> nodes;
+
+		// Create nodes at the centre of the cells
+		for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+			 cell_iter != rCellPopulation.End();
+			 ++cell_iter)
+		{
+			nodes.push_back(new Node<DIM>(rCellPopulation.GetLocationIndexUsingCell(*cell_iter), rCellPopulation.GetLocationOfCellCentre(*cell_iter)));
+	    }
+
+		mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
+		assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
+	}
+	else if (dynamic_cast<MultipleCaBasedCellPopulation<DIM>*>(&rCellPopulation))
+	{
+		std::vector<Node<DIM> *> nodes;
+
+		// Create nodes at the centre of the cells
+		unsigned cell_index = 0;
+		for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+			 cell_iter != rCellPopulation.End();
+			 ++cell_iter)
+		{
+			nodes.push_back(new Node<DIM>(cell_index, rCellPopulation.GetLocationOfCellCentre(*cell_iter)));
+			cell_index++;
+	    }
+
+		mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
+		assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
 	}
 	else
 	{
 		NEVER_REACHED;
 	}
+
     // Set up boundary conditions
     std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > p_bcc = ConstructBoundaryConditionsContainer();
 
@@ -179,19 +229,29 @@ void NeumannPDEModifier<DIM>::UpdateCellData(AbstractCellPopulation<DIM,DIM>& rC
     // Store the PDE solution in an accessible form
     ReplicatableVector solution_repl(mSolution);
 
+    // local cell index used by the CA simulation
+    unsigned cell_index = 0;
+
     for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
                  cell_iter != rCellPopulation.End();
                  ++cell_iter)
 	{
-		unsigned node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
+		unsigned tet_node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
 
 		if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
 		{
 			// Offset to relate elements in vertex mesh to nodes in tetrahedral mesh.
-			node_index += rCellPopulation.GetNumNodes();
+			tet_node_index += rCellPopulation.GetNumNodes();
 		}
 
-		double solution_at_node = solution_repl[node_index];
+		if (dynamic_cast<MultipleCaBasedCellPopulation<DIM>*>(&rCellPopulation))
+		{
+			// here local cell index corresponds to tet node
+			tet_node_index = cell_index;
+			cell_index++;
+		}
+
+		double solution_at_node = solution_repl[tet_node_index];
 
 		cell_iter->GetCellData()->SetItem(mDependentVariableName, solution_at_node);
 	}

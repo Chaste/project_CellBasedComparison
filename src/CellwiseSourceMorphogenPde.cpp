@@ -34,8 +34,10 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "CellwiseSourceMorphogenPde.hpp"
-#include "MeshBasedCellPopulation.hpp"
+#include "AbstractCentreBasedCellPopulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
+#include "PottsBasedCellPopulation.hpp"
+#include "MultipleCaBasedCellPopulation.hpp"
 #include "ApoptoticCellProperty.hpp"
 #include "Exception.hpp"
 #include "CellLabel.hpp"
@@ -76,10 +78,12 @@ double CellwiseSourceMorphogenPde<DIM>::ComputeConstantInUSourceTermAtNode(const
 
 	bool is_cell_labeled = false;
 
-	if (dynamic_cast<MeshBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)))
+	if (dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) ||
+		dynamic_cast<PottsBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) )
 	{
 		if (this->mrCellPopulation.IsCellAttachedToLocationIndex(tet_node_index))
 		{
+			// For potts this tet node corresponds to the element attached to the cell
 			is_cell_labeled = this->mrCellPopulation.GetCellUsingLocationIndex(tet_node_index)->template HasCellProperty<CellLabel>();
 		}
 		else
@@ -109,13 +113,24 @@ double CellwiseSourceMorphogenPde<DIM>::ComputeConstantInUSourceTermAtNode(const
 		}
 		else
 		{
-			// tet node is in the centre of element so can use offset
+			// tet node is in the centre of element so can use offset to calculate the cell
 			is_cell_labeled = this->mrCellPopulation.GetCellUsingLocationIndex(rNode.GetIndex()-static_cast_cell_population->GetNumNodes())->template HasCellProperty<CellLabel>();
 		}
 	}
+    else if (dynamic_cast<MultipleCaBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) )
+	{
+    	// Here tet_node_index corresponds to position of the cell in the vector of cells
+    	typename AbstractCellPopulation<DIM>::Iterator cell_iter = this->mrCellPopulation.Begin();
+
+    	assert(tet_node_index < this->mrCellPopulation.GetNumRealCells());
+    	for (unsigned i=0; i<tet_node_index; i++)
+    	{
+    		++cell_iter;
+    	}
+    	is_cell_labeled = cell_iter->template HasCellProperty<CellLabel>();
+	}
 	else
 	{
-		// Node / Potts/ CA
 		NEVER_REACHED;
 	}
 
