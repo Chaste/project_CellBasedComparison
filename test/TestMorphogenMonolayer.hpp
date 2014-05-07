@@ -40,6 +40,7 @@
 
 #include "MultipleCaBasedCellPopulation.hpp"
 #include "DiffusionMultipleCaUpdateRule.hpp"
+#include "CellMutationStatesCountWriter.hpp"
 
 #include "PetscSetupAndFinalize.hpp"
 
@@ -73,7 +74,7 @@ class TestMorphogenMonolayers : public AbstractCellBasedTestSuite
         	MorphogenDependentCellCycleModel* p_cycle_model = new MorphogenDependentCellCycleModel();
             p_cycle_model->SetDimension(2);
             p_cycle_model->SetThresholdMorphogen(0.0);
-            p_cycle_model->SetEquilibriumVolume(1.0);
+            p_cycle_model->SetEquilibriumVolume(16.0);
             p_cycle_model->SetQuiescentVolumeFraction(0.5);
 
             CellPtr p_cell(new Cell(p_state, p_cycle_model));
@@ -99,7 +100,7 @@ class TestMorphogenMonolayers : public AbstractCellBasedTestSuite
 	 */
 
 public:
-    void TestVertexBasedMonolayer() throw (Exception)
+    void noTestVertexBasedMonolayer() throw (Exception)
     {
         // Create Mesh
         HoneycombVertexMeshGenerator generator(10, 10);
@@ -111,13 +112,15 @@ public:
 
         // Create Population
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
 
         // Create Simulation
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("Monolayers/Vertex");
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(0.1);//20
+        simulator.SetEndTime(50.0);//20
 
         // Create Forces and pass to simulation NOTE: PARAMETERS CHOSEN TO GET CIRCULAR MONOLAYER
         MAKE_PTR(NagaiHondaForce<2>, p_force);
@@ -149,7 +152,7 @@ public:
         simulator.Solve();
     }
 
-    void TestNodeBasedMonolayer() throw (Exception)
+    void noTestNodeBasedMonolayer() throw (Exception)
     {
         HoneycombMeshGenerator generator(10, 10);
         MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
@@ -161,7 +164,8 @@ public:
 
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //TODO should be CellMutationStatesWriter
+        cell_population.AddPopulationWriter<CellMutationStatesCountWriter>();
 
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("Monolayers/Node");
@@ -188,7 +192,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void TestMeshBasedMonolayer() throw (Exception)
+    void noTestMeshBasedMonolayer() throw (Exception)
     {
         HoneycombMeshGenerator generator(10,10);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
@@ -210,7 +214,7 @@ public:
         simulator.SetOutputDirectory("Monolayers/Mesh");
         simulator.SetDt(1.0/120.0);
         simulator.SetSamplingTimestepMultiple(120);
-        simulator.SetEndTime(50); //20
+        simulator.SetEndTime(50.0);
 
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_force);
         p_force->SetCutOffLength(1.5);
@@ -232,7 +236,7 @@ public:
 
     void TestPottsBasedMonolayer() throw (Exception)
     {
-        PottsMeshGenerator<2> generator(100, 10, 4, 100, 10, 4);
+        PottsMeshGenerator<2> generator(200, 10, 4, 200, 10, 4);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         std::vector<CellPtr> cells;
@@ -274,7 +278,7 @@ public:
         simulator.Solve();
     }
 
-    void TestCaBasedMonolayer() throw (Exception)
+    void noTestCaBasedMonolayer() throw (Exception)
     {
         // Create a simple 2D PottsMesh
     	unsigned domain_wide = 50;
@@ -310,7 +314,7 @@ public:
         simulator.SetOutputDirectory("Monolayers/CA");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(50);
+        simulator.SetEndTime(50.0);
 
         // Adding update rule(s).
         MAKE_PTR(DiffusionMultipleCaUpdateRule<2u>, p_diffusion_update_rule);

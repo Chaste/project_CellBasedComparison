@@ -1,0 +1,45 @@
+<ChasteBuildInfo>
+	<ProvenanceInfo>
+		<VersionString>3.1.21655</VersionString> <!-- build specific -->
+		<IsWorkingCopyModified>1</IsWorkingCopyModified>
+		<BuildInformation>GccOpt, no Chaste libraries</BuildInformation>
+		<BuildTime>Wed, 07 May 2014 15:52:59 +0000</BuildTime>
+		<CurrentTime>Wed, 07 May 2014 15:53:58 +0000</CurrentTime>
+		<BuilderUnameInfo>Darwin Jamess-MacBook-Pro-10.local 13.1.0 Darwin Kernel Version 13.1.0: Thu Jan 16 19:40:37 PST 2014; root:xnu-2422.90.20~2/RELEASE_X86_64 x86_64</BuilderUnameInfo>
+		<Projects>
+			<Name>2020Science</Name><Version>Unknown</Version>
+			<Name>CellBasedComparison</Name><Version>21587:21656M</Version>
+			<Name>CryptMigration2012</Name><Version>Unknown</Version>
+			<Name>CryptProliferation2013</Name><Version>Unknown</Version>
+			<Name>DanH</Name><Version>21632M</Version>
+			<Name>FunctionalCuration</Name><Version>Unknown</Version>
+			<Name>VascularRemodelling</Name><Version>21366:21373M</Version>
+			<Name>VascularTumour</Name><Version>Unknown</Version>
+			<Name>VertexComparison2012</Name><Version>Unknown</Version>
+			<Name>Wisc2013Code</Name><Version>Unknown</Version>
+			<Name>jmbewu</Name><Version>Unknown</Version>
+			<Name>kathryna</Name><Version>Unknown</Version>
+			<Name>ozzy</Name><Version>21534:21537M</Version>
+			<Name>papers</Name><Version>21599:21604</Version>
+		</Projects>
+	</ProvenanceInfo>
+	<Compiler>
+		<NameAndVersion>clang, version unknown</NameAndVersion>
+		<Flags>-O3</Flags>
+	</Compiler>
+	<Libraries>
+		<CompiledIn>
+			<PETSc>3.3.0</PETSc>
+			<Boost>1.54.0</Boost>
+			<HDF5>1.8.12</HDF5>
+			<Parmetis>4.0.3</Parmetis>
+		</CompiledIn>
+		<Binaries>
+			<XSD>3.3.0</XSD>
+		</Binaries>
+		<Optional>
+			<VTK>5.10</VTK>
+			<SUNDIALS>no</SUNDIALS>
+		</Optional>
+	</Libraries>
+</ChasteBuildInfo>

@@ -184,12 +184,15 @@ void NeumannPDEModifier<DIM>::SetupSolve(AbstractCellPopulation<DIM,DIM>& rCellP
      */
     //UpdateCellData(rCellPopulation);
 
-    for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
-                    cell_iter != rCellPopulation.End();
-                    ++cell_iter)
-   	{
-    	cell_iter->GetCellData()->SetItem(mDependentVariableName, 0.0);
-   	}
+//    for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+//                    cell_iter != rCellPopulation.End();
+//                    ++cell_iter)
+//   	{
+//    	cell_iter->GetCellData()->SetItem(mDependentVariableName, 0.0);
+//   	}
+
+    UpdateAtEndOfTimeStep(rCellPopulation);
+    UpdateAtEndOfOutputTimeStep(rCellPopulation);
 }
 
 template<unsigned DIM>
