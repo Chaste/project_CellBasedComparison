@@ -37,7 +37,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AbstractCentreBasedCellPopulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "PottsBasedCellPopulation.hpp"
-#include "MultipleCaBasedCellPopulation.hpp"
+#include "CaBasedCellPopulation.hpp"
 #include "ApoptoticCellProperty.hpp"
 #include "Exception.hpp"
 #include "CellLabel.hpp"
@@ -117,7 +117,7 @@ double CellwiseSourceMorphogenPde<DIM>::ComputeConstantInUSourceTermAtNode(const
 			is_cell_labeled = this->mrCellPopulation.GetCellUsingLocationIndex(rNode.GetIndex()-static_cast_cell_population->GetNumNodes())->template HasCellProperty<CellLabel>();
 		}
 	}
-    else if (dynamic_cast<MultipleCaBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) )
+    else if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) )
 	{
     	// Here tet_node_index corresponds to position of the cell in the vector of cells
     	typename AbstractCellPopulation<DIM>::Iterator cell_iter = this->mrCellPopulation.Begin();

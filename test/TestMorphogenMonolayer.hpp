@@ -38,8 +38,8 @@
 #include "AdhesionPottsUpdateRule.hpp"
 #include "SurfaceAreaConstraintPottsUpdateRule.hpp"
 
-#include "MultipleCaBasedCellPopulation.hpp"
-#include "DiffusionMultipleCaUpdateRule.hpp"
+#include "CaBasedCellPopulation.hpp"
+#include "DiffusionCaUpdateRule.hpp"
 #include "CellMutationStatesCountWriter.hpp"
 
 #include "PetscSetupAndFinalize.hpp"
@@ -304,7 +304,7 @@ public:
         GenerateCells(location_indices.size(),cells);
 
         // Create cell population
-        MultipleCaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
+        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
 
 		// Set population to output all data to results files
 		cell_population.AddCellWriter<CellIdWriter>();
@@ -317,10 +317,10 @@ public:
         simulator.SetEndTime(50.0);
 
         // Adding update rule(s).
-        MAKE_PTR(DiffusionMultipleCaUpdateRule<2u>, p_diffusion_update_rule);
+        MAKE_PTR(DiffusionCaUpdateRule<2u>, p_diffusion_update_rule);
         p_diffusion_update_rule->SetDiffusionParameter(0.1);
 
-        simulator.AddMultipleCaUpdateRule(p_diffusion_update_rule);
+        simulator.AddCaUpdateRule(p_diffusion_update_rule);
 
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
 	   CellwiseSourceMorphogenPde<2> pde(cell_population, 0.1);

@@ -24,7 +24,10 @@
 #include "SensibleDiffusionForce.hpp"
 
 #include "OnLatticeSimulation.hpp"
+
 #include "FractionalLengthOutputModifier.hpp"
+#include "AdjacencyMatrixOutputModifier.hpp"
+
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
 #include "VolumeConstraintPottsUpdateRule.hpp"
@@ -54,13 +57,15 @@ private:
         AbstractCellBasedTestSuite::tearDown();
     }
 
-    void RandomlyLabelCells(std::vector<CellPtr>& rCells, boost::shared_ptr<AbstractCellProperty> pLabel, double labelledRatio)
+    void RandomlyLabelCells(std::list<CellPtr>& rCells, boost::shared_ptr<AbstractCellProperty> pLabel, double labelledRatio)
     {
-        for (unsigned i = 0; i<rCells.size(); i++)
+        for (std::list<CellPtr>::iterator cell_iter = rCells.begin();
+             cell_iter != rCells.end();
+             ++cell_iter)
         {
-            if (RandomNumberGenerator::Instance()->ranf() < labelledRatio)
+        	if (RandomNumberGenerator::Instance()->ranf() < labelledRatio)
             {
-                rCells[i]->AddCellProperty(pLabel);
+               (*cell_iter)->AddCellProperty(pLabel);
             }
         }
     }
@@ -78,10 +83,13 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void TestVertexMonolayerCellSorting() throw (Exception)
+    void noTestVertexMonolayerCellSorting() throw (Exception)
     {
+    	double time_to_steady_state = 5.0;
+    	double time_for_simulation = 5.0;
+
         // Create a simple 2D MutableVertexMesh
-        HoneycombVertexMeshGenerator generator(10, 10);
+        HoneycombVertexMeshGenerator generator(5,5);//10, 10);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
         p_mesh->SetCellRearrangementThreshold(0.1);
 
@@ -94,16 +102,12 @@ public:
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
 
-        // Randomly label some cells
-        boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-        RandomlyLabelCells(cells, p_state, 0.5);
-
         // Create cell population
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddPopulationWriter<CellMutationStatesWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
@@ -111,14 +115,17 @@ public:
 
         // Set time step and end time for simulation
         simulator.SetDt(0.001);
-        simulator.SetEndTime(10.0);//10.0);
+        simulator.SetEndTime(time_to_steady_state);//10.0);
 		// Only record results every 100 time steps
 		simulator.SetSamplingTimestepMultiple(100);
 
         // Add Fractional Length Output modifier
-        MAKE_PTR(FractionalLengthOutputModifier<2>, p_modifier);
-        simulator.AddSimulationModifier(p_modifier);
+        MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
+        simulator.AddSimulationModifier(p_fractional_length_modifier);
 
+        // Add Adjacedncy Matrix Output modifier
+        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
+        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
         // Set up force law and pass it to the simulation
         MAKE_PTR(NagaiHondaDifferentialAdhesionForce<2>, p_force);
@@ -126,9 +133,9 @@ public:
         p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
         p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
         p_force->SetNagaiHondaLabelledCellCellAdhesionEnergyParameter(6.0);
-        p_force->SetNagaiHondaLabelledCellLabelledCellAdhesionEnergyParameter(3.0);
+        p_force->SetNagaiHondaLabelledCellLabelledCellAdhesionEnergyParameter(1.0); //3.0
         p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(12.0);
-        p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(40.0);
+        p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(12.0); // 40.0
         simulator.AddForce(p_force);
 
         // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
@@ -141,6 +148,14 @@ public:
 
         // Run simulation
         simulator.Solve();
+
+		// Now label some cells
+		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
+		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
+		// Run simulation
+		simulator.Solve();
 
         // Check that the same number of cells
         TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
@@ -158,6 +173,9 @@ public:
      */
     void TestPottsMonolayerCellSorting() throw (Exception)
     {
+    	double time_to_steady_state = 10.0;
+    	double time_for_simulation = 100.0;
+
         // Create a simple 2D PottsMesh
         unsigned domain_size = 80;
         unsigned element_number = 10;
@@ -172,15 +190,10 @@ public:
         CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
 
-
-        // Randomly label some cells
-        boost::shared_ptr<AbstractCellProperty> p_label(CellPropertyRegistry::Instance()->Get<CellLabel>());
-        RandomlyLabelCells(cells, p_label, 0.5);
-
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddPopulationWriter<CellMutationStatesWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
 
         cell_population.SetNumSweepsPerTimestep(1); // This is the default value
 
@@ -188,13 +201,17 @@ public:
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CellSorting/Potts");
         simulator.SetDt(0.1); // This is the default value
-        simulator.SetEndTime(100);//000.0); // i.e 10000 MCS
+        simulator.SetEndTime(time_to_steady_state);//000.0); // i.e 10000 MCS
 		// Only record results every 10 time steps
 		simulator.SetSamplingTimestepMultiple(10);
 
         // Add Fractional Length Output modifier
-        MAKE_PTR(FractionalLengthOutputModifier<2>, p_modifier);
-        simulator.AddSimulationModifier(p_modifier);
+        MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
+        simulator.AddSimulationModifier(p_fractional_length_modifier);
+
+        // Add Adjacedncy Matrix Output modifier
+        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
+        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
 
         // Create update rules and pass to the simulation
@@ -204,15 +221,23 @@ public:
         simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
 
         MAKE_PTR(DifferentialAdhesionPottsUpdateRule<2>, p_differential_adhesion_update_rule);
-        p_differential_adhesion_update_rule->SetLabelledCellLabelledCellAdhesionEnergyParameter(0.16);
-        p_differential_adhesion_update_rule->SetLabelledCellCellAdhesionEnergyParameter(0.11);
-        p_differential_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.02);
-        p_differential_adhesion_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(0.16);
-        p_differential_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.16);
+        p_differential_adhesion_update_rule->SetLabelledCellLabelledCellAdhesionEnergyParameter(0.2);
+        p_differential_adhesion_update_rule->SetLabelledCellCellAdhesionEnergyParameter(0.4); //0.11
+        p_differential_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.2); //0.2
+        p_differential_adhesion_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(0.2); //0.16
+        p_differential_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2); //0.16
         simulator.AddPottsUpdateRule(p_differential_adhesion_update_rule);
 
         // Run simulation
         simulator.Solve();
+
+		// Now label some cells
+		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
+		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
+		// Run simulation
+		simulator.Solve();
 
         // Check that the same number of cells
         TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
@@ -225,6 +250,9 @@ public:
 
     void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
 	{
+    	double time_to_steady_state = 10.0;
+    	double time_for_simulation = 100.0;
+
         // Create a simple mesh
         unsigned num_cells_depth = 10;
         unsigned num_cells_width = 10;
@@ -239,16 +267,12 @@ public:
 		CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
 		cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_differentiated_type);
 
-		// Randomly label some cells
-		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-		RandomlyLabelCells(cells, p_state, 0.5);
-
 		// Create cell population
 		MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
 
 		// Set population to output all data to results files
 		cell_population.AddCellWriter<CellIdWriter>();
-		cell_population.AddPopulationWriter<CellMutationStatesWriter>();
+		cell_population.AddCellWriter<CellMutationStatesWriter>();
 
 		// Set up cell-based simulation and output directory
 		OffLatticeSimulation<2> simulator(cell_population);
@@ -256,13 +280,17 @@ public:
 
 		// Set time step and end time for simulation
 		simulator.SetDt(0.01);
-		simulator.SetEndTime(100.0);//10.0);
+		simulator.SetEndTime(time_to_steady_state);//10.0);
 		// Only record results every 100 time steps
 		simulator.SetSamplingTimestepMultiple(100);
 
-		// Add Fractional Length Output modifier
-		MAKE_PTR(FractionalLengthOutputModifier<2>, p_modifier);
-		simulator.AddSimulationModifier(p_modifier);
+        // Add Fractional Length Output modifier
+        MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
+        simulator.AddSimulationModifier(p_fractional_length_modifier);
+
+        // Add Adjacedncy Matrix Output modifier
+        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
+        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionSpringForce<2>, p_differntial_adhesion_force);
@@ -277,6 +305,14 @@ public:
 		// Run simulation
 		simulator.Solve();
 
+		// Now label some cells
+		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
+		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
+		// Run simulation
+		simulator.Solve();
+
 		// Check that the same number of cells
 		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
 
@@ -287,6 +323,9 @@ public:
 
     void TestNodeBasedMonolayerCellSorting() throw (Exception)
 	{
+    	double time_to_steady_state = 10.0;
+    	double time_for_simulation = 100.0;
+
         // Create a simple mesh
         unsigned num_cells_depth = 10;
         unsigned num_cells_width = 10;
@@ -303,16 +342,12 @@ public:
 		CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
 		cells_generator.GenerateBasicRandom(cells, mesh.GetNumNodes(), p_differentiated_type);
 
-		// Randomly label some cells
-		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-		RandomlyLabelCells(cells, p_state, 0.5);
-
 		// Create cell population
 		NodeBasedCellPopulation<2> cell_population(mesh, cells);
 
 		// Set population to output all data to results files
 		cell_population.AddCellWriter<CellIdWriter>();
-		cell_population.AddPopulationWriter<CellMutationStatesWriter>();
+		cell_population.AddCellWriter<CellMutationStatesWriter>();
 
 		// Set up cell-based simulation and output directory
 		OffLatticeSimulation<2> simulator(cell_population);
@@ -320,15 +355,17 @@ public:
 
 		// Set time step and end time for simulation
 		simulator.SetDt(0.01);
-		simulator.SetEndTime(100.0);//10.0);
+		simulator.SetEndTime(time_to_steady_state);//10.0);
 		// Only record results every 100 time steps
 		simulator.SetSamplingTimestepMultiple(100);
 
-		// Add Fractional Length Output modifier
-		MAKE_PTR(FractionalLengthOutputModifier<2>, p_modifier);
-		simulator.AddSimulationModifier(p_modifier);
+        // Add Fractional Length Output modifier
+        MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
+        simulator.AddSimulationModifier(p_fractional_length_modifier);
 
-
+        // Add Adjacedncy Matrix Output modifier
+        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
+        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionSpringForce<2>, p_differntial_adhesion_force);
@@ -341,6 +378,14 @@ public:
         p_random_force->SetDiffusionConstant(0.01);
         simulator.AddForce(p_random_force);
 
+		// Run simulation
+		simulator.Solve();
+
+		// Now label some cells
+		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
+		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
 		// Run simulation
 		simulator.Solve();
 

@@ -8,11 +8,11 @@
 		<OutputDivisionLocations>0</OutputDivisionLocations>
 	</OnLatticeSimulation-2>
 
-	<MultipleCaBasedCellPopulation-2>
+	<CaBasedCellPopulation-2>
 		<UpdateNodesInRandomOrder>1</UpdateNodesInRandomOrder>
 		<IterateRandomlyOverUpdateRuleCollection>0</IterateRandomlyOverUpdateRuleCollection>
 		<OutputResultsForChasteVisualizer>1</OutputResultsForChasteVisualizer>
-	</MultipleCaBasedCellPopulation-2>
+	</CaBasedCellPopulation-2>
 
 	<CellCycleModels>
 		<MorphogenDependentCellCycleModel>
@@ -38,9 +38,9 @@
 	</SimulationModifiers>
 
 	<UpdateRules>
-		<DiffusionMultipleCaUpdateRule-2>
+		<DiffusionCaUpdateRule-2>
 			<DiffusionParameter>0.1</DiffusionParameter>
-		</DiffusionMultipleCaUpdateRule-2>
+		</DiffusionCaUpdateRule-2>
 	</UpdateRules>
 
 </Chaste>

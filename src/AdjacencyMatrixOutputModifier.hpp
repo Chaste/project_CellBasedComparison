@@ -33,8 +33,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef FRACTIONALLENGTHOUTPUTMODIFIER_HPP_
-#define FRACTIONALLENGTHOUTPUTMODIFIER_HPP_
+#ifndef ADJACENCYMATRIXOUTPUTMODIFIER_HPP_
+#define ADJACENCYMATRIXOUTPUTMODIFIER_HPP_
 
 #include "ChasteSerialization.hpp"
 #include <boost/serialization/base_object.hpp>
@@ -43,11 +43,10 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 /**
- * An modifier class which at each simulation timestep calculates the fractional length of a
- * cell population and writes it to file.
+ * An modifier class which at each simulation timestep calculates the Adjacency Matrix of a cell pouplation and outputs it to file.
  */
 template<unsigned DIM>
-class FractionalLengthOutputModifier : public AbstractCellBasedSimulationModifier<DIM,DIM>
+class AdjacencyMatrixOutputModifier : public AbstractCellBasedSimulationModifier<DIM,DIM>
 {
 private:
     /** Needed for serialization. */
@@ -59,20 +58,20 @@ private:
     }
 
 
-    /** The file to which the fractional lengths are written to. DOesnt need archiving as defined in SetupSolve */
-    out_stream mpFractionalLengthsResultsFile;
+    /** The file to which the adjacency matrices are written to. Doesnt need archiving as defined in SetupSolve */
+    out_stream mpAdjacencyMatrixResultsFile;
 
 public:
 
     /**
      * Default constructor.
      */
-    FractionalLengthOutputModifier();
+    AdjacencyMatrixOutputModifier();
 
     /**
      * Destructor.
      */
-    virtual ~FractionalLengthOutputModifier();
+    virtual ~AdjacencyMatrixOutputModifier();
 
     /**
      * Overriden UpdateAtEndOfTimeStep method
@@ -103,14 +102,14 @@ public:
     virtual void UpdateAtEndOfSolve(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
 
     /**
-     * Helper Method to Compute the fractional length and output to file
+     * Helper Method to Compute the adjacency matrix and output to file
      *
      * @param rCellPopulation reference to the cell population
      */
-    void CalculateFractionalLength(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
+    void CalculateAdjacencyMatix(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
 };
 
 #include "SerializationExportWrapper.hpp"
-EXPORT_TEMPLATE_CLASS_SAME_DIMS(FractionalLengthOutputModifier)
+EXPORT_TEMPLATE_CLASS_SAME_DIMS(AdjacencyMatrixOutputModifier)
 
-#endif /*FRACTIONALLENGTHOUTPUTMODIFIER_HPP_*/
+#endif /*ADJACENCYMATRIXOUTPUTMODIFIER_HPP_*/

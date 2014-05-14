@@ -38,7 +38,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "VertexBasedCellPopulation.hpp"
 #include "MeshBasedCellPopulation.hpp"
 #include "PottsBasedCellPopulation.hpp"
-#include "MultipleCaBasedCellPopulation.hpp"
+#include "CaBasedCellPopulation.hpp"
 #include "TetrahedralMesh.hpp"
 #include "VtkMeshWriter.hpp"
 #include "CellBasedPdeSolver.hpp"
@@ -114,7 +114,7 @@ void NeumannPDEModifier<DIM>::UpdateAtEndOfTimeStep(AbstractCellPopulation<DIM,D
 		mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
 		assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
 	}
-	else if (dynamic_cast<MultipleCaBasedCellPopulation<DIM>*>(&rCellPopulation))
+	else if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&rCellPopulation))
 	{
 		std::vector<Node<DIM> *> nodes;
 
@@ -247,7 +247,7 @@ void NeumannPDEModifier<DIM>::UpdateCellData(AbstractCellPopulation<DIM,DIM>& rC
 			tet_node_index += rCellPopulation.GetNumNodes();
 		}
 
-		if (dynamic_cast<MultipleCaBasedCellPopulation<DIM>*>(&rCellPopulation))
+		if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&rCellPopulation))
 		{
 			// here local cell index corresponds to tet node
 			tet_node_index = cell_index;

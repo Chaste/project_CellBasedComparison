@@ -38,7 +38,7 @@
 #include "AdhesionPottsUpdateRule.hpp"
 
 #include "SimpleTargetAreaModifier.hpp"
-#include "DiffusionMultipleCaUpdateRule.hpp"
+#include "DiffusionCaUpdateRule.hpp"
 
 #include "PlaneBasedCellKiller.hpp"
 #include "PlaneBoundaryCondition.hpp"
@@ -329,7 +329,7 @@ public:
         }
 
         // Create cell population
-        MultipleCaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
+        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
@@ -340,9 +340,9 @@ public:
         simulator.SetOutputCellVelocities(true);
 
         // Add update rule
-        MAKE_PTR(DiffusionMultipleCaUpdateRule<2>, p_diffusion_update_rule);
+        MAKE_PTR(DiffusionCaUpdateRule<2>, p_diffusion_update_rule);
         p_diffusion_update_rule->SetDiffusionParameter(0.1);
-        simulator.AddMultipleCaUpdateRule(p_diffusion_update_rule);
+        simulator.AddCaUpdateRule(p_diffusion_update_rule);
 
         // Sloughing killer
         MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));

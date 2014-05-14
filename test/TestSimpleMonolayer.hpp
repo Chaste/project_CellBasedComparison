@@ -31,8 +31,8 @@
 #include "AdhesionPottsUpdateRule.hpp"
 #include "SurfaceAreaConstraintPottsUpdateRule.hpp"
 
-#include "MultipleCaBasedCellPopulation.hpp"
-#include "DiffusionMultipleCaUpdateRule.hpp"
+#include "CaBasedCellPopulation.hpp"
+#include "DiffusionCaUpdateRule.hpp"
 
 #include "PetscSetupAndFinalize.hpp"
 
@@ -182,7 +182,7 @@ public:
         cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_transit_type);
 
         // Create cell population
-        MultipleCaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
+        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("Monolayers/CA");
@@ -190,10 +190,10 @@ public:
         simulator.SetEndTime(20);
 
         // Adding update rule(s).
-        MAKE_PTR(DiffusionMultipleCaUpdateRule<2u>, p_diffusion_update_rule);
+        MAKE_PTR(DiffusionCaUpdateRule<2u>, p_diffusion_update_rule);
         p_diffusion_update_rule->SetDiffusionParameter(0.05);
 
-        simulator.AddMultipleCaUpdateRule(p_diffusion_update_rule);
+        simulator.AddCaUpdateRule(p_diffusion_update_rule);
 
         // Run simulation
         simulator.Solve();
