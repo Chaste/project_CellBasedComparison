@@ -95,7 +95,7 @@ public:
     void TestVertexCrypt() throw (Exception)
     {
         double crypt_length = 12;
-        double crypt_width = 6.0;
+        double crypt_width = 5.0;
 
         // Create mesh
         unsigned cells_across = 6;
@@ -145,7 +145,7 @@ public:
     void TestMeshBasedCrypt() throw (Exception)
     {
         double crypt_length = 12-0.5;
-        double crypt_width = 6.0;
+        double crypt_width = 5.0;
 
         // Create mesh
         unsigned cells_across = 6;
@@ -197,7 +197,7 @@ public:
     void TestNodeBasedCrypt() throw (Exception)
     {
         double crypt_length = 12-0.5;
-        double crypt_width = 6.0;
+        double crypt_width = 5.0;
 
         // Create a simple mesh
         unsigned cells_across = 6;
