@@ -23,7 +23,9 @@
 #include "StochasticDurationGenerationBasedCellCycleModel.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "NagaiHondaForce.hpp"
+
 #include "Cylindrical2dNodesOnlyMesh.hpp"
+#include "NodesOnlyMesh.hpp"
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
 
@@ -112,7 +114,7 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/500.0);
         simulator.SetSamplingTimestepMultiple(500);
-        simulator.SetEndTime(500.0);
+        simulator.SetEndTime(1000.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
 
         // Create a force law and pass it to the simulation
@@ -166,12 +168,12 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/120.0);
         simulator.SetSamplingTimestepMultiple(120);
-        simulator.SetEndTime(500.0);
+        simulator.SetEndTime(1000.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Mesh");
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
-        p_linear_force->SetMeinekeSpringStiffness(30.0);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
         simulator.AddForce(p_linear_force);
 
         // Create a force law to retain stem cells niche and pass it to the simulation
@@ -227,12 +229,12 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(500.0);
+        simulator.SetEndTime(1000.0);
         simulator.SetOutputDirectory("CylindricalCrypt/Node");
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(RepulsionForce<2>, p_repulsion_force);
-        p_repulsion_force->SetMeinekeSpringStiffness(30.0);
+        p_repulsion_force->SetMeinekeSpringStiffness(50.0);
         simulator.AddForce(p_repulsion_force);
 
         // Create a force law to retain stem cells niche and pass it to the simulation
@@ -270,9 +272,9 @@ public:
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         // Create cells
-        // Create cells
         std::vector<CellPtr> cells;
         GenerateStemCells(cells_across,cells);
+
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         //cell_population.SetOutputCellVolumes(true);
@@ -284,7 +286,7 @@ public:
         simulator.SetOutputDirectory("CylindricalCrypt/Potts");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(500.0);
+        simulator.SetEndTime(1000.0);
         simulator.SetOutputCellVelocities(true);
 
         // Sloughing killer
@@ -336,7 +338,7 @@ public:
         simulator.SetOutputDirectory("CylindricalCrypt/Ca");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(100.0);
+        simulator.SetEndTime(1000.0);
         simulator.SetOutputCellVelocities(true);
 
         // Add update rule

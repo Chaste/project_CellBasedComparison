@@ -49,25 +49,26 @@ void PeriodicNodeBasedBoundaryCondition::ImposeBoundaryCondition(const std::map<
 {
     assert (dynamic_cast<AbstractCentreBasedCellPopulation<2>*>(this->mpCellPopulation));
 
-    // Iterate over all nodes to update their positions
-    for (unsigned node_index=0; node_index<this->mpCellPopulation->GetNumNodes(); node_index++)
-    {
-        // Get pointer to this node
-        Node<2>* p_node = this->mpCellPopulation->GetNode(node_index);
 
+
+    // Iterate over all nodes to update their positions. Using iterator to ignore deleted nodes.
+    for (AbstractMesh<2,2>::NodeIterator node_iter = this->mpCellPopulation->rGetMesh().GetNodeIteratorBegin();
+             node_iter != this->mpCellPopulation->rGetMesh().GetNodeIteratorEnd();
+             ++node_iter)
+    {
         // Any node that has moved below the bottom of the crypt must be moved back up
-        double x = p_node->rGetLocation()[0];
+        double x = node_iter->rGetLocation()[0];
         if (x < 0.0)
         {
-            p_node->rGetModifiableLocation()[0] = x + mWidth;
+        	node_iter->rGetModifiableLocation()[0] = x + mWidth;
         }
         else if (x > mWidth)
         {
-            p_node->rGetModifiableLocation()[0] = x - mWidth;
+        	node_iter->rGetModifiableLocation()[0] = x - mWidth;
         }
 
-        assert(p_node->rGetLocation()[0] >= 0.0);
-        assert(p_node->rGetLocation()[0] <= mWidth);
+        assert(node_iter->rGetLocation()[0] >= 0.0);
+        assert(node_iter->rGetLocation()[0] <= mWidth);
     }
 }
 
