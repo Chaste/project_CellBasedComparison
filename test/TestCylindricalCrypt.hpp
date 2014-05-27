@@ -59,6 +59,9 @@
 #include "Warnings.hpp"
 #include "Debug.hpp"
 
+
+static const double M_END_TIME = 1200.0;
+
 class TestCryptSimulationcomparison : public AbstractCellBasedTestSuite
 {
 private:
@@ -105,8 +108,6 @@ private:
 
 public:
 
-    const double mEndTime = 1200.0;
-
     void TestVertexCrypt() throw (Exception)
     {
         double crypt_length = 12;
@@ -138,7 +139,7 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/500.0);
         simulator.SetSamplingTimestepMultiple(500);
-        simulator.SetEndTime(mEndTime);
+        simulator.SetEndTime(M_END_TIME);
         simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
@@ -204,7 +205,7 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(mEndTime);
+        simulator.SetEndTime(M_END_TIME);
         simulator.SetOutputDirectory("CylindricalCrypt/Mesh");
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
@@ -274,7 +275,7 @@ public:
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(mEndTime);
+        simulator.SetEndTime(M_END_TIME);
         simulator.SetOutputDirectory("CylindricalCrypt/Node");
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
@@ -340,7 +341,7 @@ public:
         simulator.SetOutputDirectory("CylindricalCrypt/Potts");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(mEndTime);
+        simulator.SetEndTime(M_END_TIME);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
@@ -400,7 +401,7 @@ public:
         simulator.SetOutputDirectory("CylindricalCrypt/Ca");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(mEndTime);
+        simulator.SetEndTime(M_END_TIME);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
