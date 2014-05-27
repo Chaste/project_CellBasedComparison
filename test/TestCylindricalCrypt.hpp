@@ -21,8 +21,10 @@
 #include "CellBasedEventHandler.hpp"
 #include "RepulsionForce.hpp"
 #include "StochasticDurationGenerationBasedCellCycleModel.hpp"
+#include "ContactInhibitionGenerationBasedCellCycleModel.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "NagaiHondaForce.hpp"
+#include "ShortAxisStemHorizontalVertexBasedDivisionRule.hpp"
 
 #include "Cylindrical2dNodesOnlyMesh.hpp"
 #include "NodesOnlyMesh.hpp"
@@ -40,7 +42,13 @@
 #include "AdhesionPottsUpdateRule.hpp"
 
 #include "SimpleTargetAreaModifier.hpp"
+#include "VolumeTrackingModifier.hpp"
 #include "DiffusionCaUpdateRule.hpp"
+
+#include "CellVolumesWriter.hpp"
+#include "CellProliferativeTypesCountWriter.hpp"
+#include "CellIdWriter.hpp"
+
 
 #include "PlaneBasedCellKiller.hpp"
 #include "PlaneBoundaryCondition.hpp"
@@ -48,7 +56,7 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-
+#include "Warnings.hpp"
 #include "Debug.hpp"
 
 class TestCryptSimulationcomparison : public AbstractCellBasedTestSuite
@@ -70,20 +78,24 @@ private:
         AbstractCellBasedTestSuite::tearDown();
     }
 
-    void GenerateStemCells(unsigned num_cells, std::vector<CellPtr>& rCells)
+    void GenerateStemCells(unsigned num_cells, std::vector<CellPtr>& rCells, double EquilibriumVolume)
 	{
     	double typical_stem_cell_cycle_duration = 24.0;
 
-		MAKE_PTR(WildTypeCellMutationState, p_state);
-		MAKE_PTR(StemCellProliferativeType, p_stem_type);
+    	boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
+    	boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<StemCellProliferativeType>());
 
 		for (unsigned i=0; i<num_cells; i++)
 		{
-			StochasticDurationGenerationBasedCellCycleModel* p_model = new StochasticDurationGenerationBasedCellCycleModel();
+			ContactInhibitionGenerationBasedCellCycleModel* p_model = new ContactInhibitionGenerationBasedCellCycleModel();
 			p_model->SetDimension(2);
 			p_model->SetMaxTransitGenerations(3);
+
+			p_model->SetEquilibriumVolume(EquilibriumVolume);
+			p_model->SetQuiescentVolumeFraction(0.8);
+
 			CellPtr p_cell(new Cell(p_state, p_model));
-			p_cell->SetCellProliferativeType(p_stem_type);
+			p_cell->SetCellProliferativeType(p_cell_type);
 			double birth_time = - RandomNumberGenerator::Instance()->ranf() * typical_stem_cell_cycle_duration;
 			p_cell->SetBirthTime(birth_time);
 			rCells.push_back(p_cell);
@@ -91,6 +103,8 @@ private:
 	}
 
 public:
+
+    const double mEndTime = 50.0;
 
     void TestVertexCrypt() throw (Exception)
     {
@@ -100,22 +114,37 @@ public:
         // Create mesh
         unsigned cells_across = 6;
 
-        CylindricalHoneycombVertexMeshGenerator generator(cells_across, 1, crypt_width/cells_across);
+        CylindricalHoneycombVertexMeshGenerator generator(cells_across, 1, true);
         Cylindrical2dVertexMesh* p_mesh = generator.GetCylindricalMesh();
+
+        p_mesh->Scale(crypt_width/cells_across,0.9); //1.0
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells);
+        GenerateStemCells(cells_across,cells,1.0);
 
         // Create tissue
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+		cell_population.AddCellWriter<CellVolumesWriter>();
+		cell_population.AddCellWriter<CellIdWriter>();
+
+        // Set the division rule so stem cells divide horizontally
+        MAKE_PTR(ShortAxisStemHorizontalVertexBasedDivisionRule<2>,p_division_rule);
+        cell_population.SetVertexBasedDivisionRule(p_division_rule);
 
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/500.0);
         simulator.SetSamplingTimestepMultiple(500);
-        simulator.SetEndTime(1000.0);
+        simulator.SetEndTime(mEndTime);
         simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
+        simulator.SetOutputDivisionLocations(true);
+        simulator.SetOutputCellVelocities(true);
+
+        //Add Volume Tracking Moddifer
+        MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(NagaiHondaForce<2>, p_nagai_honda_force);
@@ -127,11 +156,12 @@ public:
 
         // Create a force law to retain stem cells niche and pass it to the simulation
         MAKE_PTR(StemCellRetainerForce<2>, p_retainer_force);
-        p_retainer_force->SetStemCellForceMagnitudeParameter(2.0);
+        p_retainer_force->SetStemCellForceMagnitudeParameter(1.0);
         simulator.AddForce(p_retainer_force);
 
         // Solid Base Boundary Condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
+        p_bcs->SetUseJiggledNodesOnPlane(true);
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
 
         // Sloughing killer
@@ -140,6 +170,8 @@ public:
 
         // Run simulation
         simulator.Solve();
+
+        Warnings::Instance()->QuietDestroy();
     }
 
     void TestMeshBasedCrypt() throw (Exception)
@@ -159,17 +191,26 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells);
+        GenerateStemCells(cells_across,cells,sqrt(3.0)/2.0);
 
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
+        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+		cell_population.AddCellWriter<CellVolumesWriter>();
+		cell_population.AddCellWriter<CellIdWriter>();
 
-        // Create cell_population simulation from cell population
+        // Create simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetDt(1.0/120.0);
-        simulator.SetSamplingTimestepMultiple(120);
-        simulator.SetEndTime(1000.0);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
+        simulator.SetEndTime(mEndTime);
         simulator.SetOutputDirectory("CylindricalCrypt/Mesh");
+        simulator.SetOutputDivisionLocations(true);
+        simulator.SetOutputCellVelocities(true);
+
+        //Add Volume Tracking Moddifer
+        MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
@@ -183,6 +224,7 @@ public:
 
         // Solid Base Boundary Condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
+        p_bcs->SetUseJiggledNodesOnPlane(true);
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
 
         // Sloughing killer
@@ -213,24 +255,32 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells);
+        GenerateStemCells(cells_across,cells,0.9*M_PI*0.25); // r=0.5 remove 0.9*!!!!!
 
         // Create a node-based cell population
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+		cell_population.AddCellWriter<CellVolumesWriter>();
+		cell_population.AddCellWriter<CellIdWriter>();
 
         for (unsigned index = 0; index < cell_population.rGetMesh().GetNumNodes(); index++)
         {
             //PRINT_VARIABLE(index);
-        	cell_population.rGetMesh().GetNode(index)->SetRadius(0.53);
+        	cell_population.rGetMesh().GetNode(index)->SetRadius(0.5);
         }
-        TS_ASSERT_DELTA(cell_population.rGetMesh().GetNode(0)->GetRadius(),0.53,1e-6);
 
-        // Create crypt simulation from cell population
+        // Create simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(1000.0);
+        simulator.SetEndTime(mEndTime);
         simulator.SetOutputDirectory("CylindricalCrypt/Node");
+        simulator.SetOutputDivisionLocations(true);
+        simulator.SetOutputCellVelocities(true);
+
+        //Add Volume Tracking Moddifer
+        MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(RepulsionForce<2>, p_repulsion_force);
@@ -244,6 +294,7 @@ public:
 
         // Solid Base Boundary Condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
+        p_bcs->SetUseJiggledNodesOnPlane(true);
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
 
         // Sloughing killer
@@ -273,21 +324,28 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells);
+        GenerateStemCells(cells_across,cells,18.0); //16.0
 
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        //cell_population.SetOutputCellVolumes(true);
         cell_population.SetNumSweepsPerTimestep(10);
-        //cell_population.SetTemperature(0.01);
+        cell_population.SetTemperature(0.001);
+        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+		cell_population.AddCellWriter<CellVolumesWriter>();
+		cell_population.AddCellWriter<CellIdWriter>();
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CylindricalCrypt/Potts");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(1000.0);
+        simulator.SetEndTime(mEndTime);
+        simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
+
+        //Add Volume Tracking Moddifer
+        MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
 
         // Sloughing killer
         MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, 4.0*crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
@@ -301,7 +359,7 @@ public:
 
         // Restrain Stem Cells at Base of Crypt
         MAKE_PTR(StemCellRetainerPottsUpdateRule<2>, p_stem_cell_retainer_update_rule);
-        p_stem_cell_retainer_update_rule->SetStemCellRestraintParameter(1.0);
+        p_stem_cell_retainer_update_rule->SetStemCellRestraintParameter(1000.0);
         simulator.AddPottsUpdateRule(p_stem_cell_retainer_update_rule);
 
         // Run simulation
@@ -321,7 +379,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells);
+        GenerateStemCells(cells_across,cells,1.0);
 
         // Specify where cells lie
         std::vector<unsigned> location_indices;
@@ -332,14 +390,22 @@ public:
 
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
+        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+		cell_population.AddCellWriter<CellVolumesWriter>();
+		cell_population.AddCellWriter<CellIdWriter>();
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CylindricalCrypt/Ca");
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(1000.0);
+        simulator.SetEndTime(mEndTime);
+        simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
+
+        //Add Volume Tracking Moddifer
+        MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
 
         // Add update rule
         MAKE_PTR(DiffusionCaUpdateRule<2>, p_diffusion_update_rule);
