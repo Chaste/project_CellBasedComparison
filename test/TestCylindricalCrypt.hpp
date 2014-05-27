@@ -92,7 +92,8 @@ private:
 			p_model->SetMaxTransitGenerations(3);
 
 			p_model->SetEquilibriumVolume(EquilibriumVolume);
-			p_model->SetQuiescentVolumeFraction(0.8);
+			// 0.1 -> No CI!!!!
+			p_model->SetQuiescentVolumeFraction(0.1); //0.8
 
 			CellPtr p_cell(new Cell(p_state, p_model));
 			p_cell->SetCellProliferativeType(p_cell_type);
@@ -104,7 +105,7 @@ private:
 
 public:
 
-    const double mEndTime = 50.0;
+    const double mEndTime = 1200.0;
 
     void TestVertexCrypt() throw (Exception)
     {
@@ -117,11 +118,11 @@ public:
         CylindricalHoneycombVertexMeshGenerator generator(cells_across, 1, true);
         Cylindrical2dVertexMesh* p_mesh = generator.GetCylindricalMesh();
 
-        p_mesh->Scale(crypt_width/cells_across,0.9); //1.0
+        p_mesh->Scale(crypt_width/cells_across,1.0);
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,1.0);
+        GenerateStemCells(cells_across,cells,0.9); //1.0
 
         // Create tissue
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
