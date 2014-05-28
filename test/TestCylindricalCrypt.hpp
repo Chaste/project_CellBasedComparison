@@ -60,9 +60,9 @@
 #include "Debug.hpp"
 
 
-static const double M_END_TIME = 1200.0;
+static const double M_END_TIME = 2200.0;
 
-class TestCryptSimulationcomparison : public AbstractCellBasedTestSuite
+class TestCryptSimulationComparison : public AbstractCellBasedTestSuite
 {
 private:
 
@@ -95,8 +95,8 @@ private:
 			p_model->SetMaxTransitGenerations(3);
 
 			p_model->SetEquilibriumVolume(EquilibriumVolume);
-			// 0.1 -> No CI!!!!
-			p_model->SetQuiescentVolumeFraction(0.1); //0.8
+
+			p_model->SetQuiescentVolumeFraction(0.8); //0.8 -> CI // 0.1 -> No CI!!!!
 
 			CellPtr p_cell(new Cell(p_state, p_model));
 			p_cell->SetCellProliferativeType(p_cell_type);
@@ -111,7 +111,7 @@ public:
     void TestVertexCrypt() throw (Exception)
     {
         double crypt_length = 12;
-        double crypt_width = 5.0;
+        double crypt_width = 5.5;
 
         // Create mesh
         unsigned cells_across = 6;
@@ -123,7 +123,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,0.9); //1.0
+        GenerateStemCells(cells_across,cells,0.89); //1.0
 
         // Create tissue
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -193,7 +193,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,sqrt(3.0)/2.0);
+        GenerateStemCells(cells_across,cells,0.8); //sqrt(3.0)/2.0
 
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
@@ -241,7 +241,7 @@ public:
     void TestNodeBasedCrypt() throw (Exception)
     {
         double crypt_length = 12-0.5;
-        double crypt_width = 5.0;
+        double crypt_width = 5.5;
 
         // Create a simple mesh
         unsigned cells_across = 6;
@@ -257,7 +257,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,0.9*M_PI*0.25); // r=0.5 remove 0.9*!!!!!
+        GenerateStemCells(cells_across,cells,0.825); // r=0.5 M_PI*0.25
 
         // Create a node-based cell population
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -286,7 +286,7 @@ public:
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(RepulsionForce<2>, p_repulsion_force);
-        p_repulsion_force->SetMeinekeSpringStiffness(50.0);
+        p_repulsion_force->SetMeinekeSpringStiffness(25.0);
         simulator.AddForce(p_repulsion_force);
 
         // Create a force law to retain stem cells niche and pass it to the simulation
@@ -326,7 +326,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,18.0); //16.0
+        GenerateStemCells(cells_across,cells,16.0); //16.0
 
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
