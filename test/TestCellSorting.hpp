@@ -8,7 +8,7 @@
 #include "CellLabel.hpp"
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
-#include "StochasticDurationCellCycleModel.hpp"
+#include "StochasticDurationGenerationBasedCellCycleModel.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
 
 #include "OffLatticeSimulation.hpp"
@@ -39,6 +39,12 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
+static const double M_TIME_TO_STEADY_STATE = 5.0;
+static const double M_TIME_FOR_SIMULATION = 100.0;
+
+static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
+
+
 class TestCellSorting: public AbstractCellBasedTestSuite
 {
 private:
@@ -59,6 +65,10 @@ private:
 
     void RandomlyLabelCells(std::list<CellPtr>& rCells, boost::shared_ptr<AbstractCellProperty> pLabel, double labelledRatio)
     {
+
+    	double typical_transit_cell_cycle_duration = 12.0;
+    	boost::shared_ptr<AbstractCellProperty> p_transit_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
+
         for (std::list<CellPtr>::iterator cell_iter = rCells.begin();
              cell_iter != rCells.end();
              ++cell_iter)
@@ -67,6 +77,12 @@ private:
             {
                (*cell_iter)->AddCellProperty(pLabel);
             }
+        	(*cell_iter)->SetCellProliferativeType(p_transit_type);
+        	dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(2u);
+        	(*cell_iter)->InitialiseCellCycleModel(); // So gets a new G1 Duration
+
+		   double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * typical_transit_cell_cycle_duration;
+		   (*cell_iter)->SetBirthTime(birth_time);
         }
     }
 
@@ -83,13 +99,10 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void noTestVertexMonolayerCellSorting() throw (Exception)
+    void TestVertexMonolayerCellSorting() throw (Exception)
     {
-    	double time_to_steady_state = 5.0;
-    	double time_for_simulation = 5.0;
-
         // Create a simple 2D MutableVertexMesh
-        HoneycombVertexMeshGenerator generator(5,5);//10, 10);
+        HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS,M_NUM_CELLS_ACROSS);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
         p_mesh->SetCellRearrangementThreshold(0.1);
 
@@ -98,9 +111,9 @@ public:
 
         // Set up cells, one for each VertexElement
         std::vector<CellPtr> cells;
-        MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
+    	boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
+        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_cell_type);
 
         // Create cell population
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -114,10 +127,9 @@ public:
         simulator.SetOutputDirectory("CellSorting/Vertex");
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.001);
-        simulator.SetEndTime(time_to_steady_state);//10.0);
-		// Only record results every 100 time steps
+        simulator.SetDt(0.01);
 		simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Add Fractional Length Output modifier
         MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
@@ -129,13 +141,13 @@ public:
 
         // Set up force law and pass it to the simulation
         MAKE_PTR(NagaiHondaDifferentialAdhesionForce<2>, p_force);
-        p_force->SetNagaiHondaDeformationEnergyParameter(55.0);
+        p_force->SetNagaiHondaDeformationEnergyParameter(5.5);
         p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
-        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
-        p_force->SetNagaiHondaLabelledCellCellAdhesionEnergyParameter(6.0);
-        p_force->SetNagaiHondaLabelledCellLabelledCellAdhesionEnergyParameter(1.0); //3.0
-        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(12.0);
-        p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(12.0); // 40.0
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(0.1);
+        p_force->SetNagaiHondaLabelledCellCellAdhesionEnergyParameter(0.6);
+        p_force->SetNagaiHondaLabelledCellLabelledCellAdhesionEnergyParameter(0.1); //3.0
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.2);
+        p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(1.2); // 40.0
         simulator.AddForce(p_force);
 
         // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
@@ -153,12 +165,13 @@ public:
 		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
 		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
-		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
 		// Run simulation
+		simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
 		simulator.Solve();
 
+
         // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), M_NUM_CELLS_ACROSS*M_NUM_CELLS_ACROSS);
 
         // Test no births or deaths
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
@@ -173,21 +186,16 @@ public:
      */
     void TestPottsMonolayerCellSorting() throw (Exception)
     {
-    	double time_to_steady_state = 10.0;
-    	double time_for_simulation = 100.0;
-
         // Create a simple 2D PottsMesh
-        unsigned domain_size = 80;
-        unsigned element_number = 10;
         unsigned element_size = 4;
-        PottsMeshGenerator<2> generator(domain_size, element_number, element_size, domain_size, element_number, element_size);
+        unsigned domain_size = M_NUM_CELLS_ACROSS * element_size * 2; // Twice the initial domain size
+        PottsMeshGenerator<2> generator(domain_size, M_NUM_CELLS_ACROSS, element_size, domain_size, M_NUM_CELLS_ACROSS, element_size);
         PottsMesh<2>* p_mesh = generator.GetMesh();
-
 
         // Create cells
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
+        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
 
         // Create cell population
@@ -195,15 +203,16 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
 
-        cell_population.SetNumSweepsPerTimestep(1); // This is the default value
+        cell_population.SetNumSweepsPerTimestep(10); // This is the default value
 
-        // Set up cell-based simulation
+        // Set up cell-based simulation and output directory
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CellSorting/Potts");
+
+        // Set time step and end time for simulation
         simulator.SetDt(0.1); // This is the default value
-        simulator.SetEndTime(time_to_steady_state);//000.0); // i.e 10000 MCS
-		// Only record results every 10 time steps
-		simulator.SetSamplingTimestepMultiple(10);
+        simulator.SetSamplingTimestepMultiple(10);
+        simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Add Fractional Length Output modifier
         MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
@@ -212,7 +221,6 @@ public:
         // Add Adjacedncy Matrix Output modifier
         MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
         simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
-
 
         // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
@@ -235,12 +243,13 @@ public:
 		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
 		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
-		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
 		// Run simulation
+		simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
 		simulator.Solve();
 
+
         // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), M_NUM_CELLS_ACROSS*M_NUM_CELLS_ACROSS);
 
         // Test no births or deaths
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
@@ -250,21 +259,16 @@ public:
 
     void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
 	{
-    	double time_to_steady_state = 10.0;
-    	double time_for_simulation = 100.0;
-
         // Create a simple mesh
-        unsigned num_cells_depth = 10;
-        unsigned num_cells_width = 10;
         unsigned num_ghosts = 3;
-        HoneycombMeshGenerator generator(num_cells_width, num_cells_depth, num_ghosts);
+        HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
 		// Set up cells, one for each non ghost Node
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();//**Changed**//
         std::vector<CellPtr> cells;
 		MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-		CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
+		CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
 		cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_differentiated_type);
 
 		// Create cell population
@@ -280,9 +284,8 @@ public:
 
 		// Set time step and end time for simulation
 		simulator.SetDt(0.01);
-		simulator.SetEndTime(time_to_steady_state);//10.0);
-		// Only record results every 100 time steps
 		simulator.SetSamplingTimestepMultiple(100);
+		simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Add Fractional Length Output modifier
         MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
@@ -309,12 +312,13 @@ public:
 		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
 		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
-		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
 		// Run simulation
+		simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
 		simulator.Solve();
 
+
 		// Check that the same number of cells
-		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), M_NUM_CELLS_ACROSS*M_NUM_CELLS_ACROSS);
 
 		// Test no births or deaths
 		TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
@@ -323,13 +327,8 @@ public:
 
     void TestNodeBasedMonolayerCellSorting() throw (Exception)
 	{
-    	double time_to_steady_state = 10.0;
-    	double time_for_simulation = 100.0;
-
         // Create a simple mesh
-        unsigned num_cells_depth = 10;
-        unsigned num_cells_width = 10;
-        HoneycombMeshGenerator generator(num_cells_width, num_cells_depth, 0);
+        HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);
         TetrahedralMesh<2,2>* p_generating_mesh = generator.GetMesh();
 
         // Convert this to a NodesOnlyMesh
@@ -339,7 +338,7 @@ public:
 		// Set up cells, one for each Node
 		std::vector<CellPtr> cells;
 		MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-		CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
+		CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
 		cells_generator.GenerateBasicRandom(cells, mesh.GetNumNodes(), p_differentiated_type);
 
 		// Create cell population
@@ -355,9 +354,8 @@ public:
 
 		// Set time step and end time for simulation
 		simulator.SetDt(0.01);
-		simulator.SetEndTime(time_to_steady_state);//10.0);
-		// Only record results every 100 time steps
 		simulator.SetSamplingTimestepMultiple(100);
+		simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Add Fractional Length Output modifier
         MAKE_PTR(FractionalLengthOutputModifier<2>, p_fractional_length_modifier);
@@ -385,12 +383,12 @@ public:
 		boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
 		RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
-		simulator.SetEndTime(time_to_steady_state + time_for_simulation);
 		// Run simulation
+		simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
 		simulator.Solve();
 
 		// Check that the same number of cells
-		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), M_NUM_CELLS_ACROSS*M_NUM_CELLS_ACROSS);
 
 		// Test no births or deaths
 		TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
