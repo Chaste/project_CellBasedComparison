@@ -42,7 +42,7 @@
 static const double M_TIME_TO_STEADY_STATE = 5.0;
 static const double M_TIME_FOR_SIMULATION = 100.0;
 
-static const double M_NUM_CELLS_ACROSS = 20; // this ^2 cells
+static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
 
 
 class TestCellSorting: public AbstractCellBasedTestSuite
@@ -77,12 +77,12 @@ private:
             {
                (*cell_iter)->AddCellProperty(pLabel);
             }
-//        	(*cell_iter)->SetCellProliferativeType(p_transit_type);
-//        	dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(2u);
-//        	(*cell_iter)->InitialiseCellCycleModel(); // So gets a new G1 Duration
-//
-//		   double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * typical_transit_cell_cycle_duration;
-//		   (*cell_iter)->SetBirthTime(birth_time);
+        	(*cell_iter)->SetCellProliferativeType(p_transit_type);
+        	dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(2u);
+        	(*cell_iter)->InitialiseCellCycleModel(); // So gets a new G1 Duration
+
+		   double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * typical_transit_cell_cycle_duration;
+		   (*cell_iter)->SetBirthTime(birth_time);
         }
     }
 
@@ -188,7 +188,7 @@ public:
     {
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
-        unsigned domain_size = M_NUM_CELLS_ACROSS * element_size * 2; // Twice the initial domain size
+        unsigned domain_size = 158;//M_NUM_CELLS_ACROSS * element_size * 2; // Twice the initial domain size
         PottsMeshGenerator<2> generator(domain_size, M_NUM_CELLS_ACROSS, element_size, domain_size, M_NUM_CELLS_ACROSS, element_size);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
@@ -246,7 +246,6 @@ public:
 		// Run simulation
 		simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
 		simulator.Solve();
-
 
         // Check that the same number of cells
         TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), M_NUM_CELLS_ACROSS*M_NUM_CELLS_ACROSS);
