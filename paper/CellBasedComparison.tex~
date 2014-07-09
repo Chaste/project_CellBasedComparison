@@ -32,7 +32,7 @@
 \and P.K. Maini\footnotemark[4] 
 \and Daniel G. Harvey\footnotemark[3]
 \and Joseph M. Pitt-Francis\footnotemark[3]
-\and D.J. Gavaghan\footnotemark[3]}
+\and David J. Gavaghan\footnotemark[3]}
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 \footnotetext[2]{Joint first authors}
@@ -139,21 +139,21 @@ Discuss biological background:
 
 \noindent Summarize existing models:
 \begin{itemize}
-\item Lots of individual-based models consider the effect of spatial structure on patterns of cell proliferation and differentiation. In the context of the crypt, there are all the models stemming from Meineke et al. (2003).
-\item Discrete models that consider the role of contact inhibition include Drasdo and H\"{o}hme (2003), Drasdo et al. (2007), Galle et al. (2005), and Fletcher (2010).
+\item Lots of individual-based models consider the effect of spatial structure on patterns of cell proliferation and differentiation. In the context of the crypt, there are all the models stemming from \citet{Meineke2001Cell}.
+\item Discrete models that consider the role of contact inhibition include \citet{Drasdo2003Individual}, \citet{Drasdo2007Role}, \citet{Galle2005Modeling}, and possibly Fletcher (2010) and Sara-Jane's crypt paper.
 \end{itemize}
 
 \noindent Describe an example model of contact inhibition in a simple model of a colonic crypt:
 \begin{itemize}
-\item Describe the simple cylindrical crypt geometry used in van Leeuwen et al. (2009), Osborne et al. (2010) and Mirams et al. (2012).  Relate this to Sara-Jane's crypt model, which includes contact inhibition of cell proliferation.
-\item Compare results for each of the individual-based models using velocity profiles, as done in the case of centre- and vertex-based models by Osborne et al. (2010).
+\item Describe the simple cylindrical crypt geometry used in \citet{vanLeeuwen2009Integrative, Osborne2010Hybrid, Mirams2012Theoretical}. Relate this to Sara-Jane's crypt model, which includes contact inhibition of cell proliferation.
+\item Compare results for each of the individual-based models using velocity profiles, as done in the case of centre- and vertex-based models by \citet{Osborne2010Hybrid}.
 \item The idea behind this example is that all individual-based models should be very similar when considering a `position-based' cell-cycle model (in which cell proliferation occurs below a threshold height up the crypt, corresponding to a threshold Wnt stimulus). However the individual-based models should exhibit different behaviour when incorporating contact inhibition of cell proliferation into the cell-cycle model.
 \item This example demonstrates how Chaste includes coupling of cell-level processes to simple subcellular processes and deals with cell proliferation, death and differentiation.
 \end{itemize}
 
 \noindent Extra functionality required for this example:
 \begin{itemize}
-\item Set up a CA simulation of a crypt; see also the model by Paulus et al. (19??). 
+\item Set up a CA simulation of a crypt; possibly see also the model by \citet{Paulus1992Model}. 
 \item Decide on how to implement contact inhibition in a CA model as the area is always 1; we could consider multiple occupancy CA or use the density of neighbours to specify contact inhibition.
 \item Extend \texttt{ContactInhibitionCellCycleModel} to work with on-lattice simulations. This will require a \texttt{VolumeTrackedOnLatticeSimulation} analagous to the \texttt{VolumeTrackedOffLatticeSimulation} class.
 \end{itemize}
@@ -170,8 +170,8 @@ Discuss biological background:
 
 \noindent Summarize existing models:
 \begin{itemize}
-\item Focus on discrete models of lateral inhibition: Collier et al. (1996), Owen and Sherratt (1998), Wearing and Sherratt (2001), Webb and Owen (2004). These models study conditions for fine-grained patterns in a fixed cell population; proliferation and differentiation are not considered. Possible aside on continuum and coarse-grained models, e.g. O'Dea and King (2011).
-\item More detailed models focusing on the intestine: Buske et al. (2011), Pin et al. (2012). These models couple cell fate determination to Notch activity. Opportunity for linking back to previous crypt example (and mentioning Sophie's work if published and relevant).
+\item Focus on discrete models of lateral inhibition: \citet{Collier1996Pattern, Owen1998Mathematical, Wearing2001Nonlinear, Webb2004Oscillations}. These models study conditions for fine-grained patterns in a fixed cell population; proliferation and differentiation are not considered. Possible aside on continuum and coarse-grained models, e.g. \citet{ODea2011Continuum}
+\item More detailed models focusing on the intestine: \citet{Buske2011Comprehensive, Pin2012Modelling}. These models couple cell fate determination to Notch activity. Opportunity for linking back to previous crypt example (and mentioning Sophie's work if published and relevant).
 \item Need to check if any cellular Potts models have considered Delta/Notch signalling.
 \end{itemize}
 
@@ -189,12 +189,12 @@ Discuss biological background:
 
 Discuss biological background:
 \begin{itemize}
-\item Describe how morphgens are secreted signalling molecules that provide positional information to cells in a developing tissue and act as a trigger for cell growth, proliferation or differentiation. There are lots of examples and reviews relevant to this; see e.g. the recent review by Wartlick et al. (2011) discussing the insight that has been gained from studying the imaginal wing disc in {\it Drosophila}.
+\item Describe how morphgens are secreted signalling molecules that provide positional information to cells in a developing tissue and act as a trigger for cell growth, proliferation or differentiation. There are lots of examples and reviews relevant to this; see e.g. the recent review by \citet{Wartlick2011Understanding} discussing the insight that has been gained from studying the imaginal wing disc in {\it Drosophila}.
 \end{itemize}
 
 \noindent Summarize existing models:
 \begin{itemize}
-\item Again, lots of previous models; in terms of multiscale models, we should include references such as Schilling et al. (2011) and Smith et al. (2011).
+\item Again, lots of previous models; in terms of multiscale models, we should include references such as \citet{Schilling2011Cell}.
 \end{itemize}
 
 \noindent Describe an example model of a morphogen gradient influencing the development of an epithelial tissue: respecification:
@@ -206,7 +206,7 @@ Discuss biological background:
 
 \noindent Extra functionality required for this example:
 \begin{itemize}
-\item Solving a single PDE on a vertex mesh - use cell centre to allow specification of a triangular mesh at each time step (see also Smith et al. (2012)).
+\item Solving a single PDE on a vertex mesh - use cell centre to allow specification of a triangular mesh at each time step (see also \citet{Smith2011Incorporating}).
 \item Solving a single PDE in an on-lattice simulation:
 \begin{itemize}
 \item either use lattice sites to specify a FE mesh and use this to solve the PDE;

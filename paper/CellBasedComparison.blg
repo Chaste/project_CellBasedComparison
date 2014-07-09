@@ -2,51 +2,44 @@ This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
 The top-level auxiliary file: CellBasedComparison.aux
 The style file: apalike.bst
 Database file #1: comparison_refs.bib
-I was expecting a `,' or a `}'---line 789 of file comparison_refs.bib
- : 
- : @ARTICLE{Wartlick2011Understanding,
-(Error may have been on previous line)
-I'm skipping whatever remains of this entry
-Warning--I didn't find a database entry for "Pitt-Francis2012"
-You've used 23 entries,
+You've used 25 entries,
             1935 wiz_defined-function locations,
-            636 strings with 9207 characters,
-and the built_in function-call counts, 11072 in all, are:
-= -- 1048
-> -- 643
+            650 strings with 9788 characters,
+and the built_in function-call counts, 12488 in all, are:
+= -- 1174
+> -- 754
 < -- 6
-+ -- 237
-- -- 230
-* -- 1063
-:= -- 1964
-add.period$ -- 69
-call.type$ -- 23
-change.case$ -- 230
-chr.to.int$ -- 22
-cite$ -- 23
-duplicate$ -- 320
-empty$ -- 661
-format.name$ -- 263
-if$ -- 2071
-int.to.chr$ -- 2
++ -- 278
+- -- 272
+* -- 1214
+:= -- 2213
+add.period$ -- 75
+call.type$ -- 25
+change.case$ -- 261
+chr.to.int$ -- 25
+cite$ -- 25
+duplicate$ -- 349
+empty$ -- 732
+format.name$ -- 307
+if$ -- 2331
+int.to.chr$ -- 1
 int.to.str$ -- 0
-missing$ -- 23
-newline$ -- 118
-num.names$ -- 69
-pop$ -- 178
+missing$ -- 25
+newline$ -- 128
+num.names$ -- 75
+pop$ -- 205
 preamble$ -- 1
-purify$ -- 230
+purify$ -- 261
 quote$ -- 0
-skip$ -- 238
+skip$ -- 258
 stack$ -- 0
-substring$ -- 794
-swap$ -- 23
+substring$ -- 898
+swap$ -- 25
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 138
+type$ -- 150
 warning$ -- 0
-while$ -- 84
+while$ -- 93
 width$ -- 0
-write$ -- 301
-(There was 1 error message)
+write$ -- 327
