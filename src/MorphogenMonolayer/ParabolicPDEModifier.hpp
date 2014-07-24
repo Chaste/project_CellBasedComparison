@@ -68,7 +68,7 @@ private:
 		archive & mOutputDirectory;
     }
 
-    /** Pointer to a linear elliptic PDE object. */
+    /** Pointer to a linear parabolic PDE object. */
     AbstractLinearParabolicPde<DIM,DIM>* mpPde;
 
     /** The solution to the PDE problem at the current timestep
@@ -150,6 +150,13 @@ public:
      * @return the full boundary conditions container
      */
     virtual std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > ConstructBoundaryConditionsContainer();
+
+    /**
+	 * Helper method to copy the CellData to the PDE solution
+	 *
+	 * @param rCellPopulation reference to the cell population
+	 */
+	void UpdateSolutionVector(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
 
 
 

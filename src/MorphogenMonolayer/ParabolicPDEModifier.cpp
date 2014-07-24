@@ -41,7 +41,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CaBasedCellPopulation.hpp"
 #include "TetrahedralMesh.hpp"
 #include "VtkMeshWriter.hpp"
-#include "CellBasedPdeSolver.hpp"
+#include "CellBasedParabolicPdeSolver.hpp"
 #include "SimpleLinearParabolicSolver.hpp"
 #include "AveragedSourcePde.hpp"
 #include "Debug.hpp"
@@ -58,7 +58,7 @@ ParabolicPDEModifier<DIM>::ParabolicPDEModifier(AbstractLinearParabolicPde<DIM,D
 {
 	assert(DIM==2);
 
-	// Dirichlet BCS to be applied
+	// Neumann BCS to be applied
 	mpBoundaryCondition = new ConstBoundaryCondition<DIM>(0.0);
 }
 
@@ -135,14 +135,25 @@ void ParabolicPDEModifier<DIM>::UpdateAtEndOfTimeStep(AbstractCellPopulation<DIM
 	{
 		NEVER_REACHED;
 	}
-
     // Set up boundary conditions
     std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > p_bcc = ConstructBoundaryConditionsContainer();
 
-    // Use CellBasedPdeSolver as cell wise PDE
-    CellBasedPdeSolver<DIM> solver(mpFeMesh, mpPde, p_bcc.get());
+    // Construct the solution vector from cell data (takes care of cells dividing);
+    UpdateSolutionVector(rCellPopulation);
 
-    // TODO Use initial guess, when solving the system...
+    // Use CellBasedParabolicPdeSolver as cell wise PDE
+    CellBasedParabolicPdeSolver<DIM> solver(mpFeMesh, mpPde, p_bcc.get());
+
+    //TODO get these from the simulation class!
+    double t_start = 0;
+    double t_end = 1.0/120.0;
+    double dt = 1.0/120.0;
+    solver.SetTimes(t_start, t_end);
+    solver.SetTimeStep(dt);
+
+    // Use previous solution as ICS
+    solver.SetInitialCondition(mSolution);
+
     mSolution = solver.Solve();
 
     UpdateCellData(rCellPopulation);
@@ -178,7 +189,6 @@ void ParabolicPDEModifier<DIM>::SetupSolve(AbstractCellPopulation<DIM,DIM>& rCel
     // Cache the Output Directory
     mOutputDirectory = outputDirectory;
 
-
     UpdateAtEndOfTimeStep(rCellPopulation);
     UpdateAtEndOfOutputTimeStep(rCellPopulation);
 }
@@ -188,12 +198,12 @@ std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > ParabolicPDEModifier<DIM>
 {
     std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > p_bcc(new BoundaryConditionsContainer<DIM,DIM,1>(false));
 
-//	for (typename TetrahedralMesh<DIM,DIM>::BoundaryElementIterator elem_iter = mpFeMesh->GetBoundaryElementIteratorBegin();
-//		 elem_iter != mpFeMesh->GetBoundaryElementIteratorEnd();
-//		 ++elem_iter)
-//	{
-//		p_bcc->AddNeumannBoundaryCondition(*elem_iter, mpBoundaryCondition);
-//	}
+	for (typename TetrahedralMesh<DIM,DIM>::BoundaryElementIterator elem_iter = mpFeMesh->GetBoundaryElementIteratorBegin();
+		 elem_iter != mpFeMesh->GetBoundaryElementIteratorEnd();
+		 ++elem_iter)
+	{
+		p_bcc->AddNeumannBoundaryCondition(*elem_iter, mpBoundaryCondition);
+	}
 //
 //
 //	// With Neumann conditions unique up to constant so matrix singular. Not a problem for parabolic
@@ -203,14 +213,47 @@ std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > ParabolicPDEModifier<DIM>
 
 
 
-	for (typename TetrahedralMesh<DIM,DIM>::BoundaryNodeIterator node_iter = mpFeMesh->GetBoundaryNodeIteratorBegin();
-	                 node_iter != mpFeMesh->GetBoundaryNodeIteratorEnd();
-	                 ++node_iter)
-	{
-		p_bcc->AddDirichletBoundaryCondition(*node_iter, mpBoundaryCondition);
-	}
+//	for (typename TetrahedralMesh<DIM,DIM>::BoundaryNodeIterator node_iter = mpFeMesh->GetBoundaryNodeIteratorBegin();
+//	                 node_iter != mpFeMesh->GetBoundaryNodeIteratorEnd();
+//	                 ++node_iter)
+//	{
+//		p_bcc->AddDirichletBoundaryCondition(*node_iter, mpBoundaryCondition);
+//	}
 
 	return p_bcc;
+}
+
+template<unsigned DIM>
+void ParabolicPDEModifier<DIM>::UpdateSolutionVector(AbstractCellPopulation<DIM,DIM>& rCellPopulation)
+{
+    //Clear and resize the solution vector
+    PetscTools::Destroy(mSolution);
+    mSolution = PetscTools::CreateAndSetVec(mpFeMesh->GetNumNodes(), 0.0);
+
+    // Loop over nodes and get appropriate solution value from CellData
+
+
+    //     Apply dirichlet Boundaries
+    for (typename TetrahedralMesh<DIM,DIM>::NodeIterator node_iter = mpFeMesh->GetNodeIteratorBegin();
+		  node_iter != mpFeMesh->GetNodeIteratorEnd();
+		  ++node_iter)
+    {
+    	unsigned node_index = node_iter->GetIndex();
+    	double solution_at_node;
+
+    	if (dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&rCellPopulation))
+		{
+
+    		CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(node_index);
+    		solution_at_node = p_cell->GetCellData()->GetItem(mDependentVariableName);
+		}
+    	else
+		{
+    		//TODO Average over connected cells for Vertex and work out how to do potts
+    		NEVER_REACHED;
+		}
+    	PetscVecTools::SetElement(mSolution,node_index,solution_at_node);
+	}
 }
 
 template<unsigned DIM>

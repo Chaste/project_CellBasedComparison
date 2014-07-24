@@ -151,8 +151,6 @@ public:
      */
     virtual std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > ConstructBoundaryConditionsContainer();
 
-
-
     /**
      * Helper method to copy the PDE solution to CellData
      *
