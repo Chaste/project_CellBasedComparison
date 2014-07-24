@@ -38,6 +38,7 @@
 #include "DeltaNotchWriter.hpp"
 #include "CellMutationStatesWriter.hpp"
 #include "VoronoiDataWriter.hpp"
+#include "CellVolumesWriter.hpp"
 
 #include "PetscSetupAndFinalize.hpp"
 
@@ -70,8 +71,8 @@ private:
     	double typical_transit_cell_cycle_duration = 12.0;
 
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
-        boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
-//        boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
+       // boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
+        boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
 
         for (unsigned i=0; i<num_cells; i++)
         {
@@ -93,7 +94,7 @@ private:
 
 public:
 
-    void TestVertexMonolayerDeltaNotch() throw (Exception)
+    void noTestVertexMonolayerDeltaNotch() throw (Exception)
     {
         // Create a simple 2D MutableVertexMesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS,M_NUM_CELLS_ACROSS);
@@ -119,8 +120,8 @@ public:
         simulator.SetOutputDirectory("DeltaNotch/Vertex");
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.1);
-		simulator.SetSamplingTimestepMultiple(10);
+        simulator.SetDt(1.0/200.0);
+		simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
@@ -151,7 +152,7 @@ public:
    }
 
 
-    void TestPottsMonolayerDeltaNotch() throw (Exception)
+    void noTestPottsMonolayerDeltaNotch() throw (Exception)
     {
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
@@ -208,7 +209,7 @@ public:
     void TestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
 	{
 		// Create a simple mesh
-		unsigned num_ghosts = 3;
+		unsigned num_ghosts = 5;
 		HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
 		MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
@@ -223,8 +224,11 @@ public:
 		// Set population to output all data to results files
 		cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<DeltaNotchWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
+
         cell_population.SetWriteVtkAsPoints(false);
         cell_population.AddPopulationWriter<VoronoiDataWriter>();
+
 
 		// Set up cell-based simulation and output directory
 		OffLatticeSimulation<2> simulator(cell_population);
@@ -253,7 +257,7 @@ public:
 		TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-    void TestMeshBasedMonolayerDeltaNotch() throw (Exception)
+    void noTestMeshBasedMonolayerDeltaNotch() throw (Exception)
 	{
         // Create a simple mesh
         unsigned num_ghosts = 0;
@@ -302,7 +306,7 @@ public:
     }
 
 
-    void TestNodeBasedMonolayerCellSorting() throw (Exception)
+    void noTestNodeBasedMonolayerCellSorting() throw (Exception)
 	{
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);

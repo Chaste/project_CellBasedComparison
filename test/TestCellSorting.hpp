@@ -42,7 +42,7 @@
 static const double M_TIME_TO_STEADY_STATE = 5.0;
 static const double M_TIME_FOR_SIMULATION = 100.0;
 
-static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
+static const double M_NUM_CELLS_ACROSS = 20; // this ^2 cells
 
 
 class TestCellSorting: public AbstractCellBasedTestSuite
@@ -67,7 +67,8 @@ private:
     {
 
     	double typical_transit_cell_cycle_duration = 12.0;
-    	boost::shared_ptr<AbstractCellProperty> p_transit_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
+    	//boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
+        boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
 
         for (std::list<CellPtr>::iterator cell_iter = rCells.begin();
              cell_iter != rCells.end();
@@ -77,7 +78,7 @@ private:
             {
                (*cell_iter)->AddCellProperty(pLabel);
             }
-        	(*cell_iter)->SetCellProliferativeType(p_transit_type);
+        	(*cell_iter)->SetCellProliferativeType(p_prolif_type);
         	dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(2u);
         	(*cell_iter)->InitialiseCellCycleModel(); // So gets a new G1 Duration
 
@@ -99,7 +100,7 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void TestVertexMonolayerCellSorting() throw (Exception)
+    void noTestVertexMonolayerCellSorting() throw (Exception)
     {
         // Create a simple 2D MutableVertexMesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS,M_NUM_CELLS_ACROSS);
@@ -184,7 +185,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-    void TestPottsMonolayerCellSorting() throw (Exception)
+    void noTestPottsMonolayerCellSorting() throw (Exception)
     {
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
@@ -259,7 +260,7 @@ public:
     void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
 	{
         // Create a simple mesh
-        unsigned num_ghosts = 3;
+        unsigned num_ghosts = 5;
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
@@ -324,7 +325,7 @@ public:
 		TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-    void TestNodeBasedMonolayerCellSorting() throw (Exception)
+    void noTestNodeBasedMonolayerCellSorting() throw (Exception)
 	{
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);
