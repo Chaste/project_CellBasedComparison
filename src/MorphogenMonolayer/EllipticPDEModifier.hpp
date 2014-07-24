@@ -33,8 +33,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef NEUMANNPDEMODIFIER_HPP_
-#define NEUMANNPDEMODIFIER_HPP_
+#ifndef ELLIPTICPDEMODIFIER_HPP_
+#define ELLIPTICPDEMODIFIER_HPP_
 
 #include "ChasteSerialization.hpp"
 #include <boost/serialization/base_object.hpp>
@@ -47,10 +47,10 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 /**
- * A modifier class in which a PDE is solved and the results are stored in CellData.
+ * A modifier class in which an Elliptic PDE is solved and the results are stored in CellData.
  */
 template<unsigned DIM>
-class NeumannPDEModifier : public AbstractCellBasedSimulationModifier<DIM,DIM>
+class EllipticPDEModifier : public AbstractCellBasedSimulationModifier<DIM,DIM>
 {
 private:
 
@@ -98,12 +98,12 @@ public:
      * @param pde the pde to solve
      *
      */
-    NeumannPDEModifier(AbstractLinearEllipticPde<DIM,DIM>* pPde = NULL);
+    EllipticPDEModifier(AbstractLinearEllipticPde<DIM,DIM>* pPde = NULL);
 
     /**
      * Destructor.
      */
-    virtual ~NeumannPDEModifier();
+    virtual ~EllipticPDEModifier();
 
     /**
      * Overridden UpdateAtEndOfTimeStep() method.
@@ -154,14 +154,22 @@ public:
 
 
     /**
-     * Helper method to compute the mean level of Delta in each cell's neighbours and store these in the CellData.
+     * Helper method to copy the PDE solution to CellData
      *
      * @param rCellPopulation reference to the cell population
      */
     void UpdateCellData(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
+
+    /**
+     * Overridden OutputSimulationModifierParameters() method.
+     * Output any simulation modifier parameters to file.
+     *
+     * @param rParamsFile the file stream to which the parameters are output
+     */
+    void OutputSimulationModifierParameters(out_stream& rParamsFile);
 };
 
 #include "SerializationExportWrapper.hpp"
-EXPORT_TEMPLATE_CLASS_SAME_DIMS(NeumannPDEModifier)
+EXPORT_TEMPLATE_CLASS_SAME_DIMS(EllipticPDEModifier)
 
-#endif /*NEUMANNPDEMODIFIER_HPP_*/
+#endif /*ELLIPTICPDEMODIFIER_HPP_*/
