@@ -39,9 +39,14 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Exception.hpp"
 
 template<unsigned DIM>
-CellwiseSourceParabolicPde<DIM>::CellwiseSourceParabolicPde(AbstractCellPopulation<DIM,DIM>& rCellPopulation, double coefficient)
+CellwiseSourceParabolicPde<DIM>::CellwiseSourceParabolicPde(AbstractCellPopulation<DIM,DIM>& rCellPopulation,
+															double duDtCoefficient,
+															double diffusionCoefficient,
+															double uptakeCoefficient)
     : mrCellPopulation(rCellPopulation),
-      mCoefficient(coefficient)
+      mDuDtCoefficient(duDtCoefficient),
+      mDiffusionCoefficient(diffusionCoefficient),
+      mUptakeCoefficient(uptakeCoefficient)
 {
 }
 
@@ -52,15 +57,9 @@ const AbstractCellPopulation<DIM,DIM>& CellwiseSourceParabolicPde<DIM>::rGetCell
 }
 
 template<unsigned DIM>
-double CellwiseSourceParabolicPde<DIM>::GetCoefficient() const
-{
-    return mCoefficient;
-}
-
-template<unsigned DIM>
 double CellwiseSourceParabolicPde<DIM>::ComputeDuDtCoefficientFunction(const ChastePoint<DIM>& )
 {
-    return 10.0;
+    return mDuDtCoefficient;
 }
 
 
@@ -99,11 +98,11 @@ double CellwiseSourceParabolicPde<DIM>::ComputeSourceTermAtNode(const Node<DIM>&
 
 	if (is_cell_labeled)
 	{
-		coefficient = this->mCoefficient;
+		coefficient = this->mUptakeCoefficient;
 	}
 	else
 	{
-		coefficient = -this->mCoefficient;
+		coefficient = -this->mUptakeCoefficient;
 	}
 
     return coefficient;
@@ -112,7 +111,7 @@ double CellwiseSourceParabolicPde<DIM>::ComputeSourceTermAtNode(const Node<DIM>&
 template<unsigned DIM>
 c_matrix<double,DIM,DIM> CellwiseSourceParabolicPde<DIM>::ComputeDiffusionTerm(const ChastePoint<DIM>& rX, Element<DIM,DIM>* pElement)
 {
-    return identity_matrix<double>(DIM);
+    return mDiffusionCoefficient*identity_matrix<double>(DIM);
 }
 
 /////////////////////////////////////////////////////////////////////////////

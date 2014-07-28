@@ -43,9 +43,15 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const double M_TIME_FOR_SIMULATION = 20.0;
+static const double M_TIME_FOR_SIMULATION = 10.0;
 
-static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
+static const double M_NUM_CELLS_ACROSS = 5; // this ^2 cells
+
+static const double M_UPTAKE_RATE = 0.1;
+static const double M_DIFFUSION_CONSTANT = 1.0;
+static const double M_DUDT_COEFFICIENT = 10.0;
+
+
 
 class TestParabolicMorphogenMonolayers : public AbstractCellBasedTestSuite
 {
@@ -141,10 +147,10 @@ public:
 
         // Create Modifiers and pass to simulation
 
-        // Create a pde modifier and pass it to the simulation Add this first so in place for SimpleTargetArea one (calls cell pop update)
-
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, 0.1);
+        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+
+        // Create a pde modifier and pass it to the simulation Add this first so in place for SimpleTargetArea one (calls cell pop update)
         MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
         simulator.AddSimulationModifier(p_pde_modifier);
 
@@ -161,7 +167,7 @@ public:
         simulator.Solve();
     }
 
-    void noTestNodeBasedMonolayer() throw (Exception)
+    void TestNodeBasedMonolayer() throw (Exception)
     {
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS,0);
         MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
@@ -185,7 +191,7 @@ public:
         simulator.AddForce(p_force);
 
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-		CellwiseSourceParabolicPde<2> pde(cell_population, 0.1);
+        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
 
 		// Create a pde modifier and pass it to the simulation
 		MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
@@ -229,7 +235,7 @@ public:
         simulator.AddForce(p_force);
 
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, 0.1);
+        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
 
         // Create a pde modifier and pass it to the simulation
         MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
@@ -242,7 +248,7 @@ public:
         simulator.Solve();
     }
 
-    void noTestPottsBasedMonolayer() throw (Exception)
+    void TestPottsBasedMonolayer() throw (Exception)
     {
     	unsigned cell_width = 4;
     	unsigned domain_width = 200;
@@ -274,7 +280,7 @@ public:
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, 0.1);
+        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
 
         // Create a pde modifier and pass it to the simulation
         MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
@@ -330,11 +336,11 @@ public:
         simulator.AddCaUpdateRule(p_diffusion_update_rule);
 
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-	   CellwiseSourceParabolicPde<2> pde(cell_population, 0.1);
+        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
 
-	   // Create a pde modifier and pass it to the simulation
-	   MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
-	   simulator.AddSimulationModifier(p_pde_modifier);
+        // Create a pde modifier and pass it to the simulation
+        MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
+        simulator.AddSimulationModifier(p_pde_modifier);
 
 	   // Add volume tracking modifier for CI cell cycle model.
 	   MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);

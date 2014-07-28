@@ -64,7 +64,9 @@ private:
     void serialize(Archive & archive, const unsigned int version)
     {
        archive & boost::serialization::base_object<AbstractLinearParabolicPde<DIM, DIM> >(*this);
-       archive & mCoefficient;
+       archive & mDuDtCoefficient;
+       archive & mDiffusionCoefficient;
+       archive & mUptakeCoefficient;
     }
 
 protected:
@@ -72,8 +74,14 @@ protected:
     /** The cell population member. */
     AbstractCellPopulation<DIM, DIM>& mrCellPopulation;
 
+    /** Coefficient of Rate of change term  */
+    double mDuDtCoefficient;
+
+    /** Diffusuion coefficeint */
+    double mDiffusionCoefficient;
+
     /** Coefficient of consumption of nutrient by cells. */
-    double mCoefficient;
+    double mUptakeCoefficient;
 
 public:
 
@@ -81,20 +89,19 @@ public:
      * Constructor.
      *
      * @param rCellPopulation reference to the cell population
-     * @param coefficient the coefficient of consumption of nutrient by cells (defaults to 0.0)
+     * @param duDtCoefficient rate of reaction (defaults to 1.0)
+     * @param diffusionCoefficient rate of diffusion (defaults to 1.0)
+     * @param uptakeCoefficient the coefficient of consumption of nutrient by cells (defaults to 0.0)
      */
-    CellwiseSourceParabolicPde(AbstractCellPopulation<DIM, DIM>& rCellPopulation, double coefficient=0.0);
+    CellwiseSourceParabolicPde(AbstractCellPopulation<DIM, DIM>& rCellPopulation,
+    						   double duDtCoefficient = 1.0,
+							   double diffusionCoefficient = 1.0,
+							   double uptakeCoefficient = 0.0);
 
     /**
      * @return const reference to the cell population (used in archiving).
      */
     const AbstractCellPopulation<DIM>& rGetCellPopulation() const;
-
-    /**
-     * @return mCoefficient (used in archiving).
-     */
-    double GetCoefficient() const;
-
 
     /**
      * Overridden ComputeDuDtCoefficientFunction() method

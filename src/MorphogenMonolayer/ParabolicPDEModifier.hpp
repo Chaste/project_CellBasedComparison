@@ -152,6 +152,14 @@ public:
     virtual std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > ConstructBoundaryConditionsContainer();
 
     /**
+	 * Helper method to Setup a FE Mesh based on the cell population
+	 *
+	 * @param rCellPopulation reference to the cell population
+	 */
+	void SetupFeMesh(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
+
+
+    /**
 	 * Helper method to copy the CellData to the PDE solution
 	 *
 	 * @param rCellPopulation reference to the cell population
