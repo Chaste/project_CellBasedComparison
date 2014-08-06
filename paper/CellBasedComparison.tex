@@ -1,18 +1,38 @@
-\documentclass{article}
+\documentclass[12pt]{article}
 
 % Include useful packages
-\usepackage{fullpage}
-\usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage[labelfont=bf,labelsep=period,justification=raggedright]{caption}
 \usepackage{color} 
 \usepackage{fancyvrb}
-\usepackage[sort, numbers]{natbib}
-\usepackage{url}
+\usepackage{fullpage}
+\usepackage{graphicx}
+\usepackage[numbers,sort&compress]{natbib} 
+\usepackage{rotating}
+\usepackage{setspace} 
+\usepackage{soul} 
 \usepackage{subfigure}
+\usepackage{url}
 
-\linespread{1.4}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\topmargin 0.0cm
+\oddsidemargin 0.5cm
+\evensidemargin 0.5cm
+\textwidth 16cm 
+\textheight 21cm
+\setlength{\bibsep}{0.0pt}
+\date{}
+\pagestyle{myheadings}
+%\markright{Short running title}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Helpful commands for authors' notes
 \newcommand{\authornote}[2]{{\bf [#1: #2]}}
@@ -20,40 +40,58 @@
 \newcommand{\ozzy}[1]{\authornote{Ozzy}{#1}}
 \newcommand{\highlight}[1]{{\color{red} \bf{#1}}}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \begin{document}
 
-% Make title
+\onehalfspacing
 
-\title{\highlight{Something like...} Comparing individual-based approaches to modelling the self-organization of multicellular tissues}
+\noindent \highlight{Aim to submit to J. R. Soc. Interface}
 
-\author{James M. Osborne\footnotemark[3]\footnotemark[4]\footnotemark[2] \thanks{Corresponding author ({\tt James.Osborne@cs.ox.ac.uk})}\ 
-\and Alexander G. Fletcher\footnotemark[5]\ \footnotemark[2] 
-\and Daniel G. Harvey\footnotemark[3]
-\and Joseph M. Pitt-Francis\footnotemark[3]
-\and P.K. Maini\footnotemark[5] 
-\and David J. Gavaghan\footnotemark[3]
-\and \highlight{Also Jonathan? Anyone else?}}
+\begin{flushleft}
+{\Large \textbf{Comparing individual-based approaches to modelling the self-organization of multicellular tissues} }
 
-\renewcommand{\thefootnote}{\fnsymbol{footnote}}
-\footnotetext[2]{Joint first authors}
-\footnotetext[3]{Computational Biology Group, Department of Computer Science, University of Oxford, Wolfson Building, Parks Road, Oxford, OX1 3QD, UK}
-\footnotetext[4]{Computational Science Laboratory, Microsoft Research, 21 Station Road, Cambridge, CB1 2FB, UK}
-\footnotetext[5]{Wolfson Centre for Mathematical Biology, Mathematical Institute, University of Oxford, Andrew Wiles Building, Radcliffe Observatory Quarter, Woodstock Road, Oxford, OX2 6GG, UK}
-\renewcommand{\thefootnote}{\arabic{footnote}}
+\vspace{1em}
 
-% Notice that the footnote marks begin with [2] because the first mark (the asterisk) will be used in the title for date-received information by SIAM, even if not already used for support data.
+James M. Osborne$^{1,2,\ast}$, 
+Alexander G. Fletcher$^{3}$, 
+Daniel G. Harvey$^{1}$, 
+Joseph M. Pitt-Francis$^{1}$, 
+P.K. Maini$^{3}$, 
+David J. Gavaghan$^{1}$,
 
-\maketitle
+\vspace{1em}
 
-\begin{abstract}
-\highlight{Which journal shall we submit to?}
+$^{1}$ Computational Biology Group, Department of Computer Science, University of Oxford, Wolfson Building, Parks Road, Oxford, OX1 3QD, UK \\
+$^{2}$ Computational Science Laboratory, Microsoft Research, 21 Station Road, Cambridge, CB1 2FB, UK \\
+$^{3}$ Wolfson Centre for Mathematical Biology, Mathematical Institute, University of Oxford, Andrew Wiles Building, Radcliffe Observatory Quarter, Woodstock Road, Oxford, OX2 6GG, UK
 
-\highlight{Please generate all results figures in both .png and .eps formats and in greyscale and colour versions for ease of editing etc.}
-\end{abstract}
+\vspace{1em}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+$^{\ast}$ E-mail: James.Osborne@cs.ox.ac.uk
+\end{flushleft}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% No more than 200 words
+\section*{Summary}
+
+\highlight{Please generate all results figures in both .png and .eps formats and in greyscale and colour versions for ease of editing.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 3-6 choices
+\section*{Key index words}
+
+\highlight{To do.}
+
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Introduction} \label{sec:intro}
 
@@ -67,11 +105,13 @@ General motivation:
 \item Provide overview of structure of rest of paper.
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Review of different modelling approaches}\label{sec:discrete_models}
+
 Review the various individual-based approaches to modelling cell populations:
+
 \begin{itemize}
 \item Lattice-based models: cellular automata and the cellular Potts model. Off-lattice models: centre-based models (`overlapping spheres' and Voronoi tessellation) and vertex-based models. Other models, such as the subcellular element model; it might be worth highlighting the `symmetry' of the four types of model we consider in this paper (centre-based as an off-lattice analogue of CA, vertex-based as an off-lattice analogue of CPM), since this indicates why we haven't also considered e.g. the SEM. Relevant references: \citet{Fletcher2013Implementing, Fletcher2014Vertex} for vertex-based models, perhaps \citet{VossBohme2012Mulit-scale} for the cellular Potts model.
 \item Approaches to coupling such models to processes at different spatial scales: models that are coupled to continuum descriptions of transport processes; and models that are coupled to detailed representations of subcellular phenomena.
@@ -87,15 +127,17 @@ Review the various individual-based approaches to modelling cell populations:
 \item Lead in to brief discussion of Chaste, relying on the recent technical papers as key references for further implementation details. We won't put any code or structure details as these are in the technical papers.
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \section{Model comparison}\label{sec:model_comparison}
+
 We now present a series of exemplar simulations to compare how the processes discussed in Section~\ref{sec:intro} are represented in each modelling framework.
 More importantly we discuss how the differences in representation influence the results of the simulation. 
 We use cell-based Chaste; see \citet{Mirams2013Chaste} and \citet{Pitt-Francis2012Chaste} for further details.
 
-%%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Adhesion} \label{sec:adhesion}
 
 Discuss biological background:
@@ -130,187 +172,6 @@ Also spell out how we relate timescales between models, in particular between th
 \highlight{Where did the simulation snapshot figures go? 
 Make sure that we also run each simulation to `steady state' to compare equilibrium configurations - presumably over a sufficiently long time the cellular Potts model will give you complete sorting, in contrast with e.g. the vertex model?}
 
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex0}
-\label{fig:CellSortingNonProlif:a}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex25}
-\label{fig:CellSortingNonProlif:b}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex50}
-\label{fig:CellSortingNonProlif:c}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex100}
-\label{fig:CellSortingNonProlif:d}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh0}
-\label{fig:CellSortingNonProlif:e}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh25}
-\label{fig:CellSortingNonProlif:f}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh50}
-\label{fig:CellSortingNonProlif:g}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh100}
-\label{fig:CellSortingNonProlif:h}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node0}
-\label{fig:CellSortingNonProlif:i}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node25}
-\label{fig:CellSortingNonProlif:j}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node50}
-\label{fig:CellSortingNonProlif:k}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node100}
-\label{fig:CellSortingNonProlif:l}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts0}
-\label{fig:CellSortingNonProlif:m}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts25}
-\label{fig:CellSortingNonProlif:n}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts50}
-\label{fig:CellSortingNonProlif:o}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts100}
-\label{fig:CellSortingNonProlif:p}
-}
-\caption{No proliferation at $t=0,25,50$ and $100$. (a)-(d) VertexBased; (e)-(h) MeshBased; (i)-(l) Node Based; (m)-(p) Potts Based.}
-\label{fig:CellSortingNonProlif}
-\end{figure}
-
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex0}
-\label{fig:CellSortingProlif:a}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex25}
-\label{fig:CellSortingProlif:b}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex50}
-\label{fig:CellSortingProlif:c}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex100}
-\label{fig:CellSortingProlif:d}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh0}
-\label{fig:CellSortingProlif:e}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh25}
-\label{fig:CellSortingProlif:f}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh50}
-\label{fig:CellSortingProlif:g}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh100}
-\label{fig:CellSortingProlif:h}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node0}
-\label{fig:CellSortingProlif:i}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node25}
-\label{fig:CellSortingProlif:j}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node50}
-\label{fig:CellSortingProlif:k}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node100}
-\label{fig:CellSortingProlif:l}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts0}
-\label{fig:CellSortingProlif:m}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts25}
-\label{fig:CellSortingProlif:n}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts50}
-\label{fig:CellSortingProlif:o}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts100}
-\label{fig:CellSortingProlif:p}
-}
-\caption{With proliferation at $t=0,25,50$ and $100$. (a)-(d) VertexBased; (e)-(h) MeshBased; (i)-(l) Node Based; (m)-(p) Potts Based.}
-\label{fig:CellSortingProlif}
-\end{figure}
-
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/FractionalLength}
-\label{fig:CellSortingMetrics:a}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/FractionalLength}
-\label{fig:CellSortingMetrics:b}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/FractionalLengthRatio}
-\label{fig:CellSortingMetrics:c}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/FractionalLengthRatio}
-\label{fig:CellSortingMetrics:d}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/MaxEigRatio}
-\label{fig:CellSortingMetrics:e}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/MaxEigRatio}
-\label{fig:CellSortingMetrics:f}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/NumNeighbourRatio}
-\label{fig:CellSortingMetrics:g}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/NumNeighbourRatio}
-\label{fig:CellSortingMetrics:h}
-}
-\caption{(a)}
-\label{fig:CellSortingMetrics}
-\end{figure}
-
 \highlight{Comments on Figure~\ref{fig:CellSorting}: 
 Repace the title above each subfigure in the left column with just `Without cell divisions' and the title above each subfigure in the right column with just `With cell divisions' (or just remove the subfigure titles completely).
 Remove legend from each subfigure as unnecessary duplication, instead just state which lines correspond to which models in the caption. 
@@ -320,7 +181,8 @@ What are the units? If everything is non-dimensionalised, make sure to say this 
 Please define each of the quantities that you are plotting on each row. 
 General comment: ``Mesh" and ``Node" are probably better named as something like ``Delaunay triangulation" and "Overlapping spheres" (or abbreviation) respectively, in order to be a bit less Chaste-specific and clearer for the audience.}
 
-%%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Proliferation, death and differentiation} \label{sec:proliferation}
 
 Discuss biological background:
@@ -354,45 +216,6 @@ Discuss biological background:
 
 \noindent Results - go through figures and draw some conclusions.
 
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Vertex100}
-\label{fig:CylindricalCrypt:a}
-}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Mesh100}
-\label{fig:CylindricalCrypt:b}
-}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Node100}
-\label{fig:CylindricalCrypt:c}
-}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Potts100}
-\label{fig:CylindricalCrypt:d}
-}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Vertex400}
-\label{fig:CylindricalCrypt:e}
-}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Mesh403}
-\label{fig:CylindricalCrypt:f}
-}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Node400}
-\label{fig:CylindricalCrypt:g}
-}
-\subfigure[]{
-\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Potts401}
-\label{fig:CylindricalCrypt:h}
-}
-\caption{(a)-(d) Generation Based Cell Cycle Model. (e)-(h) Contact Inhibition cell Generation based cell cycle model.}
-\label{fig:CylindricalCrypt}
-\end{figure}
-
 \highlight{Comments on Figure~\ref{fig:CylindricalCrypt}: 
 Where did the CA crypt model go? There are such models in the literature so I think it would be nice to include in this example. 
 Same comment re: other case studies. 
@@ -400,45 +223,6 @@ The crypt geometries are unrealistically small - suggest we use established geom
 What does purple signify in these images? 
 The cellular Potts model simulation snapshots are quite dark, I think because of the interior boundaries being drawn in black - it would be nice if only cell boundaries were drawn in black - is this possible?
 }
-
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/HomeostasisCryptVelocityComparison}
-\label{fig:CryptStats:a}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/HomeostasisCryptVelocityComparison}
-\label{fig:CryptStats:b}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/HomeostasisCryptAveragedAreaComparison}
-\label{fig:CryptStats:c}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/HomeostasisCryptAveragedAreaComparison}
-\label{fig:CryptStats:d}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/CellDivisionDistributionComparison}
-\label{fig:CryptStats:e}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/CellDivisionDistributionComparison}
-\label{fig:CryptStats:f}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/CellAreaDistributionComparison}
-\label{fig:CryptStats:g}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/CellAreaDistributionComparison}
-\label{fig:CryptStats:h}
-}
-\caption{(a)}
-\label{fig:CryptStats:metrics}
-\end{figure}
 
 \highlight{Comments on Figure~\ref{fig:CryptStats:metrics}: 
 Repace the title above each subfigure in the left column with just `Without contact inhbition' and the title above each subfigure in the right column with just `With contact inhibition' (or just remove the subfigure titles completely). 
@@ -452,7 +236,8 @@ For (a) to (f), presumably the data are being binned? Need to say how this is do
 Also maybe use finer bins - these graphs look quite `jagged'.
 }
 
-%%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Short-range signalling} \label{sec:juxtacrine}
 
 Discuss biological background:
@@ -477,173 +262,15 @@ Discuss biological background:
 
 \noindent All the functionality needed for this example already exists in Chaste.
 
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex0}
-\label{fig:DeltaNotchNonProlif:a}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex25}
-\label{fig:DeltaNotchNonProlif:b}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex50}
-\label{fig:DeltaNotchNonProlif:c}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex100}
-\label{fig:DeltaNotchNonProlif:d}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh0}
-\label{fig:DeltaNotchNonProlif:e}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh25}
-\label{fig:DeltaNotchNonProlif:f}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh50}
-\label{fig:DeltaNotchNonProlif:g}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh100}
-\label{fig:DeltaNotchNonProlif:h}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node0}
-\label{fig:DeltaNotchNonProlif:i}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node25}
-\label{fig:DeltaNotchNonProlif:j}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node50}
-\label{fig:DeltaNotchNonProlif:k}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node100}
-\label{fig:DeltaNotchNonProlif:l}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts0}
-\label{fig:DeltaNotchNonProlif:m}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts25}
-\label{fig:DeltaNotchNonProlif:n}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts50}
-\label{fig:DeltaNotchNonProlif:o}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts100}
-\label{fig:DeltaNotchNonProlif:p}
-}
-\caption{No proliferation at $t=0,25,50$ and $100$. (a)-(d) VertexBased; (e)-(h) MeshBased; (i)-(l) Node Based; (m)-(p) Potts Based.}
-\label{fig:DeltaNotchNonProlif}
-\end{figure}
-
 \highlight{Comments on Figure~\ref{fig:DeltaNotchNonProlif}: 
 Subfigures (a) to (l) don't look very interesting - it seems like everything is pretty much at steady state by the second timepoint. 
 Suggest plotting snapshots at earlier times so that there is some difference between (c) and (d), (g) and (h) and (k) and (l) respectively. 
 We also need a colourbar and to clarify what is being visualised in each snapshot (delta or notch). 
 Also, please can we have greyscale versions of each subfigure in case the target journal charges for colour images.
 }
-
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex0}
-\label{fig:DeltaNotchProlif:a}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex25}
-\label{fig:DeltaNotchProlif:b}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex50}
-\label{fig:DeltaNotchProlif:c}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex100}
-\label{fig:DeltaNotchProlif:d}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh0}
-\label{fig:DeltaNotchProlif:e}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh25}
-\label{fig:DeltaNotchProlif:f}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh50}
-\label{fig:DeltaNotchProlif:g}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh100}
-\label{fig:DeltaNotchProlif:h}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node0}
-\label{fig:DeltaNotchProlif:i}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node25}
-\label{fig:DeltaNotchProlif:j}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node50}
-\label{fig:DeltaNotchProlif:k}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node100}
-\label{fig:DeltaNotchProlif:l}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts0}
-\label{fig:DeltaNotchProlif:m}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts25}
-\label{fig:DeltaNotchProlif:n}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts50}
-\label{fig:DeltaNotchProlif:o}
-}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts100}
-\label{fig:DeltaNotchProlif:p}
-}
-\caption{With proliferation at $t=0,25,50$ and $100$. (a)-(d) VertexBased; (e)-(h) MeshBased; (i)-(l) Node Based; (m)-(p) Potts Based.}
-\label{fig:DeltaNotchProlif}
-\end{figure}
-
 \highlight{Comments on Figure~\ref{fig:DeltaNotchProlif}: same comments apply as for Figure~\ref{fig:DeltaNotchNonProlif}. 
 Also, subfigures (n) to (p) look weird - has something gone wrong here?
 }
-
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/DeltaNotch/NonProlifPatternRatio}
-\label{fig:DeltaNotchStats:a}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/DeltaNotch/ProlifPatternRatio}
-\label{fig:DeltaNotchStats:b}
-}
-\caption{Ratio of Delta high cells to all cells for (a) no proliferation and  (b) with proliferation.}
-\label{fig:DeltaNotchStats:metrics}
-\end{figure}
 
 \highlight{Comments on Figure~\ref{fig:DeltaNotchStats:metrics}: 
 See earlier comments on subfigure titles and legends. 
@@ -651,7 +278,8 @@ Suggest we also compute spatial statistics such as Moran's I, Ripley's K etc.
 cf. Sophie's work.
 }
 
-%%%%%%%%%%%%%%%%%%% SubSection %%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \subsection{Long-range signalling} \label{sec:morphagens}
 
 Discuss biological background:
@@ -682,95 +310,13 @@ Discuss biological background:
 \end{itemize}
 
 \highlight{Suggest we implement the simulation described in Section 7 of \citet{Smith2011Incorporating}.}
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=3.7cm]{Figs/Monolayers/Vertex0}
-\label{fig:MonolayersNonProlif:a}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Vertex25}
-\label{fig:MonolayersNonProlif:b}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Vertex50}
-\label{fig:MonolayersNonProlif:c}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Mesh0}
-\label{fig:MonolayersNonProlif:d}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Mesh25}
-\label{fig:MonolayersNonProlif:e}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Mesh50}
-\label{fig:MonolayersNonProlif:f}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Node0}
-\label{fig:MonolayersNonProlif:g}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Node25}
-\label{fig:MonolayersNonProlif:h}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Node50}
-\label{fig:MonolayersNonProlif:i}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Potts0}
-\label{fig:MonolayersNonProlif:j}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Potts25}
-\label{fig:MonolayersNonProlif:k}
-}
-\subfigure[]{
-\includegraphics[width=5.0cm]{Figs/Monolayers/Potts50}
-\label{fig:MonolayersNonProlif:l}
-}
-\caption{(a)-(c) VertexBased; (d)-(f) MeshBased; (g)-(i) Node Based; (j)-(l) Potts Based.}
-\label{fig:Monolayers}
-\end{figure}
 
-\begin{figure}
-\centering
-\setlength{\unitlength}{1cm}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/Monolayers/NumCells}
-\label{fig:DeltaNotchStats:a}
-}
-\subfigure[]{
-\includegraphics[width=6cm]{Figs/Monolayers/NumLabeledCells}
-\label{fig:DeltaNotchStats:b}
-}
-\caption{Number of cells (a) total number (b) number of labeled cells i.e. ones that absorb morphogen.}
-\label{fig:DeltaNotchStats:metrics}
-\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Discussion} \label{sec:discussion}
 
-Review the work done and results of this paper and generate a table summarizing the different properties exhibited by each of the models considered:
-
-\begin{center}
-\begin{tabular}{|l|c|c|c|c|}
-\hline Model & Adhesion & Proliferation/death & Short-range signalling & Long-range signalling \\ 
-\hline Cellular automata &  &  &  &  \\ 
-\hline Cellular Potts model &  &  &  &  \\ 
-\hline Overlapping spheres &  &  &  &  \\ 
-\hline Voronoi tessellation &  &  &  &  \\ 
-\hline Vertex-based &  &  &  &  \\ 
-\hline 
-\end{tabular}
-\end{center}
+Review the work done and results of this paper and generate a table summarizing the different properties exhibited by each of the models considered: see Table~\ref{tab:properties}.
 
 \noindent Briefly discuss further avenues for research:
 \begin{itemize}
@@ -779,21 +325,276 @@ Review the work done and results of this paper and generate a table summarizing 
 \item Opportunities to automate the process of model specification and implementation, for example through extended use of mark-up languages.
 \end{itemize}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Acknowledgements}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The authors gratefully acknowledge funding through the OCISB project (BB/D020190/1).
-JMO is supported by the Life Sciences Interface and Systems Biology Doctoral Training Centres (EP/E501605/1 and EP/G50029/1 respectively) and Microsoft Research, Cambridge. 
-AGF is supported by EPSRC (EP/I017909/1) and Microsoft Research, Cambridge. 
-This publication was based on work supported in part by Award No. KUK-C1-013-04, made by King Abdullah University of Science and Technology (KAUST).
+\section*{Acknowledgments}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Section %%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliography{comparison_refs}{}
-\bibliographystyle{apalike}
+JMO and AGF are supported by EPSRC and Microsoft Research, Cambridge through grant EP/I017909/1 ({\tt www.2020science.net}). 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Please note that Interface has recently changed its referencing style from Harvard to Vancouver
+\bibliography{comparison_refs}
+\bibliographystyle{vancouver}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\clearpage
+\section{Figures}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 1
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex0} \label{fig:CellSortingNonProlif:a}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex25} \label{fig:CellSortingNonProlif:b}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex50} \label{fig:CellSortingNonProlif:c}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Vertex100} \label{fig:CellSortingNonProlif:d}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh0} \label{fig:CellSortingNonProlif:e}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh25} \label{fig:CellSortingNonProlif:f}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh50} \label{fig:CellSortingNonProlif:g}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Mesh100} \label{fig:CellSortingNonProlif:h}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node0} \label{fig:CellSortingNonProlif:i}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node25} \label{fig:CellSortingNonProlif:j}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node50} \label{fig:CellSortingNonProlif:k}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Node100} \label{fig:CellSortingNonProlif:l}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts0} \label{fig:CellSortingNonProlif:m}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts25} \label{fig:CellSortingNonProlif:n}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts50} \label{fig:CellSortingNonProlif:o}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/NonProlif/Potts100} \label{fig:CellSortingNonProlif:p}}
+\caption{No proliferation at $t=0,25,50$ and $100$. 
+(a)-(d) VertexBased; 
+(e)-(h) MeshBased; 
+(i)-(l) NodeBased; 
+(m)-(p) PottsBased.}
+\label{fig:CellSortingNonProlif}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 2
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex0} \label{fig:CellSortingProlif:a}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex25} \label{fig:CellSortingProlif:b}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex50} \label{fig:CellSortingProlif:c}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Vertex100} \label{fig:CellSortingProlif:d}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh0} \label{fig:CellSortingProlif:e}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh25} \label{fig:CellSortingProlif:f}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh50} \label{fig:CellSortingProlif:g}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Mesh100} \label{fig:CellSortingProlif:h}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node0} \label{fig:CellSortingProlif:i}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node25} \label{fig:CellSortingProlif:j}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node50} \label{fig:CellSortingProlif:k}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Node100} \label{fig:CellSortingProlif:l}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts0} \label{fig:CellSortingProlif:m}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts25} \label{fig:CellSortingProlif:n}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts50} \label{fig:CellSortingProlif:o}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/CellSorting/Prolif/Potts100} \label{fig:CellSortingProlif:p}}
+\caption{With proliferation at $t=0,25,50$ and $100$. 
+(a)-(d) VertexBased; 
+(e)-(h) MeshBased; 
+(i)-(l) NodeBased; 
+(m)-(p) PottsBased.}
+\label{fig:CellSortingProlif}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 3
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/FractionalLength} \label{fig:CellSortingMetrics:a}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/FractionalLength} \label{fig:CellSortingMetrics:b}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/FractionalLengthRatio} \label{fig:CellSortingMetrics:c}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/FractionalLengthRatio} \label{fig:CellSortingMetrics:d}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/MaxEigRatio} \label{fig:CellSortingMetrics:e}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/MaxEigRatio} \label{fig:CellSortingMetrics:f}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/NonProlifFigs/NumNeighbourRatio} \label{fig:CellSortingMetrics:g}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CellSorting/ProlifFigs/NumNeighbourRatio} \label{fig:CellSortingMetrics:h}}
+\caption{(a)}
+\label{fig:CellSortingMetrics}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 4
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Vertex100} \label{fig:CylindricalCrypt:a}}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Mesh100} \label{fig:CylindricalCrypt:b}}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Node100} \label{fig:CylindricalCrypt:c}}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsNormal/Potts100} \label{fig:CylindricalCrypt:d}}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Vertex400} \label{fig:CylindricalCrypt:e}}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Mesh403} \label{fig:CylindricalCrypt:f}}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Node400} \label{fig:CylindricalCrypt:g}}
+\subfigure[]{\includegraphics[width=3cm]{Figs/CylindricalCrypt/FigsCI/Potts401} \label{fig:CylindricalCrypt:h}}
+\caption{(a)-(d) Generation Based Cell Cycle Model. (e)-(h) Contact Inhibition cell Generation based cell cycle model.}
+\label{fig:CylindricalCrypt}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 5
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/HomeostasisCryptVelocityComparison} \label{fig:CryptStats:a}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/HomeostasisCryptVelocityComparison} \label{fig:CryptStats:b}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/HomeostasisCryptAveragedAreaComparison} \label{fig:CryptStats:c}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/HomeostasisCryptAveragedAreaComparison} \label{fig:CryptStats:d}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/CellDivisionDistributionComparison} \label{fig:CryptStats:e}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/CellDivisionDistributionComparison} \label{fig:CryptStats:f}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsNormal/CellAreaDistributionComparison} \label{fig:CryptStats:g}
+}
+\subfigure[]{
+\includegraphics[width=6cm]{Figs/CylindricalCrypt/FigsCI/CellAreaDistributionComparison}
+\label{fig:CryptStats:h}
+}
+\caption{(a)}
+\label{fig:CryptStats:metrics}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 6
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex0} \label{fig:DeltaNotchNonProlif:a}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex25} \label{fig:DeltaNotchNonProlif:b}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex50} \label{fig:DeltaNotchNonProlif:c}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Vertex100} \label{fig:DeltaNotchNonProlif:d}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh0} \label{fig:DeltaNotchNonProlif:e}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh25} \label{fig:DeltaNotchNonProlif:f}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh50} \label{fig:DeltaNotchNonProlif:g}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Mesh100} \label{fig:DeltaNotchNonProlif:h}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node0} \label{fig:DeltaNotchNonProlif:i}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node25} \label{fig:DeltaNotchNonProlif:j}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node50} \label{fig:DeltaNotchNonProlif:k}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Node100} \label{fig:DeltaNotchNonProlif:l}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts0} \label{fig:DeltaNotchNonProlif:m}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts25} \label{fig:DeltaNotchNonProlif:n}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts50} \label{fig:DeltaNotchNonProlif:o}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/NonProlif/Potts100} \label{fig:DeltaNotchNonProlif:p}}
+\caption{No proliferation at $t=0,25,50$ and $100$. 
+(a)-(d) VertexBased; 
+(e)-(h) MeshBased; 
+(i)-(l) NodeBased; 
+(m)-(p) PottsBased.}
+\label{fig:DeltaNotchNonProlif}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 7
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex0} \label{fig:DeltaNotchProlif:a}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex25} \label{fig:DeltaNotchProlif:b}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex50} \label{fig:DeltaNotchProlif:c}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Vertex100} \label{fig:DeltaNotchProlif:d}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh0} \label{fig:DeltaNotchProlif:e}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh25} \label{fig:DeltaNotchProlif:f}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh50} \label{fig:DeltaNotchProlif:g}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Mesh100} \label{fig:DeltaNotchProlif:h}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node0} \label{fig:DeltaNotchProlif:i}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node25} \label{fig:DeltaNotchProlif:j}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node50} \label{fig:DeltaNotchProlif:k}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Node100} \label{fig:DeltaNotchProlif:l}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts0} \label{fig:DeltaNotchProlif:m}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts25} \label{fig:DeltaNotchProlif:n}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts50} \label{fig:DeltaNotchProlif:o}}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/DeltaNotch/Prolif/Potts100} \label{fig:DeltaNotchProlif:p}}
+\caption{With proliferation at $t=0,25,50$ and $100$. 
+(a)-(d) VertexBased; 
+(e)-(h) MeshBased; 
+(i)-(l) NodeBased; 
+(m)-(p) PottsBased.}
+\label{fig:DeltaNotchProlif}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 8
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=6cm]{Figs/DeltaNotch/NonProlifPatternRatio} \label{fig:DeltaNotchStats:a}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/DeltaNotch/ProlifPatternRatio} \label{fig:DeltaNotchStats:b}}
+\caption{Ratio of Delta high cells to all cells for (a) no proliferation and  (b) with proliferation.}
+\label{fig:DeltaNotchStats:metrics}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 9
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=3.7cm]{Figs/Monolayers/Vertex0} \label{fig:MonolayersNonProlif:a}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Vertex25} \label{fig:MonolayersNonProlif:b}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Vertex50} \label{fig:MonolayersNonProlif:c}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Mesh0} \label{fig:MonolayersNonProlif:d}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Mesh25} \label{fig:MonolayersNonProlif:e}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Mesh50} \label{fig:MonolayersNonProlif:f}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Node0} \label{fig:MonolayersNonProlif:g}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Node25} \label{fig:MonolayersNonProlif:h}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Node50} \label{fig:MonolayersNonProlif:i}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Potts0} \label{fig:MonolayersNonProlif:j}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Potts25} \label{fig:MonolayersNonProlif:k}}
+\subfigure[]{\includegraphics[width=5.0cm]{Figs/Monolayers/Potts50} \label{fig:MonolayersNonProlif:l}}
+\caption{(a)-(c) VertexBased; 
+(d)-(f) MeshBased; 
+(g)-(i) NodeBased; 
+(j)-(l) PottsBased.}
+\label{fig:Monolayers}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Figure 10
+\begin{figure}
+\centering
+\setlength{\unitlength}{1cm}
+\subfigure[]{\includegraphics[width=6cm]{Figs/Monolayers/NumCells} \label{fig:DeltaNotchStats:a}}
+\subfigure[]{\includegraphics[width=6cm]{Figs/Monolayers/NumLabeledCells} \label{fig:DeltaNotchStats:b}}
+\caption{Number of cells (a) total number (b) number of labeled cells i.e. ones that absorb morphogen.}
+\label{fig:DeltaNotchStats:metrics}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\clearpage
+\section{Tables}
+
+\begin{sidewaystable}[h]
+\centering
+\begin{tabular}{lllll}
+\toprule
+Model & Adhesion & Proliferation/death & Short-range signalling & Long-range signalling \\
+\midrule
+Cellular Potts model &  &  &  &  \\ 
+Overlapping spheres &  &  &  &  \\ 
+Voronoi tessellation &  &  &  &  \\ 
+Vertex-based &  &  &  &  \\ 
+\bottomrule
+\end{tabular}
+\caption{Say what the Table shows.}
+\label{tab:properties}
+\end{sidewaystable}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{document}
-
