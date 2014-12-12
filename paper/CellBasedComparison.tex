@@ -59,7 +59,7 @@ Alexander G. Fletcher$^{3}$,
 Daniel G. Harvey$^{1}$, 
 Joseph M. Pitt-Francis$^{1}$, 
 P.K. Maini$^{3}$, 
-David J. Gavaghan$^{1}$,
+David J. Gavaghan$^{1}$
 
 \vspace{1em}
 
@@ -347,6 +347,8 @@ JMO and AGF are supported by EPSRC and Microsoft Research, Cambridge through gra
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Figures 1, 2 and 3 are generated using TestCellSorting.hpp and PlotFractionalLengths.m. To generate Figure 2, run TestCellSorting but uncomment line 70 and comment line 71. Make sure we output cell numbers over time (cf. the random number generator issue that Joe mentioned).
+
 % Figure 1
 \begin{figure}
 \centering
@@ -425,6 +427,8 @@ JMO and AGF are supported by EPSRC and Microsoft Research, Cambridge through gra
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Figures 4 and 5 are generated using TestCylindricalCrypt.hpp and PlotHomeostasisComparisons.m. 
+
 % Figure 4
 \begin{figure}
 \centering
@@ -464,6 +468,12 @@ JMO and AGF are supported by EPSRC and Microsoft Research, Cambridge through gra
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Figures 6, 7 and 8 are generated using TestDeltaNotch.hpp.
+To generate Figure 7, uncomment line 74 and comment line 75. 
+Figures 6 and 7 are generated using Paraview (whereas Figures 1, 2 and 4 are generated using the Chaste Java visualiser).
+There may be an issue with outputting Potts simulation results to Paraview (cf. ticket 2441). 
+Figure 8 is generated using PlotDeltaComparison.m (using output from a DeltaNotchWriter object).
 
 % Figure 6
 \begin{figure}
@@ -537,6 +547,11 @@ JMO and AGF are supported by EPSRC and Microsoft Research, Cambridge through gra
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Figures 9 and 10 are generated using TestEllipticMorphogenMonolayer.hpp, but should be replaced with output from TestMorphogenMonolayer.hpp (the latter involves a parabolic formulation).
+Figure 9 is visualised in Paraview.
+Figure 10 is generated using PlotNumCells.m. 
+To get this test working, we need to change trunk code by adding a serialization method to the class AbstractLinearParabolicPde. 
+
 % Figure 9
 \begin{figure}
 \centering
@@ -571,6 +586,12 @@ JMO and AGF are supported by EPSRC and Microsoft Research, Cambridge through gra
 \caption{Number of cells (a) total number (b) number of labeled cells i.e. ones that absorb morphogen.}
 \label{fig:DeltaNotchStats:metrics}
 \end{figure}
+
+We can remove the following old files/folders from the CellBasedComparison user project: 
+TestSimpleMonolayer.hpp; 
+TestMonolayers.hpp; 
+TestEllipticMorphogenMonolayer.hpp; 
+test/Matlab.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
