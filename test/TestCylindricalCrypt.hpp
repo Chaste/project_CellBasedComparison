@@ -16,7 +16,7 @@
 //#include "TargetedCellKiller.hpp"
 #include "RandomCellKiller.hpp"
 #include "SloughingCellKiller.hpp"
-#include "AbstractCellBasedTestSuite.hpp"
+#include "AbstractCellBasedWithTimingsTestSuite.hpp"
 #include "NumericFileComparison.hpp"
 #include "CellBasedEventHandler.hpp"
 #include "RepulsionForce.hpp"
@@ -62,49 +62,34 @@
 
 static const double M_END_TIME = 2200.0;
 
-class TestCryptSimulationComparison : public AbstractCellBasedTestSuite
+class TestCryptSimulationComparison : public AbstractCellBasedWithTimingsTestSuite
 {
 private:
 
-
-    double mLastStartTime;
-    void setUp()
-    {
-        mLastStartTime = std::clock();
-        AbstractCellBasedTestSuite::setUp();
-    }
-    void tearDown()
-    {
-        double time = std::clock();
-        double elapsed_time = (time - mLastStartTime)/(CLOCKS_PER_SEC);
-        std::cout << "Elapsed time: " << elapsed_time << std::endl;
-        AbstractCellBasedTestSuite::tearDown();
-    }
-
     void GenerateStemCells(unsigned num_cells, std::vector<CellPtr>& rCells, double EquilibriumVolume)
-	{
-    	double typical_stem_cell_cycle_duration = 24.0;
+    {
+        double typical_stem_cell_cycle_duration = 24.0;
 
-    	boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
-    	boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<StemCellProliferativeType>());
+        boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
+        boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<StemCellProliferativeType>());
 
-		for (unsigned i=0; i<num_cells; i++)
-		{
-			ContactInhibitionGenerationBasedCellCycleModel* p_model = new ContactInhibitionGenerationBasedCellCycleModel();
-			p_model->SetDimension(2);
-			p_model->SetMaxTransitGenerations(3);
+        for (unsigned i=0; i<num_cells; i++)
+        {
+            ContactInhibitionGenerationBasedCellCycleModel* p_model = new ContactInhibitionGenerationBasedCellCycleModel();
+            p_model->SetDimension(2);
+            p_model->SetMaxTransitGenerations(3);
 
-			p_model->SetEquilibriumVolume(EquilibriumVolume);
+            p_model->SetEquilibriumVolume(EquilibriumVolume);
 
-			p_model->SetQuiescentVolumeFraction(0.8); //0.8 -> CI // 0.1 -> No CI!!!!
+            p_model->SetQuiescentVolumeFraction(0.8); //0.8 -> CI // 0.1 -> No CI!!!!
 
-			CellPtr p_cell(new Cell(p_state, p_model));
-			p_cell->SetCellProliferativeType(p_cell_type);
-			double birth_time = - RandomNumberGenerator::Instance()->ranf() * typical_stem_cell_cycle_duration;
-			p_cell->SetBirthTime(birth_time);
-			rCells.push_back(p_cell);
-		}
-	}
+            CellPtr p_cell(new Cell(p_state, p_model));
+            p_cell->SetCellProliferativeType(p_cell_type);
+            double birth_time = - RandomNumberGenerator::Instance()->ranf() * typical_stem_cell_cycle_duration;
+            p_cell->SetBirthTime(birth_time);
+            rCells.push_back(p_cell);
+        }
+    }
 
 public:
 
@@ -128,8 +113,8 @@ public:
         // Create tissue
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
-		cell_population.AddCellWriter<CellVolumesWriter>();
-		cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
+        cell_population.AddCellWriter<CellIdWriter>();
 
         // Set the division rule so stem cells divide horizontally
         MAKE_PTR(ShortAxisStemHorizontalVertexBasedDivisionRule<2>,p_division_rule);
@@ -198,8 +183,8 @@ public:
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
         cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
-		cell_population.AddCellWriter<CellVolumesWriter>();
-		cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
+        cell_population.AddCellWriter<CellIdWriter>();
 
         // Create simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
@@ -262,13 +247,13 @@ public:
         // Create a node-based cell population
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
-		cell_population.AddCellWriter<CellVolumesWriter>();
-		cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
+        cell_population.AddCellWriter<CellIdWriter>();
 
         for (unsigned index = 0; index < cell_population.rGetMesh().GetNumNodes(); index++)
         {
             //PRINT_VARIABLE(index);
-        	cell_population.rGetMesh().GetNode(index)->SetRadius(0.5);
+            cell_population.rGetMesh().GetNode(index)->SetRadius(0.5);
         }
 
         // Create simulation from cell population
@@ -333,8 +318,8 @@ public:
         cell_population.SetNumSweepsPerTimestep(10);
         cell_population.SetTemperature(0.001);
         cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
-		cell_population.AddCellWriter<CellVolumesWriter>();
-		cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
+        cell_population.AddCellWriter<CellIdWriter>();
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
@@ -393,8 +378,8 @@ public:
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
         cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
-		cell_population.AddCellWriter<CellVolumesWriter>();
-		cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
+        cell_population.AddCellWriter<CellIdWriter>();
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);

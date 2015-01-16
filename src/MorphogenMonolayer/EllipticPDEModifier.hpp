@@ -54,18 +54,18 @@ class EllipticPDEModifier : public AbstractCellBasedSimulationModifier<DIM,DIM>
 {
 private:
 
-	/** Needed for serialization. */
+    /** Needed for serialization. */
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & archive, const unsigned int version)
     {
        archive & boost::serialization::base_object<AbstractCellBasedSimulationModifier<DIM,DIM> >(*this);
-		// Note that archiving of mSolution is handled by the methods save/load_construct_data
-		archive & mpPde;
-		archive & mpFeMesh;
-		archive & mpBoundaryCondition;
-		archive & mDependentVariableName;
-		archive & mOutputDirectory;
+        // Note that archiving of mSolution is handled by the methods save/load_construct_data
+        archive & mpPde;
+        archive & mpFeMesh;
+        archive & mpBoundaryCondition;
+        archive & mDependentVariableName;
+        archive & mOutputDirectory;
     }
 
     /** Pointer to a linear elliptic PDE object. */

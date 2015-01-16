@@ -94,9 +94,9 @@ public:
      * @param uptakeCoefficient the coefficient of consumption of nutrient by cells (defaults to 0.0)
      */
     CellwiseSourceParabolicPde(AbstractCellPopulation<DIM, DIM>& rCellPopulation,
-    						   double duDtCoefficient = 1.0,
-							   double diffusionCoefficient = 1.0,
-							   double uptakeCoefficient = 0.0);
+                               double duDtCoefficient = 1.0,
+                               double diffusionCoefficient = 1.0,
+                               double uptakeCoefficient = 0.0);
 
     /**
      * @return const reference to the cell population (used in archiving).

@@ -61,23 +61,23 @@ double StemCellRetainerPottsUpdateRule<DIM>::EvaluateHamiltonianContribution(uns
 
     if (target_node_contained)
     {
-    	unsigned target_element_index = (*new_location_containing_elements.begin());
+        unsigned target_element_index = (*new_location_containing_elements.begin());
 
-    	CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(target_element_index);
+        CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(target_element_index);
 
-    	// Stem cells can't shrink due to loss from other cells
-		if (p_cell->GetCellProliferativeType()->IsType<StemCellProliferativeType>())
-		{
-//			double current_height = rCellPopulation.GetNode(currentNodeIndex)->rGetLocation()[DIM-1];
-//			double target_height = rCellPopulation.GetNode(targetNodeIndex)->rGetLocation()[DIM-1];
+        // Stem cells can't shrink due to loss from other cells
+        if (p_cell->GetCellProliferativeType()->IsType<StemCellProliferativeType>())
+        {
+//            double current_height = rCellPopulation.GetNode(currentNodeIndex)->rGetLocation()[DIM-1];
+//            double target_height = rCellPopulation.GetNode(targetNodeIndex)->rGetLocation()[DIM-1];
 
-			//if (target_height > current_height)
-			{
-				//PRINT_4_VARIABLES(targetNodeIndex, target_height, currentNodeIndex,current_height);
-				//assert(0);
-				delta_H += mStemCellRestraintParameter;//mStemCellRestraintParameter*(2.0+target_height*target_height);
-			}
-		}
+            //if (target_height > current_height)
+            {
+                //PRINT_4_VARIABLES(targetNodeIndex, target_height, currentNodeIndex,current_height);
+                //assert(0);
+                delta_H += mStemCellRestraintParameter;//mStemCellRestraintParameter*(2.0+target_height*target_height);
+            }
+        }
     }
     return delta_H;
 }
@@ -85,7 +85,7 @@ double StemCellRetainerPottsUpdateRule<DIM>::EvaluateHamiltonianContribution(uns
 template<unsigned DIM>
 void StemCellRetainerPottsUpdateRule<DIM>::SetStemCellRestraintParameter(double stemCellRestraintParameter)
 {
-	mStemCellRestraintParameter = stemCellRestraintParameter;
+    mStemCellRestraintParameter = stemCellRestraintParameter;
 }
 
 template<unsigned DIM>
@@ -97,7 +97,7 @@ double StemCellRetainerPottsUpdateRule<DIM>::GetStemCellRestraintParameter()
 template<unsigned DIM>
 void StemCellRetainerPottsUpdateRule<DIM>::OutputUpdateRuleParameters(out_stream& rParamsFile)
 {
-	  *rParamsFile << "\t\t\t<StemCellRestraintParameter>" << mStemCellRestraintParameter << "</StemCellRestraintParameter> \n";
+      *rParamsFile << "\t\t\t<StemCellRestraintParameter>" << mStemCellRestraintParameter << "</StemCellRestraintParameter> \n";
 
     // Call method on direct parent class
     AbstractPottsUpdateRule<DIM>::OutputUpdateRuleParameters(rParamsFile);

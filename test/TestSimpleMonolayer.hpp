@@ -1,7 +1,7 @@
 #include <cxxtest/TestSuite.h>
 #include "CellBasedSimulationArchiver.hpp"
 #include "SmartPointers.hpp"
-#include "AbstractCellBasedTestSuite.hpp"
+#include "AbstractCellBasedWithTimingsTestSuite.hpp"
 
 #include "TransitCellProliferativeType.hpp"
 
@@ -18,12 +18,10 @@
 #include "NodeBasedCellPopulation.hpp"
 #include "RepulsionForce.hpp"
 
-
 #include "VertexBasedCellPopulation.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaForce.hpp"
 #include "SimpleTargetAreaModifier.hpp"
-
 
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
@@ -36,13 +34,11 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-class TestSimpleMonolayers : public AbstractCellBasedTestSuite
+/*
+ * Just simulates a free growing monolayer.
+ */
+class TestSimpleMonolayers : public AbstractCellBasedWithTimingsTestSuite
 {
-
-	/*
-	 * Just simulates a free growing monolayer.
-	 */
-
 public:
     void TestVertexBasedMonolayer() throw (Exception)
     {

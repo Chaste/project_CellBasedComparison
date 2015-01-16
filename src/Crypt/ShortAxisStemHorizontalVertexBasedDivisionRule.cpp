@@ -47,10 +47,10 @@ c_vector<double, SPACE_DIM> ShortAxisStemHorizontalVertexBasedDivisionRule<SPACE
 
     // If stem cell, divide horizontally
     if (pParentCell->GetCellProliferativeType()->IsType<StemCellProliferativeType>())
-	{
-		axis_of_division(0) = 1.0;
-		axis_of_division(1) = 0.0;
-	}
+    {
+        axis_of_division(0) = 1.0;
+        axis_of_division(1) = 0.0;
+    }
     return axis_of_division;
 }
 

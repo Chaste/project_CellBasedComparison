@@ -60,11 +60,11 @@ void PeriodicNodeBasedBoundaryCondition::ImposeBoundaryCondition(const std::map<
         double x = node_iter->rGetLocation()[0];
         if (x < 0.0)
         {
-        	node_iter->rGetModifiableLocation()[0] = x + mWidth;
+            node_iter->rGetModifiableLocation()[0] = x + mWidth;
         }
         else if (x > mWidth)
         {
-        	node_iter->rGetModifiableLocation()[0] = x - mWidth;
+            node_iter->rGetModifiableLocation()[0] = x - mWidth;
         }
 
         assert(node_iter->rGetLocation()[0] >= 0.0);

@@ -39,7 +39,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 template<unsigned DIM>
 CellBasedParabolicPdeSolver<DIM>::CellBasedParabolicPdeSolver(TetrahedralMesh<DIM,DIM>* pMesh,
-							  AbstractLinearParabolicPde<DIM,DIM>* pPde,
+                              AbstractLinearParabolicPde<DIM,DIM>* pPde,
                               BoundaryConditionsContainer<DIM,DIM,1>* pBoundaryConditions)
      : SimpleLinearParabolicSolver<DIM, DIM>(pMesh, pPde, pBoundaryConditions)
 {
@@ -75,23 +75,23 @@ c_matrix<double, 1*(DIM+1), 1*(DIM+1)> CellBasedParabolicPdeSolver<DIM>::Compute
         c_matrix<double, 1, DIM>& rGradU,
         Element<DIM, DIM>* pElement)
 {
-	//c_matrix<double, DIM, DIM> pde_diffusion_term = this->mpParabolicPde->ComputeDiffusionTerm(rX);
+    //c_matrix<double, DIM, DIM> pde_diffusion_term = this->mpParabolicPde->ComputeDiffusionTerm(rX);
 
-//	    // This if statement just saves computing phi*phi^T if it is to be multiplied by zero
-//	    if (mLinearInUCoeffInSourceTerm != 0)
-//	    {
-//	        return   prod( trans(rGradPhi), c_matrix<double, DIM, DIM+1>(prod(pde_diffusion_term, rGradPhi)) )
-//	               - mLinearInUCoeffInSourceTerm * outer_prod(rPhi,rPhi);
-//	    }
-//	    else
-//	    {
-//	        return   prod( trans(rGradPhi), c_matrix<double, DIM, DIM+1>(prod(pde_diffusion_term, rGradPhi)) );
-//	    }
+//        // This if statement just saves computing phi*phi^T if it is to be multiplied by zero
+//        if (mLinearInUCoeffInSourceTerm != 0)
+//        {
+//            return   prod( trans(rGradPhi), c_matrix<double, DIM, DIM+1>(prod(pde_diffusion_term, rGradPhi)) )
+//                   - mLinearInUCoeffInSourceTerm * outer_prod(rPhi,rPhi);
+//        }
+//        else
+//        {
+//            return   prod( trans(rGradPhi), c_matrix<double, DIM, DIM+1>(prod(pde_diffusion_term, rGradPhi)) );
+//        }
 
-	 c_matrix<double, DIM, DIM> pde_diffusion_term = this->mpParabolicPde->ComputeDiffusionTerm(rX, pElement);
+     c_matrix<double, DIM, DIM> pde_diffusion_term = this->mpParabolicPde->ComputeDiffusionTerm(rX, pElement);
 
-	 return    prod( trans(rGradPhi), c_matrix<double, DIM, DIM+1>(prod(pde_diffusion_term, rGradPhi)) )
-	            + PdeSimulationTime::GetPdeTimeStepInverse() * this->mpParabolicPde->ComputeDuDtCoefficientFunction(rX) * outer_prod(rPhi, rPhi);
+     return    prod( trans(rGradPhi), c_matrix<double, DIM, DIM+1>(prod(pde_diffusion_term, rGradPhi)) )
+                + PdeSimulationTime::GetPdeTimeStepInverse() * this->mpParabolicPde->ComputeDuDtCoefficientFunction(rX) * outer_prod(rPhi, rPhi);
 
 
 

@@ -1,7 +1,7 @@
 #include <cxxtest/TestSuite.h>
 #include "CellBasedSimulationArchiver.hpp"
 #include "SmartPointers.hpp"
-#include "AbstractCellBasedTestSuite.hpp"
+#include "AbstractCellBasedWithTimingsTestSuite.hpp"
 
 #include "TransitCellProliferativeType.hpp"
 
@@ -18,7 +18,6 @@
 #include "NodeBasedCellPopulation.hpp"
 #include "RepulsionForce.hpp"
 
-
 #include "VertexBasedCellPopulation.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaForce.hpp"
@@ -32,7 +31,7 @@
 #include "MultipleCaBasedCellPopulation.hpp"
 #include "DiffusionMultipleCaUpdateRule.hpp"
 
-class TestMonolayers : public AbstractCellBasedTestSuite
+class TestMonolayers : public AbstractCellBasedWithTimingsTestSuite
 {
 public:
     void TestVertexBasedMonolayer() throw (Exception)

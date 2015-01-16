@@ -54,18 +54,18 @@ class ParabolicPDEModifier : public AbstractCellBasedSimulationModifier<DIM,DIM>
 {
 private:
 
-	/** Needed for serialization. */
+    /** Needed for serialization. */
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & archive, const unsigned int version)
     {
        archive & boost::serialization::base_object<AbstractCellBasedSimulationModifier<DIM,DIM> >(*this);
-		// Note that archiving of mSolution is handled by the methods save/load_construct_data
-		archive & mpPde;
-		archive & mpFeMesh;
-		archive & mpBoundaryCondition;
-		archive & mDependentVariableName;
-		archive & mOutputDirectory;
+        // Note that archiving of mSolution is handled by the methods save/load_construct_data
+        archive & mpPde;
+        archive & mpFeMesh;
+        archive & mpBoundaryCondition;
+        archive & mDependentVariableName;
+        archive & mOutputDirectory;
     }
 
     /** Pointer to a linear parabolic PDE object. */
@@ -152,19 +152,19 @@ public:
     virtual std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > ConstructBoundaryConditionsContainer();
 
     /**
-	 * Helper method to Setup a FE Mesh based on the cell population
-	 *
-	 * @param rCellPopulation reference to the cell population
-	 */
-	void SetupFeMesh(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
+     * Helper method to Setup a FE Mesh based on the cell population
+     *
+     * @param rCellPopulation reference to the cell population
+     */
+    void SetupFeMesh(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
 
 
     /**
-	 * Helper method to copy the CellData to the PDE solution
-	 *
-	 * @param rCellPopulation reference to the cell population
-	 */
-	void UpdateSolutionVector(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
+     * Helper method to copy the CellData to the PDE solution
+     *
+     * @param rCellPopulation reference to the cell population
+     */
+    void UpdateSolutionVector(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
 
 
 

@@ -56,10 +56,10 @@ ParabolicPDEModifier<DIM>::ParabolicPDEModifier(AbstractLinearParabolicPde<DIM,D
       mDependentVariableName("morphogen"),
       mOutputDirectory("")
 {
-	assert(DIM==2);
+    assert(DIM==2);
 
-	// Neumann BCS to be applied
-	mpBoundaryCondition = new ConstBoundaryCondition<DIM>(0.0);
+    // Neumann BCS to be applied
+    mpBoundaryCondition = new ConstBoundaryCondition<DIM>(0.0);
 }
 
 template<unsigned DIM>
@@ -71,8 +71,8 @@ ParabolicPDEModifier<DIM>::~ParabolicPDEModifier()
 template<unsigned DIM>
 void ParabolicPDEModifier<DIM>::UpdateAtEndOfTimeStep(AbstractCellPopulation<DIM,DIM>& rCellPopulation)
 {
-	// Get the FeMesh from the cell population
-	SetupFeMesh(rCellPopulation);
+    // Get the FeMesh from the cell population
+    SetupFeMesh(rCellPopulation);
 
     // Set up boundary conditions
     std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > p_bcc = ConstructBoundaryConditionsContainer();
@@ -143,91 +143,91 @@ std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > ParabolicPDEModifier<DIM>
 {
     std::auto_ptr<BoundaryConditionsContainer<DIM,DIM,1> > p_bcc(new BoundaryConditionsContainer<DIM,DIM,1>(false));
 
-	for (typename TetrahedralMesh<DIM,DIM>::BoundaryElementIterator elem_iter = mpFeMesh->GetBoundaryElementIteratorBegin();
-		 elem_iter != mpFeMesh->GetBoundaryElementIteratorEnd();
-		 ++elem_iter)
-	{
-		p_bcc->AddNeumannBoundaryCondition(*elem_iter, mpBoundaryCondition);
-	}
+    for (typename TetrahedralMesh<DIM,DIM>::BoundaryElementIterator elem_iter = mpFeMesh->GetBoundaryElementIteratorBegin();
+         elem_iter != mpFeMesh->GetBoundaryElementIteratorEnd();
+         ++elem_iter)
+    {
+        p_bcc->AddNeumannBoundaryCondition(*elem_iter, mpBoundaryCondition);
+    }
 
-//	for (typename TetrahedralMesh<DIM,DIM>::BoundaryNodeIterator node_iter = mpFeMesh->GetBoundaryNodeIteratorBegin();
-//	                 node_iter != mpFeMesh->GetBoundaryNodeIteratorEnd();
-//	                 ++node_iter)
-//	{
-//		p_bcc->AddDirichletBoundaryCondition(*node_iter, mpBoundaryCondition);
-//	}
+//    for (typename TetrahedralMesh<DIM,DIM>::BoundaryNodeIterator node_iter = mpFeMesh->GetBoundaryNodeIteratorBegin();
+//                     node_iter != mpFeMesh->GetBoundaryNodeIteratorEnd();
+//                     ++node_iter)
+//    {
+//        p_bcc->AddDirichletBoundaryCondition(*node_iter, mpBoundaryCondition);
+//    }
 
-	return p_bcc;
+    return p_bcc;
 }
 
 
 template<unsigned DIM>
 void ParabolicPDEModifier<DIM>::SetupFeMesh(AbstractCellPopulation<DIM,DIM>& rCellPopulation)
 {
-	// Make sure the cell population is in a nice state
-	rCellPopulation.Update();
+    // Make sure the cell population is in a nice state
+    rCellPopulation.Update();
 
-	// Get FE mesh from Cell Population
-	if(dynamic_cast<MeshBasedCellPopulation<DIM>*>(&rCellPopulation))
-	{
-		mpFeMesh = &(static_cast<MeshBasedCellPopulation<DIM>*>(&rCellPopulation)->rGetMesh());
-	}
-	else if (dynamic_cast<NodeBasedCellPopulation<DIM>*>(&rCellPopulation))
-	{
-		std::vector<Node<DIM> *> nodes;
+    // Get FE mesh from Cell Population
+    if(dynamic_cast<MeshBasedCellPopulation<DIM>*>(&rCellPopulation))
+    {
+        mpFeMesh = &(static_cast<MeshBasedCellPopulation<DIM>*>(&rCellPopulation)->rGetMesh());
+    }
+    else if (dynamic_cast<NodeBasedCellPopulation<DIM>*>(&rCellPopulation))
+    {
+        std::vector<Node<DIM> *> nodes;
 
-		// Get the nodes of the NodesOnlyMesh
-		for (typename AbstractMesh<DIM,DIM>::NodeIterator node_iter = rCellPopulation.rGetMesh().GetNodeIteratorBegin();
-				 node_iter != rCellPopulation.rGetMesh().GetNodeIteratorEnd();
-				 ++node_iter)
-		{
-				nodes.push_back(new Node<DIM>(node_iter->GetIndex(), node_iter->rGetLocation()));
-		}
+        // Get the nodes of the NodesOnlyMesh
+        for (typename AbstractMesh<DIM,DIM>::NodeIterator node_iter = rCellPopulation.rGetMesh().GetNodeIteratorBegin();
+                 node_iter != rCellPopulation.rGetMesh().GetNodeIteratorEnd();
+                 ++node_iter)
+        {
+                nodes.push_back(new Node<DIM>(node_iter->GetIndex(), node_iter->rGetLocation()));
+        }
 
-		mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
-		assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
+        mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
+        assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
 
-	}
-	else if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
-	{
-		mpFeMesh = static_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation)->GetTetrahedralMeshUsingVertexMesh();
-	}
-	else if (dynamic_cast<PottsBasedCellPopulation<DIM>*>(&rCellPopulation))
-	{
-		std::vector<Node<DIM> *> nodes;
+    }
+    else if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
+    {
+        mpFeMesh = static_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation)->GetTetrahedralMeshUsingVertexMesh();
+    }
+    else if (dynamic_cast<PottsBasedCellPopulation<DIM>*>(&rCellPopulation))
+    {
+        std::vector<Node<DIM> *> nodes;
 
-		// Create nodes at the centre of the cells
-		for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
-			 cell_iter != rCellPopulation.End();
-			 ++cell_iter)
-		{
-			nodes.push_back(new Node<DIM>(rCellPopulation.GetLocationIndexUsingCell(*cell_iter), rCellPopulation.GetLocationOfCellCentre(*cell_iter)));
-		}
+        // Create nodes at the centre of the cells
+        for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+             cell_iter != rCellPopulation.End();
+             ++cell_iter)
+        {
+            nodes.push_back(new Node<DIM>(rCellPopulation.GetLocationIndexUsingCell(*cell_iter), rCellPopulation.GetLocationOfCellCentre(*cell_iter)));
+        }
 
-		mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
-		assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
-	}
-	else if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&rCellPopulation))
-	{
-		std::vector<Node<DIM> *> nodes;
+        mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
+        assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
+    }
+    else if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&rCellPopulation))
+    {
+        std::vector<Node<DIM> *> nodes;
 
-		// Create nodes at the centre of the cells
-		unsigned cell_index = 0;
-		for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
-			 cell_iter != rCellPopulation.End();
-			 ++cell_iter)
-		{
-			nodes.push_back(new Node<DIM>(cell_index, rCellPopulation.GetLocationOfCellCentre(*cell_iter)));
-			cell_index++;
-		}
+        // Create nodes at the centre of the cells
+        unsigned cell_index = 0;
+        for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+             cell_iter != rCellPopulation.End();
+             ++cell_iter)
+        {
+            nodes.push_back(new Node<DIM>(cell_index, rCellPopulation.GetLocationOfCellCentre(*cell_iter)));
+            cell_index++;
+        }
 
-		mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
-		assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
-	}
-	else
-	{
-		NEVER_REACHED;
-	}
+        mpFeMesh = new MutableMesh<DIM,DIM>(nodes);
+        assert(mpFeMesh->GetNumNodes() == rCellPopulation.GetNumRealCells());
+    }
+    else
+    {
+        NEVER_REACHED;
+    }
 }
 
 template<unsigned DIM>
@@ -242,61 +242,61 @@ void ParabolicPDEModifier<DIM>::UpdateSolutionVector(AbstractCellPopulation<DIM,
 
     //     Apply dirichlet Boundaries
     for (typename TetrahedralMesh<DIM,DIM>::NodeIterator node_iter = mpFeMesh->GetNodeIteratorBegin();
-		  node_iter != mpFeMesh->GetNodeIteratorEnd();
-		  ++node_iter)
+          node_iter != mpFeMesh->GetNodeIteratorEnd();
+          ++node_iter)
     {
-    	unsigned node_index = node_iter->GetIndex();
-    	double solution_at_node;
+        unsigned node_index = node_iter->GetIndex();
+        double solution_at_node;
 
-    	if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
-    	{
-    		// Cells correspond to nodes in the Center of the vertex element
-    		// nodes on vertices have averaged values from containing cells
+        if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
+        {
+            // Cells correspond to nodes in the Center of the vertex element
+            // nodes on vertices have averaged values from containing cells
 
-    		unsigned num_vertex_nodes = rCellPopulation.GetNumNodes();
-    		if (node_index >= num_vertex_nodes)
-    		{
-    			// Offset to relate elements in vertex mesh to nodes in tetrahedral mesh.
+            unsigned num_vertex_nodes = rCellPopulation.GetNumNodes();
+            if (node_index >= num_vertex_nodes)
+            {
+                // Offset to relate elements in vertex mesh to nodes in tetrahedral mesh.
 
-    			assert(node_index-num_vertex_nodes < num_vertex_nodes);
-    			assert(node_index>=0);
+                assert(node_index-num_vertex_nodes < num_vertex_nodes);
+                assert(node_index>=0);
 
-    			CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(node_index-num_vertex_nodes);
-    		    solution_at_node = p_cell->GetCellData()->GetItem(mDependentVariableName);
-    		}
-    		else
-    		{
-    			// Average over Data from containing elements (cells)
-    			assert(node_index<num_vertex_nodes);
-    			Node<DIM>* p_vertex_node = rCellPopulation.rGetMesh().GetNode(node_index);
-    			std::set<unsigned> containing_elelments  = p_vertex_node->rGetContainingElementIndices();
+                CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(node_index-num_vertex_nodes);
+                solution_at_node = p_cell->GetCellData()->GetItem(mDependentVariableName);
+            }
+            else
+            {
+                // Average over Data from containing elements (cells)
+                assert(node_index<num_vertex_nodes);
+                Node<DIM>* p_vertex_node = rCellPopulation.rGetMesh().GetNode(node_index);
+                std::set<unsigned> containing_elelments  = p_vertex_node->rGetContainingElementIndices();
 
-    			solution_at_node = 0.0;
+                solution_at_node = 0.0;
 
-    			for (std::set<unsigned>::iterator index_iter = containing_elelments.begin();
-		     		 index_iter != containing_elelments.end();
-					 ++index_iter)
-    			{
+                for (std::set<unsigned>::iterator index_iter = containing_elelments.begin();
+                      index_iter != containing_elelments.end();
+                     ++index_iter)
+                {
 
-    				assert(*index_iter<num_vertex_nodes);
-    				CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(*index_iter);
-    				solution_at_node += p_cell->GetCellData()->GetItem(mDependentVariableName);
-    			}
-    			solution_at_node /= containing_elelments.size();
-    		}
-    	}
-    	else
-    	{
-    		assert(dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&rCellPopulation)||
-    			   dynamic_cast<AbstractOnLatticeCellPopulation<DIM>*>(&rCellPopulation));
+                    assert(*index_iter<num_vertex_nodes);
+                    CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(*index_iter);
+                    solution_at_node += p_cell->GetCellData()->GetItem(mDependentVariableName);
+                }
+                solution_at_node /= containing_elelments.size();
+            }
+        }
+        else
+        {
+            assert(dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&rCellPopulation)||
+                   dynamic_cast<AbstractOnLatticeCellPopulation<DIM>*>(&rCellPopulation));
 
-			// Simple 1-1 correspondnece between cells and nodes in the FeMesh
-			CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(node_index);
-			solution_at_node = p_cell->GetCellData()->GetItem(mDependentVariableName);
-		}
+            // Simple 1-1 correspondnece between cells and nodes in the FeMesh
+            CellPtr p_cell = rCellPopulation.GetCellUsingLocationIndex(node_index);
+            solution_at_node = p_cell->GetCellData()->GetItem(mDependentVariableName);
+        }
 
-    	PetscVecTools::SetElement(mSolution,node_index,solution_at_node);
-	}
+        PetscVecTools::SetElement(mSolution,node_index,solution_at_node);
+    }
 }
 
 template<unsigned DIM>
@@ -314,26 +314,26 @@ void ParabolicPDEModifier<DIM>::UpdateCellData(AbstractCellPopulation<DIM,DIM>& 
     for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
                  cell_iter != rCellPopulation.End();
                  ++cell_iter)
-	{
-		unsigned tet_node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
+    {
+        unsigned tet_node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
 
-		if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
-		{
-			// Offset to relate elements in vertex mesh to nodes in tetrahedral mesh.
-			tet_node_index += rCellPopulation.GetNumNodes();
-		}
+        if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
+        {
+            // Offset to relate elements in vertex mesh to nodes in tetrahedral mesh.
+            tet_node_index += rCellPopulation.GetNumNodes();
+        }
 
-		if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&rCellPopulation))
-		{
-			// here local cell index corresponds to tet node
-			tet_node_index = cell_index;
-			cell_index++;
-		}
+        if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&rCellPopulation))
+        {
+            // here local cell index corresponds to tet node
+            tet_node_index = cell_index;
+            cell_index++;
+        }
 
-		double solution_at_node = solution_repl[tet_node_index];
+        double solution_at_node = solution_repl[tet_node_index];
 
-		cell_iter->GetCellData()->SetItem(mDependentVariableName, solution_at_node);
-	}
+        cell_iter->GetCellData()->SetItem(mDependentVariableName, solution_at_node);
+    }
 }
 
 template<unsigned DIM>

@@ -101,13 +101,13 @@ public:
     virtual double ComputeLinearInUCoeffInSourceTerm(const ChastePoint<DIM>& rX, Element<DIM,DIM>* pElement);
 
     /**
-	 * Overridden ComputeConstantInUSourceTermAtNode() method.
-	 *
-	 * @param rNode reference to the node
-	 * @return the constant in u part of the source term, i.e g(x) in
-	 *  Div(D Grad u)  +  f(x)u + g(x) = 0.
-	 */
-	virtual double ComputeConstantInUSourceTermAtNode(const Node<DIM>& rNode);
+     * Overridden ComputeConstantInUSourceTermAtNode() method.
+     *
+     * @param rNode reference to the node
+     * @return the constant in u part of the source term, i.e g(x) in
+     *  Div(D Grad u)  +  f(x)u + g(x) = 0.
+     */
+    virtual double ComputeConstantInUSourceTermAtNode(const Node<DIM>& rNode);
 
     /**
      * Overridden ComputeLinearInUCoeffInSourceTermAtNode() method.

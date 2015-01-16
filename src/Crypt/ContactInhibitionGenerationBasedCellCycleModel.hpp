@@ -72,25 +72,25 @@ private:
     }
 
     /**
-	* The fraction of the cells' equilibrium volume in G1 phase below which these cells are quiescent.
-	*/
-	double mQuiescentVolumeFraction;
+    * The fraction of the cells' equilibrium volume in G1 phase below which these cells are quiescent.
+    */
+    double mQuiescentVolumeFraction;
 
-	/**
-	* The cell equilibrium volume while in G1 phase.
-	*/
-	double mEquilibriumVolume;
+    /**
+    * The cell equilibrium volume while in G1 phase.
+    */
+    double mEquilibriumVolume;
 
-	/**
-	* The time when the current period of quiescence began.
-	*/
-	double mCurrentQuiescentOnsetTime;
+    /**
+    * The time when the current period of quiescence began.
+    */
+    double mCurrentQuiescentOnsetTime;
 
-	/**
-	* How long the current period of quiescence has lasted.
-	* Has units of hours.
-	*/
-	double mCurrentQuiescentDuration;
+    /**
+    * How long the current period of quiescence has lasted.
+    * Has units of hours.
+    */
+    double mCurrentQuiescentDuration;
 
     /**
      * Stochastically set the G1 duration.  Called on cell creation at

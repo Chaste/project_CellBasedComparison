@@ -42,11 +42,11 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PanethCellProliferativeType.hpp"
 
 ContactInhibitionGenerationBasedCellCycleModel::ContactInhibitionGenerationBasedCellCycleModel()
-	: AbstractSimpleGenerationBasedCellCycleModel(),
- 	 mQuiescentVolumeFraction(DOUBLE_UNSET),
-	 mEquilibriumVolume(DOUBLE_UNSET),
-	 mCurrentQuiescentOnsetTime(SimulationTime::Instance()->GetTime()),
-	 mCurrentQuiescentDuration(0.0)
+    : AbstractSimpleGenerationBasedCellCycleModel(),
+      mQuiescentVolumeFraction(DOUBLE_UNSET),
+     mEquilibriumVolume(DOUBLE_UNSET),
+     mCurrentQuiescentOnsetTime(SimulationTime::Instance()->GetTime()),
+     mCurrentQuiescentDuration(0.0)
 {
 }
 
@@ -93,31 +93,31 @@ void ContactInhibitionGenerationBasedCellCycleModel::UpdateCellCyclePhase()
 {
  /// Copied from   ContactInhibitionBasedCellCycleModel ////
     // Get cell volume
-	double cell_volume = mpCell->GetCellData()->GetItem("volume");
+    double cell_volume = mpCell->GetCellData()->GetItem("volume");
 
-	// Removes the cell label
-	mpCell->RemoveCellProperty<CellLabel>();
+    // Removes the cell label
+    mpCell->RemoveCellProperty<CellLabel>();
 
-	if (mCurrentCellCyclePhase == G_ONE_PHASE)
-	{
-		// Update G1 duration based on cell volume
-		double dt = SimulationTime::Instance()->GetTimeStep();
-		double quiescent_volume = mEquilibriumVolume * mQuiescentVolumeFraction;
+    if (mCurrentCellCyclePhase == G_ONE_PHASE)
+    {
+        // Update G1 duration based on cell volume
+        double dt = SimulationTime::Instance()->GetTimeStep();
+        double quiescent_volume = mEquilibriumVolume * mQuiescentVolumeFraction;
 
-		if (cell_volume < quiescent_volume)
-		{
-			// Update the duration of the current period of contact inhibition.
-			mCurrentQuiescentDuration = SimulationTime::Instance()->GetTime() - mCurrentQuiescentOnsetTime;
-			mG1Duration += dt;
-			mpCell->AddCellProperty(CellPropertyRegistry::Instance()->Get<CellLabel>());
-		}
-		 else
-		{
-			// Reset the cell's quiescent duration and update the time at which the onset of quiescent occurs
-			mCurrentQuiescentDuration = 0.0;
-			mCurrentQuiescentOnsetTime = SimulationTime::Instance()->GetTime();
-		}
-	}
+        if (cell_volume < quiescent_volume)
+        {
+            // Update the duration of the current period of contact inhibition.
+            mCurrentQuiescentDuration = SimulationTime::Instance()->GetTime() - mCurrentQuiescentOnsetTime;
+            mG1Duration += dt;
+            mpCell->AddCellProperty(CellPropertyRegistry::Instance()->Get<CellLabel>());
+        }
+         else
+        {
+            // Reset the cell's quiescent duration and update the time at which the onset of quiescent occurs
+            mCurrentQuiescentDuration = 0.0;
+            mCurrentQuiescentOnsetTime = SimulationTime::Instance()->GetTime();
+        }
+    }
 ////////////////////////////////////////////////////////
 
     double time_since_birth = GetAge();

@@ -41,9 +41,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "AbstractCellBasedSimulationModifier.hpp"
 
-
 /**
- * An modifier class which at each simulation timestep calculates the Adjacency Matrix of a cell pouplation and outputs it to file.
+ * An modifier class which at each simulation timestep calculates the adjacency matrix of a cell population and outputs it to file.
  */
 template<unsigned DIM>
 class AdjacencyMatrixOutputModifier : public AbstractCellBasedSimulationModifier<DIM,DIM>
@@ -57,8 +56,7 @@ private:
         archive & boost::serialization::base_object<AbstractCellBasedSimulationModifier<DIM,DIM> >(*this);
     }
 
-
-    /** The file to which the adjacency matrices are written to. Doesnt need archiving as defined in SetupSolve */
+    /** The file to which the adjacency matrices are written. Doesn't need archiving as defined in SetupSolve(). */
     out_stream mpAdjacencyMatrixResultsFile;
 
 public:
@@ -74,7 +72,7 @@ public:
     virtual ~AdjacencyMatrixOutputModifier();
 
     /**
-     * Overriden UpdateAtEndOfTimeStep method
+     * Overridden UpdateAtEndOfTimeStep method
      *
      * Specifies what to do in the simulation at the end of each output timestep.
      *
@@ -83,7 +81,7 @@ public:
     virtual void UpdateAtEndOfOutputTimeStep(AbstractCellPopulation<DIM,DIM>& rCellPopulation);
 
     /**
-     * Overriden SetupSolve method
+     * Overridden SetupSolve method
      *
      * Specifies what to do in the simulation before the start of the time loop.
      *

@@ -131,7 +131,7 @@ public:
      * @param pBoundaryConditions pointer to the boundary conditions
      */
     CellBasedParabolicPdeSolver(TetrahedralMesh<DIM,DIM>* pMesh,
-    								   AbstractLinearParabolicPde<DIM,DIM>* pPde,
+                                       AbstractLinearParabolicPde<DIM,DIM>* pPde,
                                        BoundaryConditionsContainer<DIM,DIM,1>* pBoundaryConditions);
 
     /**

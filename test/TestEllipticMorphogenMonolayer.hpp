@@ -1,7 +1,7 @@
 #include <cxxtest/TestSuite.h>
 #include "CellBasedSimulationArchiver.hpp"
 #include "SmartPointers.hpp"
-#include "AbstractCellBasedTestSuite.hpp"
+#include "AbstractCellBasedWithTimingsTestSuite.hpp"
 
 #include "TransitCellProliferativeType.hpp"
 
@@ -47,34 +47,21 @@ static const double M_TIME_FOR_SIMULATION = 5.0;
 
 static const double M_NUM_CELLS_ACROSS = 5; // this ^2 cells
 
-class TestEllipticMorphogenMonolayers : public AbstractCellBasedTestSuite
+class TestEllipticMorphogenMonolayers : public AbstractCellBasedWithTimingsTestSuite
 {
-
-    double mLastStartTime;
-    void setUp()
-    {
-        mLastStartTime = std::clock();
-        AbstractCellBasedTestSuite::setUp();
-    }
-    void tearDown()
-    {
-        double time = std::clock();
-        double elapsed_time = (time - mLastStartTime)/(CLOCKS_PER_SEC);
-        std::cout << "Elapsed time: " << elapsed_time << std::endl;
-        AbstractCellBasedTestSuite::tearDown();
-    }
+private:
 
     void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells, double EquilibriumVolume)
     {
-    	MAKE_PTR(WildTypeCellMutationState, p_state);
+        MAKE_PTR(WildTypeCellMutationState, p_state);
         MAKE_PTR(TransitCellProliferativeType, p_transit_type);
         boost::shared_ptr<AbstractCellProperty> p_label(CellPropertyRegistry::Instance()->Get<CellLabel>());
 
         for (unsigned i=0; i<num_cells; i++)
         {
-        	double typical_cell_cycle_duration = 12.0;
+            double typical_cell_cycle_duration = 12.0;
 
-        	MorphogenDependentCellCycleModel* p_cycle_model = new MorphogenDependentCellCycleModel();
+            MorphogenDependentCellCycleModel* p_cycle_model = new MorphogenDependentCellCycleModel();
             p_cycle_model->SetDimension(2);
             p_cycle_model->SetThresholdMorphogen(0.0);
             p_cycle_model->SetEquilibriumVolume(EquilibriumVolume);
@@ -84,25 +71,26 @@ class TestEllipticMorphogenMonolayers : public AbstractCellBasedTestSuite
             p_cell->SetCellProliferativeType(p_transit_type);
 
             double birth_time = - RandomNumberGenerator::Instance()->ranf() * typical_cell_cycle_duration;
- 			p_cell->SetBirthTime(birth_time);
+             p_cell->SetBirthTime(birth_time);
 
- 			p_cell->InitialiseCellCycleModel();
+             p_cell->InitialiseCellCycleModel();
 
- 			if (i<(double)num_cells/2.0)
- 			{
- 				p_cell->AddCellProperty(p_label);
- 			}
+             if (i<(double)num_cells/2.0)
+             {
+                 p_cell->AddCellProperty(p_label);
+             }
 
- 			rCells.push_back(p_cell);
+             rCells.push_back(p_cell);
         }
- 	}
+     }
 
 
-	/*
-	 * Simulates diffusion on a growing monolayer.
-	 */
+    /*
+     * Simulates diffusion on a growing monolayer.
+     */
 
 public:
+
     void TestVertexBasedMonolayer() throw (Exception)
     {
         // Create Mesh
@@ -128,9 +116,9 @@ public:
         // Create Forces and pass to simulation NOTE: PARAMETERS CHOSEN TO GET CIRCULAR MONOLAYER
         MAKE_PTR(NagaiHondaForce<2>, p_force);
         p_force->SetNagaiHondaDeformationEnergyParameter(55.0);
-		p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
-		p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(6.0);
-		p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(12.0);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(6.0);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(12.0);
         simulator.AddForce(p_force);
 
         // Create Modifiers and pass to simulation
@@ -179,15 +167,15 @@ public:
         simulator.AddForce(p_force);
 
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-		CellwiseSourceMorphogenPde<2> pde(cell_population, 0.1);
+        CellwiseSourceMorphogenPde<2> pde(cell_population, 0.1);
 
-		// Create a pde modifier and pass it to the simulation
-		MAKE_PTR_ARGS(EllipticPDEModifier<2>, p_pde_modifier, (&pde));
-		simulator.AddSimulationModifier(p_pde_modifier);
+        // Create a pde modifier and pass it to the simulation
+        MAKE_PTR_ARGS(EllipticPDEModifier<2>, p_pde_modifier, (&pde));
+        simulator.AddSimulationModifier(p_pde_modifier);
 
-		// Add volume tracking modifier for CI cell cycle model.
-		MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
-		simulator.AddSimulationModifier(p_volume_tracking_modifier);
+        // Add volume tracking modifier for CI cell cycle model.
+        MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
+        simulator.AddSimulationModifier(p_volume_tracking_modifier);
 
         simulator.Solve();
 
@@ -204,9 +192,9 @@ public:
 
         MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
 
-		// Set population to output all data to results files
-		cell_population.AddCellWriter<CellIdWriter>();
-		cell_population.AddCellWriter<CellMutationStatesWriter>();
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
 
         cell_population.SetWriteVtkAsPoints(true);
         cell_population.AddPopulationWriter<VoronoiDataWriter>();
@@ -238,8 +226,8 @@ public:
 
     void TestPottsBasedMonolayer() throw (Exception)
     {
-    	unsigned cell_width = 4;
-    	unsigned domain_width = 200;
+        unsigned cell_width = 4;
+        unsigned domain_width = 200;
         PottsMeshGenerator<2> generator(domain_width, M_NUM_CELLS_ACROSS, cell_width, domain_width, M_NUM_CELLS_ACROSS, cell_width);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
@@ -250,9 +238,9 @@ public:
         cell_population.SetTemperature(0.1);
         cell_population.SetNumSweepsPerTimestep(100);
 
-		// Set population to output all data to results files
-		cell_population.AddCellWriter<CellIdWriter>();
-		cell_population.AddCellWriter<CellMutationStatesWriter>();
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("EllipticMonolayers/Potts");
@@ -285,20 +273,20 @@ public:
     void TestCaBasedMonolayer() throw (Exception)
     {
         // Create a simple 2D PottsMesh
-    	unsigned domain_wide = 5*M_NUM_CELLS_ACROSS;
+        unsigned domain_wide = 5*M_NUM_CELLS_ACROSS;
 
-    	PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
+        PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         // Specify where cells lie
         std::vector<unsigned> location_indices;
         for (unsigned i=0; i<M_NUM_CELLS_ACROSS; i++)
         {
-        	for (unsigned j=0; j<M_NUM_CELLS_ACROSS; j++)
-			{
-        		unsigned offset = (domain_wide+1) * (domain_wide-M_NUM_CELLS_ACROSS)/2;
-				location_indices.push_back(offset + j + i * domain_wide );
-			}
+            for (unsigned j=0; j<M_NUM_CELLS_ACROSS; j++)
+            {
+                unsigned offset = (domain_wide+1) * (domain_wide-M_NUM_CELLS_ACROSS)/2;
+                location_indices.push_back(offset + j + i * domain_wide );
+            }
         }
 
         std::vector<CellPtr> cells;
@@ -307,9 +295,9 @@ public:
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
 
-		// Set population to output all data to results files
-		cell_population.AddCellWriter<CellIdWriter>();
-		cell_population.AddCellWriter<CellMutationStatesWriter>();
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("EllipticMonolayers/CA");
@@ -324,15 +312,15 @@ public:
         simulator.AddCaUpdateRule(p_diffusion_update_rule);
 
         // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-	   CellwiseSourceMorphogenPde<2> pde(cell_population, 0.1);
+       CellwiseSourceMorphogenPde<2> pde(cell_population, 0.1);
 
-	   // Create a pde modifier and pass it to the simulation
-	   MAKE_PTR_ARGS(EllipticPDEModifier<2>, p_pde_modifier, (&pde));
-	   simulator.AddSimulationModifier(p_pde_modifier);
+       // Create a pde modifier and pass it to the simulation
+       MAKE_PTR_ARGS(EllipticPDEModifier<2>, p_pde_modifier, (&pde));
+       simulator.AddSimulationModifier(p_pde_modifier);
 
-	   // Add volume tracking modifier for CI cell cycle model.
-	   MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
-	   simulator.AddSimulationModifier(p_volume_tracking_modifier);
+       // Add volume tracking modifier for CI cell cycle model.
+       MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
+       simulator.AddSimulationModifier(p_volume_tracking_modifier);
 
         // Run simulation
         simulator.Solve();

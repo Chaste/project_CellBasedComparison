@@ -50,7 +50,7 @@ VertexDiffusionForce<DIM>::~VertexDiffusionForce()
 template<unsigned DIM>
 void VertexDiffusionForce<DIM>::SetDiffusionConstant(double diffusionConstant)
 {
-	mDiffusionConstant = diffusionConstant;
+    mDiffusionConstant = diffusionConstant;
 }
 
 template<unsigned DIM>
@@ -70,9 +70,9 @@ void VertexDiffusionForce<DIM>::AddForceContribution(AbstractCellPopulation<DIM>
     // Iterate over vertices in the cell population
     for (unsigned node_index=0; node_index<p_cell_population->GetNumNodes(); node_index++)
     {
-    	Node<DIM>* p_node = rCellPopulation.GetNode(node_index);
+        Node<DIM>* p_node = rCellPopulation.GetNode(node_index);
 
-    	c_vector<double, DIM> force_contribution;
+        c_vector<double, DIM> force_contribution;
         for (unsigned i=0; i<DIM; i++)
         {
             double nu = p_cell_population->GetDampingConstant(node_index);

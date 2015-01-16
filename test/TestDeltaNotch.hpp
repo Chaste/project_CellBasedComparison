@@ -4,7 +4,7 @@
 // Must be included before other cell_based headers
 #include "CellBasedSimulationArchiver.hpp"
 
-#include "AbstractCellBasedTestSuite.hpp"
+#include "AbstractCellBasedWithTimingsTestSuite.hpp"
 #include "CellLabel.hpp"
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
@@ -21,7 +21,6 @@
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
 #include "HoneycombMeshGenerator.hpp"
-#include "DifferentialAdhesionSpringForce.hpp"
 #include "SensibleDiffusionForce.hpp"
 #include "RepulsionForce.hpp"
 #include "GeneralisedLinearSpringForce.hpp"
@@ -34,8 +33,8 @@
 #include "AdhesionPottsUpdateRule.hpp"
 #include "DifferentialAdhesionPottsUpdateRule.hpp"
 
+#include "CellDeltaNotchWriter.hpp"
 #include "CellIdWriter.hpp"
-#include "DeltaNotchWriter.hpp"
 #include "CellMutationStatesWriter.hpp"
 #include "VoronoiDataWriter.hpp"
 #include "CellVolumesWriter.hpp"
@@ -43,32 +42,15 @@
 #include "PetscSetupAndFinalize.hpp"
 
 static const double M_TIME_FOR_SIMULATION = 100.0;
-
 static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
 
-
-
-class TestDeltaNotch: public AbstractCellBasedTestSuite
+class TestDeltaNotch: public AbstractCellBasedWithTimingsTestSuite
 {
 private:
 
-    double mLastStartTime;
-    void setUp()
-    {
-        mLastStartTime = std::clock();
-        AbstractCellBasedTestSuite::setUp();
-    }
-    void tearDown()
-    {
-        double time = std::clock();
-        double elapsed_time = (time - mLastStartTime)/(CLOCKS_PER_SEC);
-        std::cout << "Elapsed time: " << elapsed_time << std::endl;
-        AbstractCellBasedTestSuite::tearDown();
-    }
-
     void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells)
     {
-    	double typical_transit_cell_cycle_duration = 12.0;
+        double typical_transit_cell_cycle_duration = 12.0;
 
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
        // boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
@@ -86,8 +68,8 @@ private:
             p_model->SetMaxTransitGenerations(2u);
             CellPtr p_cell(new Cell(p_state, p_model));
             p_cell->SetCellProliferativeType(p_prolif_type);
-			double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * typical_transit_cell_cycle_duration;
-			p_cell->SetBirthTime(birth_time);
+            double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * typical_transit_cell_cycle_duration;
+            p_cell->SetBirthTime(birth_time);
             rCells.push_back(p_cell);
         }
     }
@@ -113,7 +95,7 @@ public:
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<DeltaNotchWriter>();
+        cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
@@ -121,7 +103,7 @@ public:
 
         // Set time step and end time for simulation
         simulator.SetDt(1.0/200.0);
-		simulator.SetSamplingTimestepMultiple(200);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
@@ -131,9 +113,9 @@ public:
         // Create Forces and pass to simulation NOTE: PARAMETERS CHOSEN TO GET CIRCULAR MONOLAYER
         MAKE_PTR(NagaiHondaForce<2>, p_force);
         p_force->SetNagaiHondaDeformationEnergyParameter(5.5);
-		p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
-		p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(0.6);
-		p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.2);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(0.6);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.2);
         simulator.AddForce(p_force);
 
         // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
@@ -167,10 +149,9 @@ public:
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<DeltaNotchWriter>();
+        cell_population.AddCellWriter<CellDeltaNotchWriter>();
         //cell_population.SetNumSweepsPerTimestep(10);
        // cell_population.SetTemperature(0.01);// This is the default value
-
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
@@ -207,37 +188,36 @@ public:
 
 
     void TestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
-	{
-		// Create a simple mesh
-		unsigned num_ghosts = 5;
-		HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
-		MutableMesh<2,2>* p_mesh = generator.GetMesh();
+    {
+        // Create a simple mesh
+        unsigned num_ghosts = 5;
+        HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
+        MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
-		// Set up cells, one for each non ghost Node
+        // Set up cells, one for each non ghost Node
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();//**Changed**//
         std::vector<CellPtr> cells;
         GenerateCells(location_indices.size(),cells);
 
-		// Create cell population
-		MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
+        // Create cell population
+        MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
 
-		// Set population to output all data to results files
-		cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<DeltaNotchWriter>();
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellDeltaNotchWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
 
         cell_population.SetWriteVtkAsPoints(false);
         cell_population.AddPopulationWriter<VoronoiDataWriter>();
 
+        // Set up cell-based simulation and output directory
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory("DeltaNotch/MeshGhost");
 
-		// Set up cell-based simulation and output directory
-		OffLatticeSimulation<2> simulator(cell_population);
-		simulator.SetOutputDirectory("DeltaNotch/MeshGhost");
-
-		// Set time step and end time for simulation
-		simulator.SetDt(0.01);
-		simulator.SetSamplingTimestepMultiple(100);
-		simulator.SetEndTime(M_TIME_FOR_SIMULATION);
+        // Set time step and end time for simulation
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
         MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
@@ -246,68 +226,67 @@ public:
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_force);
         simulator.AddForce(p_force);
 
-      	// Run simulation
-		simulator.Solve();
+          // Run simulation
+        simulator.Solve();
 
-		// Check that the same number of cells
-		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+        // Check that the same number of cells
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
 
-		// Test no births or deaths
-		TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-		TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
+        // Test no births or deaths
+        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
+        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
     void noTestMeshBasedMonolayerDeltaNotch() throw (Exception)
-	{
+    {
         // Create a simple mesh
         unsigned num_ghosts = 0;
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
-		// Set up cells, one for each Node
+        // Set up cells, one for each Node
         std::vector<CellPtr> cells;
         GenerateCells(p_mesh->GetNumNodes(),cells);
 
-		// Create cell population
-		MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        // Create cell population
+        MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
 
-		// Set population to output all data to results files
-		cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<DeltaNotchWriter>();
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellDeltaNotchWriter>();
         cell_population.SetWriteVtkAsPoints(false);
-		cell_population.AddPopulationWriter<VoronoiDataWriter>();
+        cell_population.AddPopulationWriter<VoronoiDataWriter>();
 
-		// Set up cell-based simulation and output directory
-		OffLatticeSimulation<2> simulator(cell_population);
-		simulator.SetOutputDirectory("DeltaNotch/Mesh");
+        // Set up cell-based simulation and output directory
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory("DeltaNotch/Mesh");
 
-		// Set time step and end time for simulation
-		simulator.SetDt(0.01);
-		simulator.SetSamplingTimestepMultiple(100);
-		simulator.SetEndTime(M_TIME_FOR_SIMULATION);
+        // Set time step and end time for simulation
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
         MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
-
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_force);
         simulator.AddForce(p_force);
 
-      	// Run simulation
-		simulator.Solve();
+          // Run simulation
+        simulator.Solve();
 
-		// Check that the same number of cells
-		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+        // Check that the same number of cells
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
 
-		// Test no births or deaths
-		TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-		TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
+        // Test no births or deaths
+        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
+        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
 
     void noTestNodeBasedMonolayerCellSorting() throw (Exception)
-	{
+    {
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);
         TetrahedralMesh<2,2>* p_generating_mesh = generator.GetMesh();
@@ -316,26 +295,26 @@ public:
         NodesOnlyMesh<2> mesh;
         mesh.ConstructNodesWithoutMesh(*p_generating_mesh, 1.5);
 
-		// Set up cells, one for each Node
-		std::vector<CellPtr> cells;
+        // Set up cells, one for each Node
+        std::vector<CellPtr> cells;
         GenerateCells(mesh.GetNumNodes(),cells);
 
-		// Create cell population
-		NodeBasedCellPopulation<2> cell_population(mesh, cells);
+        // Create cell population
+        NodeBasedCellPopulation<2> cell_population(mesh, cells);
 
-		// Set population to output all data to results files
-		cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<DeltaNotchWriter>();
-		cell_population.AddPopulationWriter<VoronoiDataWriter>();
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellDeltaNotchWriter>();
+        cell_population.AddPopulationWriter<VoronoiDataWriter>();
 
-		// Set up cell-based simulation and output directory
-		OffLatticeSimulation<2> simulator(cell_population);
-		simulator.SetOutputDirectory("DeltaNotch/Node");
+        // Set up cell-based simulation and output directory
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory("DeltaNotch/Node");
 
-		// Set time step and end time for simulation
-		simulator.SetDt(0.01);
-		simulator.SetSamplingTimestepMultiple(100);
-		simulator.SetEndTime(M_TIME_FOR_SIMULATION);
+        // Set time step and end time for simulation
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
         MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
@@ -344,15 +323,15 @@ public:
         MAKE_PTR(RepulsionForce<2>, p_force);
         simulator.AddForce(p_force);
 
-		// Run simulation
-		simulator.Solve();
+        // Run simulation
+        simulator.Solve();
 
-		// Check that the same number of cells
-		TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+        // Check that the same number of cells
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
 
-		// Test no births or deaths
-		TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-		TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
+        // Test no births or deaths
+        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
+        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
 

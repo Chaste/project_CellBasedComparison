@@ -40,9 +40,9 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 template<unsigned DIM>
 CellwiseSourceParabolicPde<DIM>::CellwiseSourceParabolicPde(AbstractCellPopulation<DIM,DIM>& rCellPopulation,
-															double duDtCoefficient,
-															double diffusionCoefficient,
-															double uptakeCoefficient)
+                                                            double duDtCoefficient,
+                                                            double diffusionCoefficient,
+                                                            double uptakeCoefficient)
     : mrCellPopulation(rCellPopulation),
       mDuDtCoefficient(duDtCoefficient),
       mDiffusionCoefficient(diffusionCoefficient),
@@ -66,7 +66,7 @@ double CellwiseSourceParabolicPde<DIM>::ComputeDuDtCoefficientFunction(const Cha
 template<unsigned DIM>
 double CellwiseSourceParabolicPde<DIM>::ComputeSourceTerm(const ChastePoint<DIM>& rX, double u)
 {
-	//NEVER_REACHED;
+    //NEVER_REACHED;
     return 0.0;
 }
 
@@ -77,33 +77,33 @@ double CellwiseSourceParabolicPde<DIM>::ComputeSourceTermAtNode(const Node<DIM>&
 
     unsigned tet_node_index = rNode.GetIndex();
 
-	bool is_cell_labeled = false;
+    bool is_cell_labeled = false;
 
-	if (dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&mrCellPopulation))
-	{
-		if (mrCellPopulation.IsCellAttachedToLocationIndex(tet_node_index))
-		{
-			is_cell_labeled = mrCellPopulation.GetCellUsingLocationIndex(tet_node_index)->template HasCellProperty<CellLabel>();
-		}
-		else
-		{
-			// no cell at node
-			return 0.0;
-		}
-	}
-	else
-	{
-		NEVER_REACHED;
-	}
+    if (dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&mrCellPopulation))
+    {
+        if (mrCellPopulation.IsCellAttachedToLocationIndex(tet_node_index))
+        {
+            is_cell_labeled = mrCellPopulation.GetCellUsingLocationIndex(tet_node_index)->template HasCellProperty<CellLabel>();
+        }
+        else
+        {
+            // no cell at node
+            return 0.0;
+        }
+    }
+    else
+    {
+        NEVER_REACHED;
+    }
 
-	if (is_cell_labeled)
-	{
-		coefficient = this->mUptakeCoefficient;
-	}
-	else
-	{
-		coefficient = -this->mUptakeCoefficient;
-	}
+    if (is_cell_labeled)
+    {
+        coefficient = this->mUptakeCoefficient;
+    }
+    else
+    {
+        coefficient = -this->mUptakeCoefficient;
+    }
 
     return coefficient;
 }

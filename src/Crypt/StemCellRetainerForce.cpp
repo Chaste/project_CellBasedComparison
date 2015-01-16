@@ -54,7 +54,7 @@ StemCellRetainerForce<DIM>::~StemCellRetainerForce()
 template<unsigned DIM>
 void StemCellRetainerForce<DIM>::SetStemCellForceMagnitudeParameter(double stemCellForceMagnitudeParameter)
 {
-	mStemCellForceMagnitudeParameter = stemCellForceMagnitudeParameter;
+    mStemCellForceMagnitudeParameter = stemCellForceMagnitudeParameter;
 }
 
 template<unsigned DIM>
@@ -67,67 +67,67 @@ template<unsigned DIM>
 void StemCellRetainerForce<DIM>::AddForceContribution(AbstractCellPopulation<DIM>& rCellPopulation)
 {
 
-	if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
-	{
-		for (unsigned node_index=0; node_index<rCellPopulation.GetNumNodes(); node_index++)
-		{
-			Node<DIM>* p_node = rCellPopulation.GetNode(node_index);
+    if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&rCellPopulation))
+    {
+        for (unsigned node_index=0; node_index<rCellPopulation.GetNumNodes(); node_index++)
+        {
+            Node<DIM>* p_node = rCellPopulation.GetNode(node_index);
 
-			bool node_in_stem_cell  = false;
+            bool node_in_stem_cell  = false;
 
-			std::set<unsigned> containing_element_indices = p_node->rGetContainingElementIndices();
+            std::set<unsigned> containing_element_indices = p_node->rGetContainingElementIndices();
 
-			for (std::set<unsigned>::iterator element_iter = containing_element_indices.begin();
-					element_iter != containing_element_indices.end();
-			        ++element_iter)
-			{
-				 boost::shared_ptr<AbstractCellProliferativeType> p_cell_type = rCellPopulation.GetCellUsingLocationIndex(*element_iter)->GetCellProliferativeType();
+            for (std::set<unsigned>::iterator element_iter = containing_element_indices.begin();
+                    element_iter != containing_element_indices.end();
+                    ++element_iter)
+            {
+                 boost::shared_ptr<AbstractCellProliferativeType> p_cell_type = rCellPopulation.GetCellUsingLocationIndex(*element_iter)->GetCellProliferativeType();
 
 
-				if (p_cell_type->IsType<StemCellProliferativeType>())
-				{
-					node_in_stem_cell = true;
-					break;
-				}
-			}
+                if (p_cell_type->IsType<StemCellProliferativeType>())
+                {
+                    node_in_stem_cell = true;
+                    break;
+                }
+            }
 
-			if (node_in_stem_cell)
-			{
-				double height = p_node->rGetLocation()[DIM-1];
+            if (node_in_stem_cell)
+            {
+                double height = p_node->rGetLocation()[DIM-1];
 
-				c_vector<double,DIM> force_direction = zero_vector<double>(DIM);
-				force_direction[DIM-1]=-1.0;
+                c_vector<double,DIM> force_direction = zero_vector<double>(DIM);
+                force_direction[DIM-1]=-1.0;
 
-				c_vector<double, DIM> force_contribution =mStemCellForceMagnitudeParameter*force_direction*(1.0+height*height);
-				p_node->AddAppliedForceContribution(force_contribution);
-			}
-		}
-	}
-	else // A centre based simulation
-	{
-		assert(dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&rCellPopulation));
+                c_vector<double, DIM> force_contribution =mStemCellForceMagnitudeParameter*force_direction*(1.0+height*height);
+                p_node->AddAppliedForceContribution(force_contribution);
+            }
+        }
+    }
+    else // A centre based simulation
+    {
+        assert(dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&rCellPopulation));
 
-		for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
-		             cell_iter != rCellPopulation.End();
-		             ++cell_iter)
-		{
-		   boost::shared_ptr<AbstractCellProliferativeType> p_cell_type = cell_iter->GetCellProliferativeType();
+        for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
+                     cell_iter != rCellPopulation.End();
+                     ++cell_iter)
+        {
+           boost::shared_ptr<AbstractCellProliferativeType> p_cell_type = cell_iter->GetCellProliferativeType();
 
-		   if(p_cell_type->IsType<StemCellProliferativeType>())
-		   {
-				unsigned node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
-				Node<DIM>* p_node = rCellPopulation.GetNode(node_index);
+           if(p_cell_type->IsType<StemCellProliferativeType>())
+           {
+                unsigned node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
+                Node<DIM>* p_node = rCellPopulation.GetNode(node_index);
 
-				double height = p_node->rGetLocation()[DIM-1];
+                double height = p_node->rGetLocation()[DIM-1];
 
-				c_vector<double,DIM> force_direction = zero_vector<double>(DIM);
-				force_direction[DIM-1]=-1.0;
+                c_vector<double,DIM> force_direction = zero_vector<double>(DIM);
+                force_direction[DIM-1]=-1.0;
 
-				c_vector<double, DIM> force_contribution =mStemCellForceMagnitudeParameter*force_direction*(1.0+height*height);
-				p_node->AddAppliedForceContribution(force_contribution);
-			}
-		}
-	}
+                c_vector<double, DIM> force_contribution =mStemCellForceMagnitudeParameter*force_direction*(1.0+height*height);
+                p_node->AddAppliedForceContribution(force_contribution);
+            }
+        }
+    }
 }
 
 template<unsigned DIM>

@@ -192,7 +192,7 @@ double MorphogenDependentCellCycleModel::GetCurrentQuiescentOnsetTime()
 
 void MorphogenDependentCellCycleModel::OutputCellCycleModelParameters(out_stream& rParamsFile)
 {
-	*rParamsFile << "\t\t\t<ThresholdMorphogen>" << mThresholdMorphogen << "</ThresholdMorphogen>\n";
+    *rParamsFile << "\t\t\t<ThresholdMorphogen>" << mThresholdMorphogen << "</ThresholdMorphogen>\n";
     *rParamsFile << "\t\t\t<QuiescentVolumeFraction>" << mQuiescentVolumeFraction << "</QuiescentVolumeFraction>\n";
     *rParamsFile << "\t\t\t<EquilibriumVolume>" << mEquilibriumVolume << "</EquilibriumVolume>\n";
 

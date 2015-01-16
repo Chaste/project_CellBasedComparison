@@ -53,10 +53,10 @@ class StemCellRetainerPottsUpdateRule : public AbstractPottsUpdateRule<DIM>
 friend class TestPottsUpdateRules;
 
 private:
-	/**
+    /**
      * magnitude of restraint applied to stem cells
-	 */
-	double mStemCellRestraintParameter;
+     */
+    double mStemCellRestraintParameter;
 
     friend class boost::serialization::access;
     /**
