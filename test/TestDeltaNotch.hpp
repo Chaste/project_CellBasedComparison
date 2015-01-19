@@ -21,7 +21,7 @@
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
 #include "HoneycombMeshGenerator.hpp"
-#include "SensibleDiffusionForce.hpp"
+#include "DiffusionForce.hpp"
 #include "RepulsionForce.hpp"
 #include "GeneralisedLinearSpringForce.hpp"
 

@@ -23,7 +23,7 @@
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
 #include "HoneycombMeshGenerator.hpp"
 #include "DifferentialAdhesionGeneralisedLinearSpringForce.hpp"
-#include "SensibleDiffusionForce.hpp"
+#include "DiffusionForce.hpp"
 
 #include "OnLatticeSimulation.hpp"
 #include "CellPopulationAdjacencyMatrixWriter.hpp"
@@ -271,7 +271,7 @@ public:
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
-        MAKE_PTR(SensibleDiffusionForce<2>, p_random_force);
+        MAKE_PTR(DiffusionForce<2>, p_random_force);
         p_random_force->SetDiffusionConstant(0.01);
         simulator.AddForce(p_random_force);
 
@@ -336,7 +336,7 @@ public:
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
-        MAKE_PTR(SensibleDiffusionForce<2>, p_random_force);
+        MAKE_PTR(DiffusionForce<2>, p_random_force);
         p_random_force->SetDiffusionConstant(0.01);
         simulator.AddForce(p_random_force);
 
