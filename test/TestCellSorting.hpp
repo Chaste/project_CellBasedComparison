@@ -26,7 +26,7 @@
 #include "SensibleDiffusionForce.hpp"
 
 #include "OnLatticeSimulation.hpp"
-#include "AdjacencyMatrixOutputModifier.hpp"
+#include "CellPopulationAdjacencyMatrixWriter.hpp"
 
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
@@ -47,7 +47,6 @@ static const double M_NUM_CELLS_ACROSS = 20; // this ^2 cells
  * \todo
  *
  * create test using a CaBasedCellPopulation
- * refactor AdjacencyMatrixOutputModifier into a writer class
  * re-run tests since DifferentialAdhesionGeneralisedLinearSpringForce is slightly different now
  * regenerate results
  */
@@ -113,6 +112,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
+        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
@@ -122,10 +122,6 @@ public:
         simulator.SetDt(0.01);
         simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
-
-        // Add adjacency matrix output modifier
-        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
-        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
         // Set up force law and pass it to the simulation
         MAKE_PTR(NagaiHondaDifferentialAdhesionForce<2>, p_force);
@@ -189,6 +185,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
+        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
 
         cell_population.SetNumSweepsPerTimestep(10); // This is the default value
 
@@ -200,10 +197,6 @@ public:
         simulator.SetDt(0.1); // This is the default value
         simulator.SetSamplingTimestepMultiple(10);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
-
-        // Add adjacency matrix output modifier
-        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
-        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
         // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
@@ -255,6 +248,7 @@ public:
 
         // Create cell population
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
+        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
@@ -269,10 +263,6 @@ public:
         simulator.SetDt(0.01);
         simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
-
-        // Add adjacency matrix output modifier
-        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
-        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2,2>, p_differential_adhesion_force);
@@ -327,6 +317,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
+        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
@@ -336,10 +327,6 @@ public:
         simulator.SetDt(0.01);
         simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
-
-        // Add adjacency matrix output modifier
-        MAKE_PTR(AdjacencyMatrixOutputModifier<2>, p_adjacency_matrix_modifier);
-        simulator.AddSimulationModifier(p_adjacency_matrix_modifier);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2,2>, p_differential_adhesion_force);

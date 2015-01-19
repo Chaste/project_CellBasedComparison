@@ -4,7 +4,7 @@
 clear 
 close all
 
-load /tmp/ozzy/testoutput/CellSorting/Potts/results_from_time_0/adjacencymatrices.dat
+load /tmp/ozzy/testoutput/CellSorting/Potts/results_from_time_0/cellpopulationadjacency.dat
 
 time = adjacencymatrices(:,1);
 num_cells = adjacencymatrices(:,2);

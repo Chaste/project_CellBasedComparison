@@ -45,7 +45,7 @@ saveaspngandeps(-1,[Type 'Figs/MaxEigRatio'], 7, 7/5, 9)
 
 function [time,num_neighbours, max_eig] = CalculateAdjacency(Directory)
 
-adjacenciesfile = [Directory,'/results_from_time_5/adjacencymatrices.dat']
+adjacenciesfile = [Directory,'/results_from_time_5/cellpopulationadjacency.dat']
 
 adjacenciesdata = LoadNonConstantLengthData(adjacenciesfile);
 time = zeros(length(adjacenciesdata),1);
