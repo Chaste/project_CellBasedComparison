@@ -21,7 +21,7 @@
 #include "CellBasedEventHandler.hpp"
 #include "RepulsionForce.hpp"
 #include "StochasticDurationGenerationBasedCellCycleModel.hpp"
-#include "ContactInhibitionGenerationBasedCellCycleModel.hpp"
+#include "ContactInhibitionCellCycleModel.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "NagaiHondaForce.hpp"
 #include "ShortAxisStemHorizontalVertexBasedDivisionRule.hpp"
@@ -75,7 +75,7 @@ private:
 
         for (unsigned i=0; i<num_cells; i++)
         {
-            ContactInhibitionGenerationBasedCellCycleModel* p_model = new ContactInhibitionGenerationBasedCellCycleModel();
+            ContactInhibitionCellCycleModel* p_model = new ContactInhibitionCellCycleModel();
             p_model->SetDimension(2);
             p_model->SetMaxTransitGenerations(3);
 
