@@ -5,60 +5,43 @@
 
 // Must be included before any other cell_based headers
 #include "CellBasedSimulationArchiver.hpp"
-#include "CryptSimulation2d.hpp"
-//#include "NodeBasedCryptSimulation2d.hpp"
-#include "CryptCellsGenerator.hpp"
-#include "CellsGenerator.hpp"
-//#include "VanLeeuwen2009WntSwatCellCycleModelHypothesisOne.hpp"
-#include "LinearSpringWithVariableSpringConstantsForce.hpp"
+
 #include "CylindricalHoneycombVertexMeshGenerator.hpp"
 #include "CylindricalHoneycombMeshGenerator.hpp"
-//#include "TargetedCellKiller.hpp"
-#include "RandomCellKiller.hpp"
-#include "SloughingCellKiller.hpp"
-#include "AbstractCellBasedWithTimingsTestSuite.hpp"
-#include "NumericFileComparison.hpp"
-#include "CellBasedEventHandler.hpp"
-#include "RepulsionForce.hpp"
-#include "StochasticDurationGenerationBasedCellCycleModel.hpp"
-#include "ContactInhibitionCellCycleModel.hpp"
-#include "VertexBasedCellPopulation.hpp"
-#include "NagaiHondaForce.hpp"
-#include "ShortAxisStemHorizontalVertexBasedDivisionRule.hpp"
-
+#include "PottsMeshGenerator.hpp"
 #include "Cylindrical2dNodesOnlyMesh.hpp"
-#include "NodesOnlyMesh.hpp"
+
+#include "ContactInhibitionCellCycleModel.hpp"
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
-
-#include "PeriodicNodeBasedBoundaryCondition.hpp"
-#include "StemCellRetainerForce.hpp"
-
-#include "PottsMeshGenerator.hpp"
-#include "SimpleWntCellCycleModel.hpp"
-#include "OnLatticeSimulation.hpp"
+#include "NodeBasedCellPopulation.hpp"
 #include "PottsBasedCellPopulation.hpp"
+#include "VertexBasedCellPopulation.hpp"
+
+#include "CellProliferativeTypesCountWriter.hpp"
+#include "CellIdWriter.hpp"
+#include "CellVolumesWriter.hpp"
+
+#include "OffLatticeSimulation.hpp"
+#include "OnLatticeSimulation.hpp"
+
+#include "NagaiHondaForce.hpp"
+#include "RepulsionForce.hpp"
+#include "DiffusionCaUpdateRule.hpp"
 #include "VolumeConstraintPottsUpdateRule.hpp"
 #include "AdhesionPottsUpdateRule.hpp"
 
 #include "SimpleTargetAreaModifier.hpp"
 #include "VolumeTrackingModifier.hpp"
-#include "DiffusionCaUpdateRule.hpp"
-
-#include "CellVolumesWriter.hpp"
-#include "CellProliferativeTypesCountWriter.hpp"
-#include "CellIdWriter.hpp"
-
 
 #include "PlaneBasedCellKiller.hpp"
+
 #include "PlaneBoundaryCondition.hpp"
-#include "StemCellRetainerPottsUpdateRule.hpp"
+#include "PeriodicNodeBasedBoundaryCondition.hpp"
 
+#include "AbstractCellBasedWithTimingsTestSuite.hpp"
 #include "PetscSetupAndFinalize.hpp"
-
 #include "Warnings.hpp"
-#include "Debug.hpp"
-
 
 static const double M_END_TIME = 2200.0;
 
@@ -77,10 +60,7 @@ private:
         {
             ContactInhibitionCellCycleModel* p_model = new ContactInhibitionCellCycleModel();
             p_model->SetDimension(2);
-            p_model->SetMaxTransitGenerations(3);
-
             p_model->SetEquilibriumVolume(EquilibriumVolume);
-
             p_model->SetQuiescentVolumeFraction(0.8); //0.8 -> CI // 0.1 -> No CI!!!!
 
             CellPtr p_cell(new Cell(p_state, p_model));
@@ -112,13 +92,9 @@ public:
 
         // Create tissue
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+        cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
-
-        // Set the division rule so stem cells divide horizontally
-        MAKE_PTR(ShortAxisStemHorizontalVertexBasedDivisionRule<2>,p_division_rule);
-        cell_population.SetVertexBasedDivisionRule(p_division_rule);
 
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
@@ -129,7 +105,7 @@ public:
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
-        //Add Volume Tracking Moddifer
+        // Add volume tracking modifier
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
@@ -141,12 +117,7 @@ public:
         MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
         simulator.AddSimulationModifier(p_growth_modifier);
 
-        // Create a force law to retain stem cells niche and pass it to the simulation
-        MAKE_PTR(StemCellRetainerForce<2>, p_retainer_force);
-        p_retainer_force->SetStemCellForceMagnitudeParameter(1.0);
-        simulator.AddForce(p_retainer_force);
-
-        // Solid Base Boundary Condition
+        // Solid base Boundary condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
         p_bcs->SetUseJiggledNodesOnPlane(true);
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
@@ -182,7 +153,7 @@ public:
 
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
-        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+        cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
 
@@ -195,7 +166,7 @@ public:
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
-        //Add Volume Tracking Moddifer
+        // Add volume tracking Modifier
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
@@ -204,12 +175,7 @@ public:
         p_linear_force->SetMeinekeSpringStiffness(50.0);
         simulator.AddForce(p_linear_force);
 
-        // Create a force law to retain stem cells niche and pass it to the simulation
-        MAKE_PTR(StemCellRetainerForce<2>, p_retainer_force);
-        p_retainer_force->SetStemCellForceMagnitudeParameter(50.0);
-        simulator.AddForce(p_retainer_force);
-
-        // Solid Base Boundary Condition
+        // Solid base boundary condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
         p_bcs->SetUseJiggledNodesOnPlane(true);
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
@@ -221,7 +187,6 @@ public:
         // Run simulation
         simulator.Solve();
     }
-
 
     void TestNodeBasedCrypt() throw (Exception)
     {
@@ -242,17 +207,16 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,0.825); // r=0.5 M_PI*0.25
+        GenerateStemCells(cells_across, cells, 0.825); // r=0.5 M_PI*0.25
 
         // Create a node-based cell population
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+        cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
 
         for (unsigned index = 0; index < cell_population.rGetMesh().GetNumNodes(); index++)
         {
-            //PRINT_VARIABLE(index);
             cell_population.rGetMesh().GetNode(index)->SetRadius(0.5);
         }
 
@@ -265,7 +229,7 @@ public:
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
-        //Add Volume Tracking Moddifer
+        // Add volume tracking modifier
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
@@ -274,12 +238,7 @@ public:
         p_repulsion_force->SetMeinekeSpringStiffness(25.0);
         simulator.AddForce(p_repulsion_force);
 
-        // Create a force law to retain stem cells niche and pass it to the simulation
-        MAKE_PTR(StemCellRetainerForce<2>, p_retainer_force);
-        p_retainer_force->SetStemCellForceMagnitudeParameter(50.0);
-        simulator.AddForce(p_retainer_force);
-
-        // Solid Base Boundary Condition
+        // Solid base boundary condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
         p_bcs->SetUseJiggledNodesOnPlane(true);
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
@@ -317,7 +276,7 @@ public:
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.SetNumSweepsPerTimestep(10);
         cell_population.SetTemperature(0.001);
-        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+        cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
 
@@ -330,7 +289,7 @@ public:
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
-        //Add Volume Tracking Moddifer
+        // Add volume tracking modifier
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
@@ -344,16 +303,9 @@ public:
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
-        // Restrain Stem Cells at Base of Crypt
-        MAKE_PTR(StemCellRetainerPottsUpdateRule<2>, p_stem_cell_retainer_update_rule);
-        p_stem_cell_retainer_update_rule->SetStemCellRestraintParameter(1000.0);
-        simulator.AddPottsUpdateRule(p_stem_cell_retainer_update_rule);
-
         // Run simulation
         simulator.Solve();
     }
-
-
 
     void TestCaCrypt() throw (Exception)
     {
@@ -377,7 +329,7 @@ public:
 
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
-        cell_population.AddPopulationWriter<CellProliferativeTypesCountWriter>();
+        cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
 
@@ -390,7 +342,7 @@ public:
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
-        //Add Volume Tracking Moddifer
+        // Add Volume tracking modifier
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
