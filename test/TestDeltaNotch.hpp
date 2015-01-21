@@ -16,7 +16,6 @@
 #include "VertexBasedCellPopulation.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaDifferentialAdhesionForce.hpp"
-#include "VertexDiffusionForce.hpp"
 #include "SimpleTargetAreaModifier.hpp"
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"

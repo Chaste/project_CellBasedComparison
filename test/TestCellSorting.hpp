@@ -17,7 +17,7 @@
 #include "VertexBasedCellPopulation.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaDifferentialAdhesionForce.hpp"
-#include "VertexDiffusionForce.hpp"
+#include "DiffusionForce.hpp"
 #include "SimpleTargetAreaModifier.hpp"
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
@@ -139,7 +139,7 @@ public:
         simulator.AddSimulationModifier(p_growth_modifier);
 
 //      you need to check for internal intersections if running with diffusion.
-//        MAKE_PTR_ARGS(VertexDiffusionForce<2>, p_random_force, (0.01));
+//        MAKE_PTR_ARGS(DiffusionForce<2>, p_random_force, (0.01));
 //        simulator.AddForce(p_random_force);
 
         // Run simulation

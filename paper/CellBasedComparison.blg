@@ -1,46 +1,46 @@
 This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
 The top-level auxiliary file: CellBasedComparison.aux
-The style file: vancouver.bst
-Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+The style file: model3-num-names.bst
 Database file #1: comparison_refs.bib
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
 You've used 25 entries,
-            3170 wiz_defined-function locations,
-            815 strings with 10578 characters,
-and the built_in function-call counts, 49331 in all, are:
-= -- 6134
-> -- 396
-< -- 0
-+ -- 408
-- -- 99
-* -- 4124
-:= -- 5338
-add.period$ -- 100
+            3138 wiz_defined-function locations,
+            839 strings with 11491 characters,
+and the built_in function-call counts, 21613 in all, are:
+= -- 1669
+> -- 767
+< -- 6
++ -- 402
+- -- 198
+* -- 2451
+:= -- 2759
+add.period$ -- 76
 call.type$ -- 25
-change.case$ -- 0
-chr.to.int$ -- 0
+change.case$ -- 125
+chr.to.int$ -- 25
 cite$ -- 25
-duplicate$ -- 3811
-empty$ -- 4733
-format.name$ -- 123
-if$ -- 11499
-int.to.chr$ -- 0
-int.to.str$ -- 25
+duplicate$ -- 1759
+empty$ -- 1735
+format.name$ -- 281
+if$ -- 4189
+int.to.chr$ -- 1
+int.to.str$ -- 26
 missing$ -- 298
-newline$ -- 128
-num.names$ -- 25
-pop$ -- 543
+newline$ -- 143
+num.names$ -- 75
+pop$ -- 557
 preamble$ -- 1
-purify$ -- 0
+purify$ -- 125
 quote$ -- 0
-skip$ -- 469
+skip$ -- 466
 stack$ -- 0
-substring$ -- 9843
-swap$ -- 613
+substring$ -- 1686
+swap$ -- 1107
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 0
+type$ -- 150
 warning$ -- 0
-while$ -- 267
-width$ -- 27
-write$ -- 277
+while$ -- 118
+width$ -- 0
+write$ -- 368
