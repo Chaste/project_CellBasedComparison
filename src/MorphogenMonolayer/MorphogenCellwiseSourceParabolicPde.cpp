@@ -33,7 +33,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include "CellwiseSourceMorphogenPde.hpp"
+#include "MorphogenCellwiseSourceParabolicPde.hpp"
+
 #include "AbstractCentreBasedCellPopulation.hpp"
 #include "VertexBasedCellPopulation.hpp"
 #include "PottsBasedCellPopulation.hpp"
@@ -44,33 +45,44 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Debug.hpp"
 
 template<unsigned DIM>
-CellwiseSourceMorphogenPde<DIM>::CellwiseSourceMorphogenPde(AbstractCellPopulation<DIM,DIM>& rCellPopulation, double coefficient)
-    : CellwiseSourcePde<DIM>(rCellPopulation,coefficient)
+MorphogenCellwiseSourceParabolicPde<DIM>::MorphogenCellwiseSourceParabolicPde(AbstractCellPopulation<DIM,DIM>& rCellPopulation,
+        double duDtCoefficient,
+        double diffusionCoefficient,
+        double uptakeCoefficient)
+		: CellwiseSourceParabolicPde<DIM>(rCellPopulation,duDtCoefficient, diffusionCoefficient, uptakeCoefficient )
+
 {
 }
 
 template<unsigned DIM>
-double CellwiseSourceMorphogenPde<DIM>::ComputeConstantInUSourceTerm(const ChastePoint<DIM>& rX, Element<DIM,DIM>* pElement)
+const AbstractCellPopulation<DIM,DIM>& MorphogenCellwiseSourceParabolicPde<DIM>::rGetCellPopulation() const
 {
-    NEVER_REACHED;
+    return this->mrCellPopulation;
+}
+
+template<unsigned DIM>
+double MorphogenCellwiseSourceParabolicPde<DIM>::ComputeDuDtCoefficientFunction(const ChastePoint<DIM>& )
+{
+    return this->mDuDtCoefficient;
+}
+
+
+template<unsigned DIM>
+double MorphogenCellwiseSourceParabolicPde<DIM>::ComputeSourceTerm(const ChastePoint<DIM>& rX, double u, Element<DIM,DIM>* pElement)
+{
+    //NEVER_REACHED;
     return 0.0;
+    //return this->mUptakeCoefficient;
 }
 
 template<unsigned DIM>
-double CellwiseSourceMorphogenPde<DIM>::ComputeLinearInUCoeffInSourceTerm(const ChastePoint<DIM>& rX, Element<DIM,DIM>* pElement)
+c_matrix<double,DIM,DIM> MorphogenCellwiseSourceParabolicPde<DIM>::ComputeDiffusionTerm(const ChastePoint<DIM>& rX, Element<DIM,DIM>* pElement)
 {
-    NEVER_REACHED;
-    return 0.0;
+    return this->mDiffusionCoefficient*identity_matrix<double>(DIM);
 }
 
 template<unsigned DIM>
-double CellwiseSourceMorphogenPde<DIM>::ComputeLinearInUCoeffInSourceTermAtNode(const Node<DIM>& rNode)
-{
-    return 0.0;
-}
-
-template<unsigned DIM>
-double CellwiseSourceMorphogenPde<DIM>::ComputeConstantInUSourceTermAtNode(const Node<DIM>& rNode)
+double MorphogenCellwiseSourceParabolicPde<DIM>::ComputeSourceTermAtNode(const Node<DIM>& rNode, double u)
 {
     double coefficient = 0.0;
 
@@ -136,30 +148,24 @@ double CellwiseSourceMorphogenPde<DIM>::ComputeConstantInUSourceTermAtNode(const
 
     if (is_cell_labeled)
     {
-        coefficient = this->mCoefficient;
+        coefficient = this->mUptakeCoefficient;
     }
     else
     {
-        coefficient = -this->mCoefficient;
+        coefficient = -this->mUptakeCoefficient;
     }
 
     return coefficient;
-}
-
-template<unsigned DIM>
-c_matrix<double,DIM,DIM> CellwiseSourceMorphogenPde<DIM>::ComputeDiffusionTerm(const ChastePoint<DIM>& rX)
-{
-    return identity_matrix<double>(DIM);
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Explicit instantiation
 /////////////////////////////////////////////////////////////////////////////
 
-template class CellwiseSourceMorphogenPde<1>;
-template class CellwiseSourceMorphogenPde<2>;
-template class CellwiseSourceMorphogenPde<3>;
+template class MorphogenCellwiseSourceParabolicPde<1>;
+template class MorphogenCellwiseSourceParabolicPde<2>;
+template class MorphogenCellwiseSourceParabolicPde<3>;
 
 // Serialization for Boost >= 1.36
 #include "SerializationExportWrapperForCpp.hpp"
-EXPORT_TEMPLATE_CLASS_SAME_DIMS(CellwiseSourceMorphogenPde)
+EXPORT_TEMPLATE_CLASS_SAME_DIMS(MorphogenCellwiseSourceParabolicPde)

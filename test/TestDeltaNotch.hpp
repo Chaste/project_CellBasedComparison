@@ -40,8 +40,8 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const double M_TIME_FOR_SIMULATION = 100.0;
-static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
+static const double M_TIME_FOR_SIMULATION = 10.0; //100
+static const double M_NUM_CELLS_ACROSS = 5; //10 // this ^2 cells
 
 class TestDeltaNotch: public AbstractCellBasedWithTimingsTestSuite
 {
@@ -52,8 +52,8 @@ private:
         double typical_transit_cell_cycle_duration = 12.0;
 
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
-       // boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
-        boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
+        boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
+        //boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
 
         for (unsigned i=0; i<num_cells; i++)
         {
@@ -75,7 +75,7 @@ private:
 
 public:
 
-    void noTestVertexMonolayerDeltaNotch() throw (Exception)
+    void TestVertexMonolayerDeltaNotch() throw (Exception)
     {
         // Create a simple 2D MutableVertexMesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS,M_NUM_CELLS_ACROSS);
@@ -133,7 +133,7 @@ public:
    }
 
 
-    void noTestPottsMonolayerDeltaNotch() throw (Exception)
+    void TestPottsMonolayerDeltaNotch() throw (Exception)
     {
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
@@ -236,7 +236,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-    void noTestMeshBasedMonolayerDeltaNotch() throw (Exception)
+    void TestMeshBasedMonolayerDeltaNotch() throw (Exception)
     {
         // Create a simple mesh
         unsigned num_ghosts = 0;
@@ -284,7 +284,7 @@ public:
     }
 
 
-    void noTestNodeBasedMonolayerCellSorting() throw (Exception)
+    void TestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);

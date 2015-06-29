@@ -9,8 +9,8 @@
 #include "VoronoiDataWriter.hpp"
 #include "CellMutationStatesWriter.hpp"
 
-#include "ParabolicPDEModifier.hpp"
-#include "CellwiseSourceParabolicPde.hpp"
+#include "ParabolicGrowingDomainPdeModifier.hpp"
+#include "MorphogenCellwiseSourceParabolicPde.hpp"
 #include "VolumeTrackingModifier.hpp"
 
 #include "MorphogenDependentCellCycleModel.hpp"
@@ -78,7 +78,7 @@ private:
              if (i<(double)num_cells/2.0)
              {
                  p_cell->AddCellProperty(p_label);
-                 p_cell->GetCellData()->SetItem("morphogen",1.0);
+                 p_cell->GetCellData()->SetItem("morphogen",0.0);
              }
              else
              {
@@ -96,7 +96,7 @@ private:
      */
 
 public:
-    void noTestVertexBasedMonolayer() throw (Exception)
+    void TestVertexBasedMonolayer() throw (Exception)
     {
         // Create Mesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS);
@@ -128,12 +128,17 @@ public:
 
         // Create Modifiers and pass to simulation
 
-        // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
-
         // Create a pde modifier and pass it to the simulation Add this first so in place for SimpleTargetArea one (calls cell pop update)
-        MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
-        simulator.AddSimulationModifier(p_pde_modifier);
+
+		// Make the Pde and BCS
+        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+		ConstBoundaryCondition<2> bc(0.0);
+		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
+		pde_and_bc.SetDependentVariableName("morphogen");
+
+		// Create a PDE Modifier object using this pde and bcs object
+		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
+		simulator.AddSimulationModifier(p_pde_modifier);
 
         // Add volume tracking modifier for CI cell cycle model.
         MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
@@ -171,12 +176,15 @@ public:
         MAKE_PTR(RepulsionForce<2>, p_force);
         simulator.AddForce(p_force);
 
-        // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+        // Make the Pde and BCS
+        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+		ConstBoundaryCondition<2> bc(0.0);
+		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
+		pde_and_bc.SetDependentVariableName("morphogen");
 
-        // Create a pde modifier and pass it to the simulation
-        MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
-        simulator.AddSimulationModifier(p_pde_modifier);
+		// Create a PDE Modifier object using this pde and bcs object
+		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
+		simulator.AddSimulationModifier(p_pde_modifier);
 
         // Add volume tracking modifier for CI cell cycle model.
         MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
@@ -215,12 +223,15 @@ public:
         p_force->SetCutOffLength(1.5);
         simulator.AddForce(p_force);
 
-        // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+        // Make the Pde and BCS
+        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+		ConstBoundaryCondition<2> bc(0.0);
+		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
+		pde_and_bc.SetDependentVariableName("morphogen");
 
-        // Create a pde modifier and pass it to the simulation
-        MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
-        simulator.AddSimulationModifier(p_pde_modifier);
+		// Create a PDE Modifier object using this pde and bcs object
+		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
+		simulator.AddSimulationModifier(p_pde_modifier);
 
         // Add volume tracking modifier for CI cell cycle model.
         MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
@@ -260,12 +271,15 @@ public:
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
-        // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+        // Make the Pde and BCS
+        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+		ConstBoundaryCondition<2> bc(0.0);
+		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
+		pde_and_bc.SetDependentVariableName("morphogen");
 
-        // Create a pde modifier and pass it to the simulation
-        MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
-        simulator.AddSimulationModifier(p_pde_modifier);
+		// Create a PDE Modifier object using this pde and bcs object
+		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
+		simulator.AddSimulationModifier(p_pde_modifier);
 
         // Add volume tracking modifier for CI cell cycle model.
         MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
@@ -274,61 +288,4 @@ public:
 
         simulator.Solve();
     }
-
-    void noTestCaBasedMonolayer() throw (Exception)
-    {
-        // Create a simple 2D PottsMesh
-        unsigned domain_wide = 5*M_NUM_CELLS_ACROSS;
-
-        PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
-        PottsMesh<2>* p_mesh = generator.GetMesh();
-
-        // Specify where cells lie
-        std::vector<unsigned> location_indices;
-        for (unsigned i=0; i<M_NUM_CELLS_ACROSS; i++)
-        {
-            for (unsigned j=0; j<M_NUM_CELLS_ACROSS; j++)
-            {
-                unsigned offset = (domain_wide+1) * (domain_wide-M_NUM_CELLS_ACROSS)/2;
-                location_indices.push_back(offset + j + i * domain_wide );
-            }
-        }
-
-        std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells,1);
-
-        // Create cell population
-        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
-
-        // Set population to output all data to results files
-        cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<CellMutationStatesWriter>();
-
-        OnLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("ParabolicMonolayers/CA");
-        simulator.SetDt(0.1);
-        simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
-
-        // Adding update rule(s).
-        MAKE_PTR(DiffusionCaUpdateRule<2u>, p_diffusion_update_rule);
-        p_diffusion_update_rule->SetDiffusionParameter(0.1);
-
-        simulator.AddCaUpdateRule(p_diffusion_update_rule);
-
-        // Set up PDE and pass to simulation via modifier (uniform secretion at each labeled cell)
-        CellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
-
-        // Create a pde modifier and pass it to the simulation
-        MAKE_PTR_ARGS(ParabolicPDEModifier<2>, p_pde_modifier, (&pde));
-        simulator.AddSimulationModifier(p_pde_modifier);
-
-       // Add volume tracking modifier for CI cell cycle model.
-       MAKE_PTR(VolumeTrackingModifier<2>, p_volume_tracking_modifier);
-       simulator.AddSimulationModifier(p_volume_tracking_modifier);
-
-        // Run simulation
-        simulator.Solve();
-    }
-
 };

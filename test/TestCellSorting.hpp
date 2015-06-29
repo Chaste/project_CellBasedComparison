@@ -17,13 +17,13 @@
 #include "VertexBasedCellPopulation.hpp"
 #include "HoneycombVertexMeshGenerator.hpp"
 #include "NagaiHondaDifferentialAdhesionForce.hpp"
-#include "DiffusionForce.hpp"
+#include "RandomMotionForce.hpp"
 #include "SimpleTargetAreaModifier.hpp"
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
 #include "HoneycombMeshGenerator.hpp"
 #include "DifferentialAdhesionGeneralisedLinearSpringForce.hpp"
-#include "DiffusionForce.hpp"
+#include "RandomMotionForce.hpp"
 
 #include "OnLatticeSimulation.hpp"
 #include "CellPopulationAdjacencyMatrixWriter.hpp"
@@ -37,11 +37,13 @@
 #include "CellIdWriter.hpp"
 #include "CellMutationStatesWriter.hpp"
 
+#include "Debug.hpp"
+
 #include "PetscSetupAndFinalize.hpp"
 
 static const double M_TIME_TO_STEADY_STATE = 5.0;
-static const double M_TIME_FOR_SIMULATION = 100.0;
-static const double M_NUM_CELLS_ACROSS = 20; // this ^2 cells
+static const double M_TIME_FOR_SIMULATION = 100.0; //100
+static const double M_NUM_CELLS_ACROSS = 5; //20 // this ^2 cells
 
 /**
  * \todo
@@ -112,7 +114,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
-        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
+        cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
@@ -137,10 +139,6 @@ public:
         // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
         MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
         simulator.AddSimulationModifier(p_growth_modifier);
-
-//      you need to check for internal intersections if running with diffusion.
-//        MAKE_PTR_ARGS(DiffusionForce<2>, p_random_force, (0.01));
-//        simulator.AddForce(p_random_force);
 
         // Run simulation
         simulator.Solve();
@@ -185,7 +183,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
-        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
+        cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
 
         cell_population.SetNumSweepsPerTimestep(10); // This is the default value
 
@@ -240,7 +238,7 @@ public:
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
         // Set up cells, one for each non ghost Node
-        std::vector<unsigned> location_indices = generator.GetCellLocationIndices();//**Changed**//
+        std::vector<unsigned> location_indices = generator.GetCellLocationIndices();
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
         CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
@@ -248,7 +246,7 @@ public:
 
         // Create cell population
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
-        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
+        cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
@@ -265,14 +263,14 @@ public:
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Create a force law and pass it to the simulation
-        MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2,2>, p_differential_adhesion_force);
+        MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2>, p_differential_adhesion_force);
         p_differential_adhesion_force->SetHomotypicLabelledSpringConstantMultiplier(1.0);
         p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.01);
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
-        MAKE_PTR(DiffusionForce<2>, p_random_force);
-        p_random_force->SetDiffusionConstant(0.01);
+        MAKE_PTR(RandomMotionForce<2>, p_random_force);
+        p_random_force->SetMovementParameter(0.01);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -317,7 +315,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
-        cell_population.AddPopulationWriter<>CellPopulationAdjacencyMatrixWriter>();
+        cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
@@ -329,15 +327,15 @@ public:
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Create a force law and pass it to the simulation
-        MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2,2>, p_differential_adhesion_force);
+        MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2>, p_differential_adhesion_force);
         p_differential_adhesion_force->SetHomotypicLabelledSpringConstantMultiplier(1.0);
         p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.01);
         p_differential_adhesion_force->SetCutOffLength(1.5);
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
-        MAKE_PTR(DiffusionForce<2>, p_random_force);
-        p_random_force->SetDiffusionConstant(0.01);
+        MAKE_PTR(RandomMotionForce<2>, p_random_force);
+        p_random_force->SetMovementParameter(0.01);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -358,6 +356,4 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
-
-
 };

@@ -37,13 +37,12 @@
 #include "PlaneBasedCellKiller.hpp"
 
 #include "PlaneBoundaryCondition.hpp"
-#include "PeriodicNodeBasedBoundaryCondition.hpp"
 
 #include "AbstractCellBasedWithTimingsTestSuite.hpp"
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const double M_END_TIME = 2200.0;
+static const double M_END_TIME = 20.0; //2200
 
 class TestCryptSimulationComparison : public AbstractCellBasedWithTimingsTestSuite
 {
@@ -98,8 +97,8 @@ public:
 
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetDt(1.0/500.0);
-        simulator.SetSamplingTimestepMultiple(500);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_END_TIME);
         simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
         simulator.SetOutputDivisionLocations(true);
@@ -191,7 +190,7 @@ public:
     void TestNodeBasedCrypt() throw (Exception)
     {
         double crypt_length = 12-0.5;
-        double crypt_width = 5.5;
+        double crypt_width = 5;
 
         // Create a simple mesh
         unsigned cells_across = 6;
@@ -200,7 +199,7 @@ public:
 
         // Convert this to a Cylindrical2dNodesOnlyMesh
         Cylindrical2dNodesOnlyMesh* p_mesh = new Cylindrical2dNodesOnlyMesh(crypt_width);
-        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh,crypt_width/2.);
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh,crypt_width);
 
         // Get location indices corresponding to real cells
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();
@@ -246,10 +245,6 @@ public:
         // Sloughing killer
         MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
         simulator.AddCellKiller(p_killer);
-
-        // Periodic BCS to move nodes round periodic boundary
-        MAKE_PTR_ARGS(PeriodicNodeBasedBoundaryCondition, p_periodic_bcs,(&cell_population, crypt_width));
-        simulator.AddCellPopulationBoundaryCondition(p_periodic_bcs);
 
         // Run simulation
         simulator.Solve();
