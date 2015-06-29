@@ -70,7 +70,7 @@ double MorphogenCellwiseSourceParabolicPde<DIM>::ComputeDuDtCoefficientFunction(
 template<unsigned DIM>
 double MorphogenCellwiseSourceParabolicPde<DIM>::ComputeSourceTerm(const ChastePoint<DIM>& rX, double u, Element<DIM,DIM>* pElement)
 {
-    //NEVER_REACHED;
+    NEVER_REACHED;
     return 0.0;
     //return this->mUptakeCoefficient;
 }
