@@ -50,7 +50,7 @@
 
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TIME_FOR_SIMULATION = 100.0;
+static const double M_TIME_FOR_SIMULATION = 1.0;
 static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
 static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
@@ -99,7 +99,7 @@ public:
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
-            double sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
@@ -168,7 +168,7 @@ public:
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
-            double sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
@@ -224,7 +224,7 @@ public:
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
-            double sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
@@ -283,7 +283,7 @@ public:
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
-            double sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
@@ -345,7 +345,7 @@ public:
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
-            double sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
