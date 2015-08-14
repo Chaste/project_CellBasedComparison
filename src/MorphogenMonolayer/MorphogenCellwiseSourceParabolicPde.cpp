@@ -48,9 +48,10 @@ template<unsigned DIM>
 MorphogenCellwiseSourceParabolicPde<DIM>::MorphogenCellwiseSourceParabolicPde(AbstractCellPopulation<DIM,DIM>& rCellPopulation,
         double duDtCoefficient,
         double diffusionCoefficient,
-        double uptakeCoefficient)
-		: CellwiseSourceParabolicPde<DIM>(rCellPopulation,duDtCoefficient, diffusionCoefficient, uptakeCoefficient )
-
+        double uptakeCoefficient,
+        double sourceWidth)
+		: CellwiseSourceParabolicPde<DIM>(rCellPopulation,duDtCoefficient, diffusionCoefficient, uptakeCoefficient ),
+		  mSourceWidth(sourceWidth)
 {
 }
 
@@ -72,7 +73,6 @@ double MorphogenCellwiseSourceParabolicPde<DIM>::ComputeSourceTerm(const ChasteP
 {
     NEVER_REACHED;
     return 0.0;
-    //return this->mUptakeCoefficient;
 }
 
 template<unsigned DIM>
@@ -86,76 +86,19 @@ double MorphogenCellwiseSourceParabolicPde<DIM>::ComputeSourceTermAtNode(const N
 {
     double coefficient = 0.0;
 
-    unsigned tet_node_index = rNode.GetIndex();
+    double x = rNode.rGetLocation()[0];
+    //double y = rNode.rGetLocation()[1];
 
-    bool is_cell_labeled = false;
+    //if (x*x+y*y <4)
 
-    if (dynamic_cast<AbstractCentreBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) ||
-        dynamic_cast<PottsBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) )
+    if (x>-0.5*mSourceWidth && x<0.5*mSourceWidth)
     {
-        if (this->mrCellPopulation.IsCellAttachedToLocationIndex(tet_node_index))
-        {
-            // For potts this tet node corresponds to the element attached to the cell
-            is_cell_labeled = this->mrCellPopulation.GetCellUsingLocationIndex(tet_node_index)->template HasCellProperty<CellLabel>();
-        }
-        else
-        {
-            // no cell at node
-            return 0.0;
-        }
-    }
-    else if (dynamic_cast<VertexBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)))
-    {
-        VertexBasedCellPopulation<DIM>* static_cast_cell_population = static_cast<VertexBasedCellPopulation<DIM>*>(&(this->mrCellPopulation));
-
-        if (rNode.GetIndex() < static_cast_cell_population->GetNumNodes())
-        {
-            std::set<unsigned> containing_element_indices = static_cast_cell_population->GetNode(tet_node_index)->rGetContainingElementIndices();
-
-            for (std::set<unsigned>::iterator iter = containing_element_indices.begin();
-                     iter != containing_element_indices.end();
-                     iter++)
-            {
-                if (static_cast_cell_population->GetCellUsingLocationIndex(*iter)->template HasCellProperty<CellLabel>())
-                {
-                    is_cell_labeled = true;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // tet node is in the centre of element so can use offset to calculate the cell
-            is_cell_labeled = this->mrCellPopulation.GetCellUsingLocationIndex(rNode.GetIndex()-static_cast_cell_population->GetNumNodes())->template HasCellProperty<CellLabel>();
-        }
-    }
-    else if (dynamic_cast<CaBasedCellPopulation<DIM>*>(&(this->mrCellPopulation)) )
-    {
-        // Here tet_node_index corresponds to position of the cell in the vector of cells
-        typename AbstractCellPopulation<DIM>::Iterator cell_iter = this->mrCellPopulation.Begin();
-
-        assert(tet_node_index < this->mrCellPopulation.GetNumRealCells());
-        for (unsigned i=0; i<tet_node_index; i++)
-        {
-            ++cell_iter;
-        }
-        is_cell_labeled = cell_iter->template HasCellProperty<CellLabel>();
-    }
-    else
-    {
-        NEVER_REACHED;
+    	coefficient = this->mUptakeCoefficient;
     }
 
-    if (is_cell_labeled)
-    {
-        coefficient = this->mUptakeCoefficient;
-    }
-    else
-    {
-        coefficient = -this->mUptakeCoefficient;
-    }
+    double decay_coeficient = 0.01;
 
-    return coefficient;
+    return coefficient - u*decay_coeficient;
 }
 
 /////////////////////////////////////////////////////////////////////////////

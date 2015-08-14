@@ -31,6 +31,11 @@
 
 #include "CaBasedCellPopulation.hpp"
 #include "DiffusionCaUpdateRule.hpp"
+#include "ShovingCaBasedDivisionRule.hpp"
+#include "CryptShovingCaBasedDivisionRule.hpp"
+
+#include "CellAgesWriter.hpp"
+#include "CellIdWriter.hpp"
 
 #include "PetscSetupAndFinalize.hpp"
 
@@ -40,7 +45,7 @@
 class TestSimpleMonolayers : public AbstractCellBasedWithTimingsTestSuite
 {
 public:
-    void TestVertexBasedMonolayer() throw (Exception)
+    void NoTestVertexBasedMonolayer() throw (Exception)
     {
         // Create Mesh
         HoneycombVertexMeshGenerator generator(2, 2);
@@ -77,7 +82,7 @@ public:
         simulator.Solve();
     }
 
-    void TestNodeBasedMonolayer() throw (Exception)
+    void NoTestNodeBasedMonolayer() throw (Exception)
     {
         HoneycombMeshGenerator generator(2, 2);
         MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
@@ -106,7 +111,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void TestMeshBasedMonolayer() throw (Exception)
+    void NoTestMeshBasedMonolayer() throw (Exception)
     {
         HoneycombMeshGenerator generator(2, 2);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
@@ -130,7 +135,7 @@ public:
         simulator.Solve();
     }
 
-    void TestPottsBasedMonolayer() throw (Exception)
+    void NoTestPottsBasedMonolayer() throw (Exception)
     {
         PottsMeshGenerator<2> generator(20, 2, 4, 20, 2, 4);
         PottsMesh<2>* p_mesh = generator.GetMesh();
@@ -161,15 +166,12 @@ public:
     void TestCaBasedMonolayer() throw (Exception)
     {
         // Create a simple 2D PottsMesh
-        PottsMeshGenerator<2> generator(10, 0, 0, 10, 0, 0);
+        PottsMeshGenerator<2> generator(100, 0, 0, 100, 0, 0);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         // Specify where cells lie
         std::vector<unsigned> location_indices;
-        location_indices.push_back(44u);
-        location_indices.push_back(45u);
-        location_indices.push_back(54u);
-        location_indices.push_back(55u);
+        location_indices.push_back(5050u);
 
         MAKE_PTR(TransitCellProliferativeType, p_transit_type);
 
@@ -180,16 +182,23 @@ public:
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
 
+        boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
+        cell_population.SetCaBasedDivisionRule(p_division_rule);
+
+
+
+        cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellIdWriter>();
+
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("Monolayers/CA");
-        simulator.SetDt(0.1);
-        simulator.SetEndTime(20);
+        simulator.SetDt(1.0);
+        simulator.SetEndTime(150);
 
         // Adding update rule(s).
-        MAKE_PTR(DiffusionCaUpdateRule<2u>, p_diffusion_update_rule);
-        p_diffusion_update_rule->SetDiffusionParameter(0.05);
-
-        simulator.AddCaUpdateRule(p_diffusion_update_rule);
+//        MAKE_PTR(DiffusionCaUpdateRule<2u>, p_diffusion_update_rule);
+//        p_diffusion_update_rule->SetDiffusionParameter(0.05);
+//        simulator.AddCaUpdateRule(p_diffusion_update_rule);
 
         // Run simulation
         simulator.Solve();

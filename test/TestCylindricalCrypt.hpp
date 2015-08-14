@@ -11,7 +11,10 @@
 #include "PottsMeshGenerator.hpp"
 #include "Cylindrical2dNodesOnlyMesh.hpp"
 
+#include "CellsGenerator.hpp"
+
 #include "ContactInhibitionCellCycleModel.hpp"
+#include "StochasticDurationCellCycleModel.hpp"
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
 #include "NodeBasedCellPopulation.hpp"
@@ -21,6 +24,7 @@
 #include "CellProliferativeTypesCountWriter.hpp"
 #include "CellIdWriter.hpp"
 #include "CellVolumesWriter.hpp"
+#include "CellAncestorWriter.hpp"
 
 #include "OffLatticeSimulation.hpp"
 #include "OnLatticeSimulation.hpp"
@@ -38,6 +42,8 @@
 
 #include "PlaneBoundaryCondition.hpp"
 
+#include "CryptShovingCaBasedDivisionRule.hpp"
+
 #include "AbstractCellBasedWithTimingsTestSuite.hpp"
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
@@ -50,10 +56,10 @@ private:
 
     void GenerateStemCells(unsigned num_cells, std::vector<CellPtr>& rCells, double EquilibriumVolume)
     {
-        double typical_stem_cell_cycle_duration = 24.0;
+        double typical_cell_cycle_duration = 12.0;
 
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
-        boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<StemCellProliferativeType>());
+        boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
 
         for (unsigned i=0; i<num_cells; i++)
         {
@@ -64,7 +70,7 @@ private:
 
             CellPtr p_cell(new Cell(p_state, p_model));
             p_cell->SetCellProliferativeType(p_cell_type);
-            double birth_time = - RandomNumberGenerator::Instance()->ranf() * typical_stem_cell_cycle_duration;
+            double birth_time = - RandomNumberGenerator::Instance()->ranf() * typical_cell_cycle_duration;
             p_cell->SetBirthTime(birth_time);
             rCells.push_back(p_cell);
         }
@@ -72,7 +78,7 @@ private:
 
 public:
 
-    void TestVertexCrypt() throw (Exception)
+    void NoTestVertexCrypt() throw (Exception)
     {
         double crypt_length = 12;
         double crypt_width = 5.5;
@@ -131,7 +137,7 @@ public:
         Warnings::Instance()->QuietDestroy();
     }
 
-    void TestMeshBasedCrypt() throw (Exception)
+    void NoTestMeshBasedCrypt() throw (Exception)
     {
         double crypt_length = 12-0.5;
         double crypt_width = 5.0;
@@ -187,7 +193,7 @@ public:
         simulator.Solve();
     }
 
-    void TestNodeBasedCrypt() throw (Exception)
+    void NoTestNodeBasedCrypt() throw (Exception)
     {
         double crypt_length = 12-0.5;
         double crypt_width = 5;
@@ -253,14 +259,14 @@ public:
         delete p_mesh;
     }
 
-    void TestPottsCrypt() throw (Exception)
+    void NoTestPottsCrypt() throw (Exception)
     {
         double crypt_length = 12;
         double crypt_width = 6;
         unsigned cells_across = 6;
 
         // Create a simple 2D PottsMesh (periodic in x)
-        PottsMeshGenerator<2> generator(crypt_width*4, cells_across, 4, (crypt_length+2)*4, 1, 4, 1, 1, 1, true);
+        PottsMeshGenerator<2> generator(crypt_width*4, cells_across, 4, (crypt_length+2)*4, 1, 4, 1, 1, 1, false, true);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         // Create cells
@@ -308,12 +314,8 @@ public:
         unsigned crypt_length = 12;
 
         // Create a simple 2D PottsMesh (periodic in x)
-        PottsMeshGenerator<2> generator(6, 0, 0, crypt_length+1, 0, 0, 1, 0, 0, true);
+        PottsMeshGenerator<2> generator(cells_across, 0, 0, crypt_length*2+1, 0, 0, 1, 0, 0, false, true);
         PottsMesh<2>* p_mesh = generator.GetMesh();
-
-        // Create cells
-        std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,1.0);
 
         // Specify where cells lie
         std::vector<unsigned> location_indices;
@@ -322,18 +324,30 @@ public:
             location_indices.push_back(index);
         }
 
+
+//        // Create cells
+//        std::vector<CellPtr> cells;
+//        GenerateStemCells(cells_across,cells,1.0);
+
+		MAKE_PTR(TransitCellProliferativeType, p_transit_type);
+
+		std::vector<CellPtr> cells;
+		CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
+		cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_transit_type);
+
+
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
         cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAncestorWriter>();
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory("CylindricalCrypt/Ca");
-        simulator.SetDt(0.1);
-        simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(M_END_TIME);
+        simulator.SetDt(1);
+        simulator.SetEndTime(100);//M_END_TIME);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
@@ -341,10 +355,11 @@ public:
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
-        // Add update rule
-        MAKE_PTR(DiffusionCaUpdateRule<2>, p_diffusion_update_rule);
-        p_diffusion_update_rule->SetDiffusionParameter(0.1);
-        simulator.AddCaUpdateRule(p_diffusion_update_rule);
+        // Add Division Rule
+        boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new CryptShovingCaBasedDivisionRule());
+        cell_population.SetCaBasedDivisionRule(p_division_rule);
+
+
 
         // Sloughing killer
         MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
@@ -352,6 +367,16 @@ public:
 
         // Run simulation
         simulator.Solve();
+
+        simulator.SetEndTime(500);
+
+        simulator.rGetCellPopulation().SetCellAncestorsToLocationIndices();
+
+        // Run simulation to new end time
+        simulator.Solve();
+
+
+
     }
 };
 

@@ -36,25 +36,13 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MORPHOGENDEPENDENTCELLCYCLEMODEL_HPP_
 #define MORPHOGENDEPENDENTCELLCYCLEMODEL_HPP_
 
-#include "AbstractSimpleCellCycleModel.hpp"
+#include "AbstractCellCycleModel.hpp"
 
 /**
- * Simple stress-based cell-cycle model.
- *
- * A simple stress-dependent cell-cycle model that inherits from
- * AbstractSimpleCellCycleModel. The duration of G1 phase depends
- * on the local stress, interpreted here as deviation from target
- * volume (or area/length in 2D/1D).
- *
- * This model allows for quiescence imposed by transient periods
- * of high stress, followed by relaxation.
- *
- * Note that in this cell cycle model, quiescence is implemented
- * by extending the G1 phase. If a cell is compressed during G2
- * or S phases then it will still divide, and thus cells whose
- * volumes are smaller than the given threshold may still divide.
+ * TODO
  */
-class MorphogenDependentCellCycleModel : public AbstractSimpleCellCycleModel
+
+class MorphogenDependentCellCycleModel : public AbstractCellCycleModel
 {
 private:
 
@@ -68,39 +56,34 @@ private:
     template<class Archive>
     void serialize(Archive & archive, const unsigned int version)
     {
-        archive & boost::serialization::base_object<AbstractSimpleCellCycleModel>(*this);
-        archive & mThresholdMorphogen;
-        archive & mQuiescentVolumeFraction;
-        archive & mEquilibriumVolume;
-        archive & mCurrentQuiescentDuration;
-        archive & mCurrentQuiescentOnsetTime;
+        archive & boost::serialization::base_object<AbstractCellCycleModel>(*this);
+        archive & mGrowthRate;
+        archive & mCurrentMass;
+        archive & mTargetMass;
+        archive & mMorphogenInfluence;
     }
 
     /**
-     * Threshold level of Morphogen, below this cells don't proliferate
+     * Growth rate of the cell, randomly assigned on birth
      */
-    double mThresholdMorphogen;
+    double mGrowthRate;
 
     /**
-     * The fraction of the cells' equilibrium volume in G1 phase below which these cells are quiescent.
+     * Stores the current mass of the cell, (Referred to as volume in the paper)
      */
-    double mQuiescentVolumeFraction;
+    double mCurrentMass;
+
+    // Parameters
 
     /**
-     * The cell equilibrium volume while in G1 phase.
+     * Target mass of the cell (Referred to as volume in the paper)
      */
-    double mEquilibriumVolume;
+    double mTargetMass;
 
     /**
-     * The time when the current period of quiescence began.
+     * the level of influence the morphogen has on growth
      */
-    double mCurrentQuiescentOnsetTime;
-
-    /**
-     * How long the current period of quiescence has lasted.
-     * Has units of hours.
-     */
-    double mCurrentQuiescentDuration;
+    double mMorphogenInfluence;
 
 public:
 
@@ -110,7 +93,26 @@ public:
     MorphogenDependentCellCycleModel();
 
     /**
+     * Overridden ReadyToDivideMethod
+     *
+     * @return whether the cell is ready to divide (enter M phase).
+     *
+     * Here we divide randomly basd on the size of the cell compared to the target size.
+     *
+     */
+    virtual bool ReadyToDivide();
+
+    /**
+     * Overriden ResetForDivision method to halve the current cell size.
+     *
+     * Should only be called by the Cell Divide() method.
+     */
+    virtual void ResetForDivision();
+
+    /**
      * Overridden UpdateCellCyclePhase() method.
+     *
+     * Note this is never called. But we need to include it.
      */
     void UpdateCellCyclePhase();
 
@@ -126,56 +128,32 @@ public:
     /**
      * @param thresholdMorphogen
      */
-    void SetThresholdMorphogen(double thresholdMorphogen);
+    void SetCurrentMass(double currentMass);
 
     /**
-     * @return mThresholdMorphogen
+     * @return mCurrentMass
      */
-    double GetThresholdMorphogen();
+    double GetCurrentMass();
 
     /**
-     * @param quiescentVolumeFraction
+     * @param targetMass
      */
-    void SetQuiescentVolumeFraction(double quiescentVolumeFraction);
+    void SetTargetMass(double targetMass);
 
     /**
-     * @return mQuiescentVolumeFraction
+     * @return mTargetMass
      */
-    double GetQuiescentVolumeFraction();
+    double GetTargetMass();
 
     /**
-     * @param equilibriumVolume
+     * @param morphogenInfluence
      */
-    void SetEquilibriumVolume(double equilibriumVolume);
+    void SetMorphogenInfluence(double morphogenInfluence);
 
     /**
-     * @return mEquilibriumVolume
+     * @return mMorphogenInfluence
      */
-    double GetEquilibriumVolume();
-
-    /**
-     * Set method for mCurrentQuiescentDuration.
-     *
-     * @param currentQuiescentDuration the new value of mCurrentQuiescentDuration
-     */
-    void SetCurrentQuiescentDuration(double currentQuiescentDuration);
-
-    /**
-     * @return mCurrentQuiescentDuration
-     */
-    double GetCurrentQuiescentDuration();
-
-    /**
-     * Set method for mCurrentQuiescentOnsetTime.
-     *
-     * @param currentQuiescentOnsetTime the new value of mCurrentQuiescentOnsetTime
-     */
-    void SetCurrentQuiescentOnsetTime(double currentQuiescentOnsetTime);
-
-    /**
-     * @return mCurrentQuiescentOnsetTime
-     */
-    double GetCurrentQuiescentOnsetTime();
+    double GetMorphogenInfluence();
 
     /**
      * Outputs cell cycle model parameters to file.

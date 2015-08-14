@@ -299,6 +299,8 @@ Discuss biological background:
 \item This example demonstrates morphogens being represented as reaction-diffusion systems coupled to the discrete cell level models in Chaste.
 \end{itemize}
 
+
+
 \noindent Extra functionality required for this example:
 \begin{itemize}
 \item Solving a single PDE on a vertex mesh - use cell centre to allow specification of a triangular mesh at each time step (see also \citet{Smith2011Incorporating}).
@@ -310,6 +312,35 @@ Discuss biological background:
 \end{itemize}
 
 \highlight{Suggest we implement the simulation described in Section 7 of \citet{Smith2011Incorporating}.}
+
+
+\subsection{Mathematical model of Dpp diffusion}
+From \citet{Smith2011Incorporating}. The Dpp distribution satisfies
+
+\begin{equation}
+\frac{\partial c}{\partial t} - \nabla \cdot (D \nabla c) = \sum_{i=1}^{N(t)}f_{i}(t)\phi_i(\vec{x},t) - dc
+\end{equation}
+Where $d$ is degredation coeficient ($d=0.01$ CHECK) and 
+\begin{equation}
+f_i = \begin{cases}
+        0.1 \text{ for } x \in (-1,1),
+        \\
+        0 \text{ otherwise.} 
+        \end{cases}
+\end{equation}
+\subsection{Cell Cycle Model}
+From \citet{Smith2011Incorporating}. The Mass of the cell $v_k$ (called volume in the paper) increases at each timestep by
+\begin{equation}
+v_{k}^{t+1} = v_{k}^{t} \left( 1+\Delta t g_k(1+\lambda c_{k})\left(1-\frac{v_{k}^{t}}{V_T}\right)\right).
+\end{equation}
+$g_k$ is drawn from a truncated normal with $g_{k} \sim N(0.1,0.01^{2})$ and $g_k>0.01$.
+The probability of division at each timestep is 
+\begin{equation}
+p = d \Delta t (v_{k}/V_T - 0.5)
+\end{equation}
+The 0.5 is not in  \citet{Smith2011Incorporating}.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

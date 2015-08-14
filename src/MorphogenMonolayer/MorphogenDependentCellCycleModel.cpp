@@ -35,74 +35,75 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "MorphogenDependentCellCycleModel.hpp"
 #include "CellLabel.hpp"
-#include "DifferentiatedCellProliferativeType.hpp"
+#include "DefaultCellProliferativeType.hpp"
+#include "RandomNumberGenerator.hpp"
 
 MorphogenDependentCellCycleModel::MorphogenDependentCellCycleModel()
-    : AbstractSimpleCellCycleModel(),
-      mThresholdMorphogen(DOUBLE_UNSET),
-      mQuiescentVolumeFraction(DOUBLE_UNSET),
-      mEquilibriumVolume(DOUBLE_UNSET),
-      mCurrentQuiescentOnsetTime(SimulationTime::Instance()->GetTime()),
-      mCurrentQuiescentDuration(0.0)
+    : AbstractCellCycleModel(),
+	  mGrowthRate(DOUBLE_UNSET),
+	  mCurrentMass(DOUBLE_UNSET),
+	  mTargetMass(1.0),
+	  mMorphogenInfluence(DOUBLE_UNSET)
 {
+
+	double minimum_growth_rate = 0.01;
+	double mean_growth_rate = 0.05;
+	double sd = 0.01;
+    RandomNumberGenerator* p_gen =RandomNumberGenerator::Instance();
+
+	//Genrate a truncated normal for the Growth rate
+	mGrowthRate = 0.0;
+	while ( mGrowthRate < minimum_growth_rate)
+	{
+		mGrowthRate = p_gen->NormalRandomDeviate(mean_growth_rate,sd);
+
+	}
+}
+
+bool MorphogenDependentCellCycleModel::ReadyToDivide()
+{
+	if  ((mCurrentMass == DOUBLE_UNSET) || (mMorphogenInfluence == DOUBLE_UNSET) )
+    {
+        EXCEPTION("The member variables mCurrentMass and mMorphogenInfluence have not yet been set.");
+    }
+
+	assert(mpCell != NULL);
+
+	double morphogen_level = mpCell->GetCellData()->GetItem("morphogen");
+	double dt = SimulationTime::Instance()->GetTimeStep();
+
+
+	// Equation 16 from Smith et al 2011
+	mCurrentMass *= 1.0 + dt*mGrowthRate*(1.0+mMorphogenInfluence*morphogen_level)*(1.0-mCurrentMass/mTargetMass);
+
+	double division_rate = 0.1; // Per cell per hour
+
+
+	double p_division = division_rate * dt *  (mCurrentMass/mTargetMass - 0.5);
+	RandomNumberGenerator* p_gen = RandomNumberGenerator::Instance();
+	 if (p_gen->ranf()<p_division)
+	 {
+		 mReadyToDivide = true;
+	 }
+
+	 mpCell->GetCellData()->SetItem("p_division", p_division);
+	 mpCell->GetCellData()->SetItem("GrowthRate", mGrowthRate);
+	 mpCell->GetCellData()->SetItem("CurrentMass", mCurrentMass);
+
+	return mReadyToDivide;
+}
+
+void MorphogenDependentCellCycleModel::ResetForDivision()
+{
+    AbstractCellCycleModel::ResetForDivision();
+    mBirthTime = SimulationTime::Instance()->GetTime();
+    // Halve the mass as half goes to each daughter cell
+    mCurrentMass *= 0.5;
 }
 
 void MorphogenDependentCellCycleModel::UpdateCellCyclePhase()
 {
-    if ((mQuiescentVolumeFraction == DOUBLE_UNSET) || (mEquilibriumVolume == DOUBLE_UNSET) || (mThresholdMorphogen == DOUBLE_UNSET))
-    {
-        EXCEPTION("The member variables mThresholdMorphogen, mQuiescentVolumeFraction and mEquilibriumVolume have not yet been set.");
-    }
-
-    // Get cell volume and morphogen level
-    double morphogen_level = mpCell->GetCellData()->GetItem("morphogen");
-    double cell_volume = mpCell->GetCellData()->GetItem("volume");
-
-
-    if (mCurrentCellCyclePhase == G_ONE_PHASE)
-    {
-        // Update G1 duration based on cell volume
-        double dt = SimulationTime::Instance()->GetTimeStep();
-        double quiescent_volume = mEquilibriumVolume * mQuiescentVolumeFraction;
-
-        if (cell_volume < quiescent_volume || morphogen_level < mThresholdMorphogen)
-        {
-            // Update the duration of the current period of contact inhibition.
-            mCurrentQuiescentDuration = SimulationTime::Instance()->GetTime() - mCurrentQuiescentOnsetTime;
-            mG1Duration += dt;
-
-        }
-        else
-        {
-            // Reset the cell's quiescent duration and update the time at which the onset of quiescent occurs
-            mCurrentQuiescentDuration = 0.0;
-            mCurrentQuiescentOnsetTime = SimulationTime::Instance()->GetTime();
-        }
-    }
-
-    double time_since_birth = GetAge();
-    assert(time_since_birth >= 0);
-
-    if (mpCell->GetCellProliferativeType()->IsType<DifferentiatedCellProliferativeType>())
-    {
-        mCurrentCellCyclePhase = G_ZERO_PHASE;
-    }
-    else if ( time_since_birth < GetMDuration() )
-    {
-        mCurrentCellCyclePhase = M_PHASE;
-    }
-    else if ( time_since_birth < GetMDuration() + mG1Duration)
-    {
-        mCurrentCellCyclePhase = G_ONE_PHASE;
-    }
-    else if ( time_since_birth < GetMDuration() + mG1Duration + GetSDuration())
-    {
-        mCurrentCellCyclePhase = S_PHASE;
-    }
-    else if ( time_since_birth < GetMDuration() + mG1Duration + GetSDuration() + GetG2Duration())
-    {
-        mCurrentCellCyclePhase = G_TWO_PHASE;
-    }
+	NEVER_REACHED;
 }
 
 AbstractCellCycleModel* MorphogenDependentCellCycleModel::CreateCellCycleModel()
@@ -131,73 +132,52 @@ AbstractCellCycleModel* MorphogenDependentCellCycleModel::CreateCellCycleModel()
     p_model->SetSDuration(mSDuration);
     p_model->SetG2Duration(mG2Duration);
     p_model->SetMDuration(mMDuration);
-    p_model->SetThresholdMorphogen(mThresholdMorphogen);
-    p_model->SetQuiescentVolumeFraction(mQuiescentVolumeFraction);
-    p_model->SetEquilibriumVolume(mEquilibriumVolume);
-    p_model->SetCurrentQuiescentOnsetTime(mCurrentQuiescentOnsetTime);
-    p_model->SetCurrentQuiescentDuration(mCurrentQuiescentDuration);
+    p_model->SetCurrentMass(mCurrentMass);
+    p_model->SetTargetMass(mTargetMass);
+    p_model->SetMorphogenInfluence(mMorphogenInfluence);
 
     return p_model;
 }
 
-void MorphogenDependentCellCycleModel::SetThresholdMorphogen(double thresholdMorphogen)
+
+void MorphogenDependentCellCycleModel::SetCurrentMass(double currentMass)
 {
-    mThresholdMorphogen = thresholdMorphogen;
+	mCurrentMass = currentMass;
 }
 
-double MorphogenDependentCellCycleModel::GetThresholdMorphogen()
+double MorphogenDependentCellCycleModel::GetCurrentMass()
 {
-    return mThresholdMorphogen;
+    return mCurrentMass;
 }
 
-void MorphogenDependentCellCycleModel::SetQuiescentVolumeFraction(double quiescentVolumeFraction)
+void MorphogenDependentCellCycleModel::SetTargetMass(double targetMass)
 {
-    mQuiescentVolumeFraction = quiescentVolumeFraction;
+	mTargetMass = targetMass;
 }
 
-double MorphogenDependentCellCycleModel::GetQuiescentVolumeFraction()
+double MorphogenDependentCellCycleModel::GetTargetMass()
 {
-    return mQuiescentVolumeFraction;
+    return mTargetMass;
 }
 
-void MorphogenDependentCellCycleModel::SetEquilibriumVolume(double equilibriumVolume)
+void MorphogenDependentCellCycleModel::SetMorphogenInfluence(double morphogenInfluence)
 {
-    mEquilibriumVolume = equilibriumVolume;
+	mMorphogenInfluence = morphogenInfluence;
 }
 
-double MorphogenDependentCellCycleModel::GetEquilibriumVolume()
+double MorphogenDependentCellCycleModel::GetMorphogenInfluence()
 {
-    return mEquilibriumVolume;
+    return mMorphogenInfluence;
 }
 
-void MorphogenDependentCellCycleModel::SetCurrentQuiescentDuration(double currentQuiescentDuration)
-{
-    mCurrentQuiescentDuration = currentQuiescentDuration;
-}
-
-double MorphogenDependentCellCycleModel::GetCurrentQuiescentDuration()
-{
-    return mCurrentQuiescentDuration;
-}
-
-void MorphogenDependentCellCycleModel::SetCurrentQuiescentOnsetTime(double currentQuiescentOnsetTime)
-{
-    mCurrentQuiescentOnsetTime = currentQuiescentOnsetTime;
-}
-
-double MorphogenDependentCellCycleModel::GetCurrentQuiescentOnsetTime()
-{
-    return mCurrentQuiescentOnsetTime;
-}
 
 void MorphogenDependentCellCycleModel::OutputCellCycleModelParameters(out_stream& rParamsFile)
 {
-    *rParamsFile << "\t\t\t<ThresholdMorphogen>" << mThresholdMorphogen << "</ThresholdMorphogen>\n";
-    *rParamsFile << "\t\t\t<QuiescentVolumeFraction>" << mQuiescentVolumeFraction << "</QuiescentVolumeFraction>\n";
-    *rParamsFile << "\t\t\t<EquilibriumVolume>" << mEquilibriumVolume << "</EquilibriumVolume>\n";
+    *rParamsFile << "\t\t\t<TargetMass>" << mTargetMass << "</TargetMass>\n";
+    *rParamsFile << "\t\t\t<MorphogenInfluence>" << mMorphogenInfluence << "</MorphogenInfluence>\n";
 
     // Call method on direct parent class
-    AbstractSimpleCellCycleModel::OutputCellCycleModelParameters(rParamsFile);
+    AbstractCellCycleModel::OutputCellCycleModelParameters(rParamsFile);
 }
 
 // Serialization for Boost >= 1.36
