@@ -13,8 +13,8 @@
 
 #include "CellsGenerator.hpp"
 
-#include "ContactInhibitionCellCycleModel.hpp"
-#include "StochasticDurationCellCycleModel.hpp"
+#include "SimpleWntContactInhibitionCellCycleModel.hpp"
+#include "WntConcentration.hpp"
 
 #include "MeshBasedCellPopulationWithGhostNodes.hpp"
 #include "NodeBasedCellPopulation.hpp"
@@ -48,13 +48,20 @@
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const double M_END_TIME = 20.0; //2200
+static const bool M_USING_COMMAND_LINE_ARGS = true;
+static const double M_END_STEADY_STATE = 100.0; //100
+static const double M_END_TIME = 1000.0; //600
+static const double M_CRYPT_DIAMETER = 16;
+static const double M_CRYPT_LENGTH = 12;
+static const double M_CONTACT_INHIBITION_LEVEL = 0.8;
+
+
 
 class TestCryptSimulationComparison : public AbstractCellBasedWithTimingsTestSuite
 {
 private:
 
-    void GenerateStemCells(unsigned num_cells, std::vector<CellPtr>& rCells, double EquilibriumVolume)
+    void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells, double EquilibriumVolume)
     {
         double typical_cell_cycle_duration = 12.0;
 
@@ -63,10 +70,12 @@ private:
 
         for (unsigned i=0; i<num_cells; i++)
         {
-            ContactInhibitionCellCycleModel* p_model = new ContactInhibitionCellCycleModel();
+            SimpleWntContactInhibitionCellCycleModel* p_model = new SimpleWntContactInhibitionCellCycleModel();
             p_model->SetDimension(2);
             p_model->SetEquilibriumVolume(EquilibriumVolume);
-            p_model->SetQuiescentVolumeFraction(0.8); //0.8 -> CI // 0.1 -> No CI!!!!
+            p_model->SetQuiescentVolumeFraction(M_CONTACT_INHIBITION_LEVEL); //0.8 -> CI // 0.1 -> No CI!!!!
+            p_model->SetWntThreshold(0.5); //0.8 -> CI // 0.1 -> No CI!!!!
+
 
             CellPtr p_cell(new Cell(p_state, p_model));
             p_cell->SetCellProliferativeType(p_cell_type);
@@ -78,22 +87,27 @@ private:
 
 public:
 
-    void NoTestVertexCrypt() throw (Exception)
+    void TestVertexCrypt() throw (Exception)
     {
-        double crypt_length = 12;
-        double crypt_width = 5.5;
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CylindricalCrypt/Vertex/" +  out.str();
 
         // Create mesh
-        unsigned cells_across = 6;
-
-        CylindricalHoneycombVertexMeshGenerator generator(cells_across, 1, true);
+        CylindricalHoneycombVertexMeshGenerator generator(M_CRYPT_DIAMETER, M_CRYPT_LENGTH, true);
         Cylindrical2dVertexMesh* p_mesh = generator.GetCylindricalMesh();
-
-        p_mesh->Scale(crypt_width/cells_across,1.0);
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,0.89); //1.0
+        GenerateCells(p_mesh->GetNumElements(),cells,1.0); //mature_volume = 1.0
 
         // Create tissue
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -101,14 +115,20 @@ public:
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
 
+        // Create an instance of a Wnt concentration
+        WntConcentration<2>::Instance()->SetType(LINEAR);
+        WntConcentration<2>::Instance()->SetCellPopulation(cell_population);
+        WntConcentration<2>::Instance()->SetCryptLength(M_CRYPT_LENGTH);
+
         // Create crypt simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(M_END_TIME);
-        simulator.SetOutputDirectory("CylindricalCrypt/Vertex");
+        simulator.SetEndTime(M_END_STEADY_STATE);
+        simulator.SetOutputDirectory(output_directory);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
+        cell_population.AddCellWriter<CellAncestorWriter>();
 
         // Add volume tracking modifier
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
@@ -128,25 +148,42 @@ public:
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
 
         // Sloughing killer
-        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
+        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, M_CRYPT_LENGTH*unit_vector<double>(2,1), unit_vector<double>(2,1)));
         simulator.AddCellKiller(p_killer);
 
         // Run simulation
         simulator.Solve();
 
+        // Mark Ancestors
+        simulator.SetEndTime(M_END_TIME);
+        simulator.rGetCellPopulation().SetCellAncestorsToLocationIndices();
+
+        // Run simulation to new end time
+        simulator.Solve();
+
+        // Clear singletons
+        WntConcentration<2>::Instance()->Destroy();
         Warnings::Instance()->QuietDestroy();
     }
 
-    void NoTestMeshBasedCrypt() throw (Exception)
+    void TestMeshBasedCrypt() throw (Exception)
     {
-        double crypt_length = 12-0.5;
-        double crypt_width = 5.0;
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CylindricalCrypt/Mesh/" +  out.str();
 
         // Create mesh
-        unsigned cells_across = 6;
         unsigned thickness_of_ghost_layer = 2;
 
-        CylindricalHoneycombMeshGenerator generator(cells_across, 1, thickness_of_ghost_layer, crypt_width/cells_across);
+        CylindricalHoneycombMeshGenerator generator(M_CRYPT_DIAMETER, M_CRYPT_LENGTH, thickness_of_ghost_layer);
         Cylindrical2dMesh* p_mesh = generator.GetCylindricalMesh();
 
         // Get location indices corresponding to real cells
@@ -154,20 +191,26 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,0.8); //sqrt(3.0)/2.0
+        GenerateCells(location_indices.size(),cells,sqrt(3.0)/2.0);  //mature_volume = sqrt(3.0)/2.0
 
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
         cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAncestorWriter>();
+
+        // Create an instance of a Wnt concentration
+        WntConcentration<2>::Instance()->SetType(LINEAR);
+        WntConcentration<2>::Instance()->SetCellPopulation(cell_population);
+        WntConcentration<2>::Instance()->SetCryptLength(M_CRYPT_LENGTH);
 
         // Create simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(M_END_TIME);
-        simulator.SetOutputDirectory("CylindricalCrypt/Mesh");
+        simulator.SetEndTime(M_END_STEADY_STATE);
+        simulator.SetOutputDirectory(output_directory);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
@@ -186,51 +229,72 @@ public:
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
 
         // Sloughing killer
-        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
+        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, (M_CRYPT_LENGTH-0.5)*unit_vector<double>(2,1), unit_vector<double>(2,1)));
         simulator.AddCellKiller(p_killer);
 
         // Run simulation
         simulator.Solve();
+
+        // Mark Ancestors
+        simulator.SetEndTime(M_END_TIME);
+        simulator.rGetCellPopulation().SetCellAncestorsToLocationIndices();
+
+        // Run simulation to new end time
+        simulator.Solve();
+
+        // Clear singletons
+        WntConcentration<2>::Instance()->Destroy();
     }
 
-    void NoTestNodeBasedCrypt() throw (Exception)
+    void TestNodeBasedCrypt() throw (Exception)
     {
-        double crypt_length = 12-0.5;
-        double crypt_width = 5;
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CylindricalCrypt/Node/" +  out.str();
 
         // Create a simple mesh
-        unsigned cells_across = 6;
-        HoneycombMeshGenerator generator(cells_across, 1, 0, crypt_width/cells_across);
+        HoneycombMeshGenerator generator(M_CRYPT_DIAMETER, M_CRYPT_LENGTH, 0);
         TetrahedralMesh<2,2>* p_generating_mesh = generator.GetMesh();
 
         // Convert this to a Cylindrical2dNodesOnlyMesh
-        Cylindrical2dNodesOnlyMesh* p_mesh = new Cylindrical2dNodesOnlyMesh(crypt_width);
-        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh,crypt_width);
-
-        // Get location indices corresponding to real cells
-        std::vector<unsigned> location_indices = generator.GetCellLocationIndices();
+        Cylindrical2dNodesOnlyMesh* p_mesh = new Cylindrical2dNodesOnlyMesh(M_CRYPT_DIAMETER);
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh,M_CRYPT_DIAMETER);
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across, cells, 0.825); // r=0.5 M_PI*0.25
+        GenerateCells(p_mesh->GetNumNodes(), cells, M_PI*0.25); // mature volume: M_PI*0.25 as r=0.5
 
         // Create a node-based cell population
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAncestorWriter>();
 
         for (unsigned index = 0; index < cell_population.rGetMesh().GetNumNodes(); index++)
         {
             cell_population.rGetMesh().GetNode(index)->SetRadius(0.5);
         }
 
+        // Create an instance of a Wnt concentration
+        WntConcentration<2>::Instance()->SetType(LINEAR);
+        WntConcentration<2>::Instance()->SetCellPopulation(cell_population);
+        WntConcentration<2>::Instance()->SetCryptLength(M_CRYPT_LENGTH);
+
         // Create simulation from cell population
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(M_END_TIME);
-        simulator.SetOutputDirectory("CylindricalCrypt/Node");
+        simulator.SetEndTime(M_END_STEADY_STATE);
+        simulator.SetOutputDirectory(output_directory);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
@@ -249,44 +313,69 @@ public:
         simulator.AddCellPopulationBoundaryCondition(p_bcs);
 
         // Sloughing killer
-        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
+        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, (M_CRYPT_LENGTH-0.5)*unit_vector<double>(2,1), unit_vector<double>(2,1)));
         simulator.AddCellKiller(p_killer);
 
         // Run simulation
         simulator.Solve();
 
+        // Mark Ancestors
+        simulator.SetEndTime(M_END_TIME);
+        simulator.rGetCellPopulation().SetCellAncestorsToLocationIndices();
+
+        // Run simulation to new end time
+        simulator.Solve();
+
         // Clear memory
         delete p_mesh;
+
+        // Clear singletons
+        WntConcentration<2>::Instance()->Destroy();
     }
 
-    void NoTestPottsCrypt() throw (Exception)
+    void TestPottsCrypt() throw (Exception)
     {
-        double crypt_length = 12;
-        double crypt_width = 6;
-        unsigned cells_across = 6;
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CylindricalCrypt/Potts/" +  out.str();
+
+        unsigned cell_width = 4;
 
         // Create a simple 2D PottsMesh (periodic in x)
-        PottsMeshGenerator<2> generator(crypt_width*4, cells_across, 4, (crypt_length+2)*4, 1, 4, 1, 1, 1, false, true);
+        PottsMeshGenerator<2> generator( M_CRYPT_DIAMETER*cell_width, M_CRYPT_DIAMETER, cell_width, (M_CRYPT_LENGTH+2)*cell_width, M_CRYPT_LENGTH, cell_width, 1, 1, 1, true, true); //Dtart from bottom left and periodic
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateStemCells(cells_across,cells,16.0); //16.0
+        GenerateCells(p_mesh->GetNumElements(),cells,cell_width*cell_width); // mature volume = 16.0 LSs
 
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.SetNumSweepsPerTimestep(10);
-        cell_population.SetTemperature(0.001);
+        cell_population.SetTemperature(0.1);
         cell_population.AddCellPopulationCountWriter<CellProliferativeTypesCountWriter>();
         cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAncestorWriter>();
+
+        // Create an instance of a Wnt concentration
+        WntConcentration<2>::Instance()->SetType(LINEAR);
+        WntConcentration<2>::Instance()->SetCellPopulation(cell_population);
+        WntConcentration<2>::Instance()->SetCryptLength(M_CRYPT_LENGTH*cell_width);
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("CylindricalCrypt/Potts");
-        simulator.SetDt(0.1);
-        simulator.SetSamplingTimestepMultiple(10);
-        simulator.SetEndTime(M_END_TIME);
+        simulator.SetOutputDirectory(output_directory);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetEndTime(M_END_STEADY_STATE);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
@@ -295,7 +384,7 @@ public:
         simulator.AddSimulationModifier(p_modifier);
 
         // Sloughing killer
-        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, 4.0*crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
+        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, cell_width*M_CRYPT_LENGTH*unit_vector<double>(2,1), unit_vector<double>(2,1)));
         simulator.AddCellKiller(p_killer);
 
         // Create update rules and pass to the simulation
@@ -306,35 +395,46 @@ public:
 
         // Run simulation
         simulator.Solve();
+
+        // Mark Ancestors
+        simulator.SetEndTime(M_END_TIME);
+        simulator.rGetCellPopulation().SetCellAncestorsToLocationIndices();
+
+        // Run simulation to new end time
+        simulator.Solve();
+
+        // Clear singletons
+        WntConcentration<2>::Instance()->Destroy();
     }
 
     void TestCaCrypt() throw (Exception)
     {
-        unsigned cells_across = 6;
-        unsigned crypt_length = 12;
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CylindricalCrypt/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh (periodic in x)
-        PottsMeshGenerator<2> generator(cells_across, 0, 0, crypt_length*2+1, 0, 0, 1, 0, 0, false, true);
+        PottsMeshGenerator<2> generator(M_CRYPT_DIAMETER, 0, 0, M_CRYPT_LENGTH*3, 0, 0, 1, 0, 0, false, true);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         // Specify where cells lie
         std::vector<unsigned> location_indices;
-        for (unsigned index=0; index<cells_across; index++)
+        for (unsigned index=0; index<(unsigned)M_CRYPT_DIAMETER*(unsigned)M_CRYPT_LENGTH; index++)
         {
             location_indices.push_back(index);
         }
 
-
 //        // Create cells
-//        std::vector<CellPtr> cells;
-//        GenerateStemCells(cells_across,cells,1.0);
-
-		MAKE_PTR(TransitCellProliferativeType, p_transit_type);
-
-		std::vector<CellPtr> cells;
-		CellsGenerator<StochasticDurationCellCycleModel, 2> cells_generator;
-		cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_transit_type);
-
+        std::vector<CellPtr> cells;
+        GenerateCells(location_indices.size(),cells,1.0); //Mature volume = 1 LS
 
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
@@ -343,11 +443,16 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAncestorWriter>();
 
+        // Create an instance of a Wnt concentration
+        WntConcentration<2>::Instance()->SetType(LINEAR);
+        WntConcentration<2>::Instance()->SetCellPopulation(cell_population);
+        WntConcentration<2>::Instance()->SetCryptLength(M_CRYPT_LENGTH);
+
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("CylindricalCrypt/Ca");
+        simulator.SetOutputDirectory(output_directory);
         simulator.SetDt(1);
-        simulator.SetEndTime(100);//M_END_TIME);
+        simulator.SetEndTime(M_END_STEADY_STATE);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
 
@@ -360,23 +465,22 @@ public:
         cell_population.SetCaBasedDivisionRule(p_division_rule);
 
 
-
         // Sloughing killer
-        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, crypt_length*unit_vector<double>(2,1), unit_vector<double>(2,1)));
+        MAKE_PTR_ARGS(PlaneBasedCellKiller<2>, p_killer, (&cell_population, M_CRYPT_LENGTH*unit_vector<double>(2,1), unit_vector<double>(2,1)));
         simulator.AddCellKiller(p_killer);
 
         // Run simulation
         simulator.Solve();
 
-        simulator.SetEndTime(500);
-
+        // Mark Ancestors
+        simulator.SetEndTime(M_END_TIME);
         simulator.rGetCellPopulation().SetCellAncestorsToLocationIndices();
 
         // Run simulation to new end time
         simulator.Solve();
 
-
-
+        // Clear singletons
+        WntConcentration<2>::Instance()->Destroy();
     }
 };
 

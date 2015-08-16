@@ -28,6 +28,9 @@
 #include "OnLatticeSimulation.hpp"
 #include "CellPopulationAdjacencyMatrixWriter.hpp"
 
+#include "CaBasedCellPopulation.hpp"
+#include "ShovingCaBasedDivisionRule.hpp"
+
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
 #include "VolumeConstraintPottsUpdateRule.hpp"
@@ -39,8 +42,12 @@
 
 #include "Debug.hpp"
 
+#include "CommandLineArguments.hpp"
+#include "CommandLineArgumentsMocker.hpp"
+
 #include "PetscSetupAndFinalize.hpp"
 
+static const bool M_USING_COMMAND_LINE_ARGS = false;
 static const double M_TIME_TO_STEADY_STATE = 5.0;
 static const double M_TIME_FOR_SIMULATION = 100.0; //100
 static const double M_NUM_CELLS_ACROSS = 5; //20 // this ^2 cells
@@ -91,7 +98,7 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void TestVertexMonolayerCellSorting() throw (Exception)
+    void NoTestVertexMonolayerCellSorting() throw (Exception)
     {
         // Create a simple 2D MutableVertexMesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS);
@@ -164,7 +171,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-    void TestPottsMonolayerCellSorting() throw (Exception)
+    void NoTestPottsMonolayerCellSorting() throw (Exception)
     {
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
@@ -230,7 +237,7 @@ public:
     }
 
 
-    void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+    void NoTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         // Create a simple mesh
         unsigned num_ghosts = 5;
@@ -292,7 +299,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-    void TestNodeBasedMonolayerCellSorting() throw (Exception)
+    void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);
@@ -356,4 +363,82 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
+
+    void TestCaBasedMonolayer() throw (Exception)
+    {
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CellSorting/Ca/" +  out.str();
+
+        // Create a simple 2D PottsMesh
+        unsigned domain_wide = 5*M_NUM_CELLS_ACROSS;
+
+        PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
+        PottsMesh<2>* p_mesh = generator.GetMesh();
+
+        p_mesh->Translate(-(double)domain_wide*0.5 + 0.5,-(double)domain_wide*0.5 + 0.5);
+
+        // Specify where cells lie
+        std::vector<unsigned> location_indices;
+        for (unsigned i=0; i<M_NUM_CELLS_ACROSS; i++)
+        {
+          for (unsigned j=0; j<M_NUM_CELLS_ACROSS; j++)
+          {
+              unsigned offset = (domain_wide+1) * (domain_wide-M_NUM_CELLS_ACROSS)/2;
+              location_indices.push_back(offset + j + i * domain_wide );
+          }
+        }
+        std::vector<CellPtr> cells;
+        MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
+        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_differentiated_type);
+
+        // Create cell population
+        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
+
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
+        cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
+        cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
+
+        OnLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory(output_directory);
+        simulator.SetDt(1.0);
+        simulator.SetSamplingTimestepMultiple(1);
+        simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
+
+        // Add Division Rule
+        boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
+        cell_population.SetCaBasedDivisionRule(p_division_rule);
+
+        //Add a movement rule
+        simulator.Solve();
+
+        // Now label some cells
+        boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
+        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+        // Run simulation
+        simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
+        simulator.Solve();
+
+        // Check that the same number of cells
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), M_NUM_CELLS_ACROSS*M_NUM_CELLS_ACROSS);
+
+        // Test no births or deaths
+        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
+        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
+
+
+
+    }
 };
