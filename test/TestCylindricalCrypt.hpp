@@ -50,10 +50,10 @@
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_END_STEADY_STATE = 100.0; //100
-static const double M_END_TIME = 1000.0; //600
+static const double M_END_TIME = 1100; //1100
 static const double M_CRYPT_DIAMETER = 16;
 static const double M_CRYPT_LENGTH = 12;
-static const double M_CONTACT_INHIBITION_LEVEL = 0.8;
+//static const double M_CONTACT_INHIBITION_LEVEL = 0.8;
 
 
 
@@ -61,7 +61,7 @@ class TestCryptSimulationComparison : public AbstractCellBasedWithTimingsTestSui
 {
 private:
 
-    void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells, double EquilibriumVolume)
+    void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells, double equilibriumVolume, double quiescentVolumeFraction)
     {
         double typical_cell_cycle_duration = 12.0;
 
@@ -72,8 +72,8 @@ private:
         {
             SimpleWntContactInhibitionCellCycleModel* p_model = new SimpleWntContactInhibitionCellCycleModel();
             p_model->SetDimension(2);
-            p_model->SetEquilibriumVolume(EquilibriumVolume);
-            p_model->SetQuiescentVolumeFraction(M_CONTACT_INHIBITION_LEVEL); //0.8 -> CI // 0.1 -> No CI!!!!
+            p_model->SetEquilibriumVolume(equilibriumVolume);
+            p_model->SetQuiescentVolumeFraction(quiescentVolumeFraction);
             p_model->SetWntThreshold(0.5); //0.8 -> CI // 0.1 -> No CI!!!!
 
 
@@ -90,15 +90,17 @@ public:
     void TestVertexCrypt() throw (Exception)
     {
         double sim_index = 0;
+        double contact_inhibition_level = 0.8;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          contact_inhibition_level = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CI").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CI_" << contact_inhibition_level;
         std::string output_directory = "CylindricalCrypt/Vertex/" +  out.str();
 
         // Create mesh
@@ -107,7 +109,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumElements(),cells,1.0); //mature_volume = 1.0
+        GenerateCells(p_mesh->GetNumElements(),cells,1.0,contact_inhibition_level); //mature_volume = 1.0
 
         // Create tissue
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -169,15 +171,16 @@ public:
     void TestMeshBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
+        double contact_inhibition_level = 0.8;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          contact_inhibition_level = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CI").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
-
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CI_" << contact_inhibition_level;
         std::string output_directory = "CylindricalCrypt/Mesh/" +  out.str();
 
         // Create mesh
@@ -191,7 +194,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells,sqrt(3.0)/2.0);  //mature_volume = sqrt(3.0)/2.0
+        GenerateCells(location_indices.size(),cells,sqrt(3.0)/2.0,contact_inhibition_level);  //mature_volume = sqrt(3.0)/2.0 =
 
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
@@ -249,15 +252,17 @@ public:
     void TestNodeBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
+        double contact_inhibition_level = 0.8;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          contact_inhibition_level = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CI").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CI_" << contact_inhibition_level;
         std::string output_directory = "CylindricalCrypt/Node/" +  out.str();
 
         // Create a simple mesh
@@ -270,7 +275,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumNodes(), cells, M_PI*0.25); // mature volume: M_PI*0.25 as r=0.5
+        GenerateCells(p_mesh->GetNumNodes(), cells, M_PI*0.25,contact_inhibition_level); // mature volume: M_PI*0.25 as r=0.5
 
         // Create a node-based cell population
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -336,15 +341,17 @@ public:
     void TestPottsCrypt() throw (Exception)
     {
         double sim_index = 0;
+        double contact_inhibition_level = 0.8;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          contact_inhibition_level = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CI").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CI_" << contact_inhibition_level;
         std::string output_directory = "CylindricalCrypt/Potts/" +  out.str();
 
         unsigned cell_width = 4;
@@ -355,7 +362,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumElements(),cells,cell_width*cell_width); // mature volume = 16.0 LSs
+        GenerateCells(p_mesh->GetNumElements(),cells,cell_width*cell_width,contact_inhibition_level); // mature volume = 16.0 LSs
 
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -410,15 +417,17 @@ public:
     void TestCaCrypt() throw (Exception)
     {
         double sim_index = 0;
+        double contact_inhibition_level = 0.8;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          contact_inhibition_level = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CI").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CI_" << contact_inhibition_level;
         std::string output_directory = "CylindricalCrypt/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh (periodic in x)
@@ -434,7 +443,7 @@ public:
 
 //        // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells,1.0); //Mature volume = 1 LS
+        GenerateCells(location_indices.size(),cells,1.0,contact_inhibition_level); //Mature volume = 1 LS
 
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);

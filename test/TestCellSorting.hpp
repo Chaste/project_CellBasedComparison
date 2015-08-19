@@ -30,6 +30,8 @@
 
 #include "CaBasedCellPopulation.hpp"
 #include "ShovingCaBasedDivisionRule.hpp"
+#include "RandomCaSwitchingUpdateRule.hpp"
+#include "DifferentialAdhesionCaSwitchingUpdateRule.hpp"
 
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
@@ -50,15 +52,8 @@
 static const bool M_USING_COMMAND_LINE_ARGS = false;
 static const double M_TIME_TO_STEADY_STATE = 5.0;
 static const double M_TIME_FOR_SIMULATION = 100.0; //100
-static const double M_NUM_CELLS_ACROSS = 5; //20 // this ^2 cells
+static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
-/**
- * \todo
- *
- * create test using a CaBasedCellPopulation
- * re-run tests since DifferentialAdhesionGeneralisedLinearSpringForce is slightly different now
- * regenerate results
- */
 class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
 {
 private:
@@ -98,8 +93,20 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void NoTestVertexMonolayerCellSorting() throw (Exception)
+    void TestVertexMonolayerCellSorting() throw (Exception)
     {
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CellSorting/Vertex/" +  out.str();
+
         // Create a simple 2D MutableVertexMesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
@@ -125,7 +132,7 @@ public:
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("CellSorting/Vertex");
+        simulator.SetOutputDirectory(output_directory);
 
         // Set time step and end time for simulation
         simulator.SetDt(0.01);
@@ -171,11 +178,23 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-    void NoTestPottsMonolayerCellSorting() throw (Exception)
+    void TestPottsMonolayerCellSorting() throw (Exception)
     {
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CellSorting/Potts/" +  out.str();
+
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
-        unsigned domain_size = 158;//M_NUM_CELLS_ACROSS * element_size * 2; // Twice the initial domain size
+        unsigned domain_size = M_NUM_CELLS_ACROSS * element_size * 2; // Twice the initial domain size
         PottsMeshGenerator<2> generator(domain_size, M_NUM_CELLS_ACROSS, element_size, domain_size, M_NUM_CELLS_ACROSS, element_size);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
@@ -192,15 +211,13 @@ public:
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
         cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
 
-        cell_population.SetNumSweepsPerTimestep(10); // This is the default value
-
         // Set up cell-based simulation and output directory
         OnLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("CellSorting/Potts");
+        simulator.SetOutputDirectory(output_directory);
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.1); // This is the default value
-        simulator.SetSamplingTimestepMultiple(10);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Create update rules and pass to the simulation
@@ -237,8 +254,20 @@ public:
     }
 
 
-    void NoTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+    void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CellSorting/MeshGhost/" +  out.str();
+
         // Create a simple mesh
         unsigned num_ghosts = 5;
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
@@ -262,7 +291,7 @@ public:
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("CellSorting/MeshGhost");
+        simulator.SetOutputDirectory(output_directory);
 
         // Set time step and end time for simulation
         simulator.SetDt(0.01);
@@ -299,8 +328,20 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-    void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
+    void TestNodeBasedMonolayerCellSorting() throw (Exception)
     {
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "CellSorting/Node/" +  out.str();
+
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);
         TetrahedralMesh<2,2>* p_generating_mesh = generator.GetMesh();
@@ -326,7 +367,7 @@ public:
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory("CellSorting/Node");
+        simulator.SetOutputDirectory(output_directory);
 
         // Set time step and end time for simulation
         simulator.SetDt(0.01);
@@ -364,7 +405,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-    void TestCaBasedMonolayer() throw (Exception)
+    void TestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -379,7 +420,7 @@ public:
         std::string output_directory = "CellSorting/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh
-        unsigned domain_wide = 5*M_NUM_CELLS_ACROSS;
+        unsigned domain_wide = 2*M_NUM_CELLS_ACROSS;
 
         PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
         PottsMesh<2>* p_mesh = generator.GetMesh();
@@ -412,15 +453,24 @@ public:
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0);
-        simulator.SetSamplingTimestepMultiple(1);
+        simulator.SetDt(0.1);
+        simulator.SetSamplingTimestepMultiple(10);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Add Division Rule
         boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
         cell_population.SetCaBasedDivisionRule(p_division_rule);
 
-        //Add a movement rule
+        // Add switching Update Rule
+        MAKE_PTR(DifferentialAdhesionCaSwitchingUpdateRule<2u>, p_switching_update_rule);
+        simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
+
+
+        MAKE_PTR(RandomCaSwitchingUpdateRule<2u>, p_random_switching_update_rule);
+        p_random_switching_update_rule->SetSwitchingParameter(0.01);
+        simulator.AddCaSwitchingUpdateRule(p_random_switching_update_rule);
+
+
         simulator.Solve();
 
         // Now label some cells
@@ -437,8 +487,5 @@ public:
         // Test no births or deaths
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-
-
-
     }
 };
