@@ -8,7 +8,8 @@
 #include "CellLabel.hpp"
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
-#include "DeltaNotchCellCycleModel.hpp"
+#include "RandomDivisionDeltaNotchCellCycleModel.hpp"
+
 #include "WildTypeCellMutationState.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
 #include "RadialSloughingCellKiller.hpp"
@@ -44,21 +45,18 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_TISSUE_RADIUS = 20;
 static const double M_PROLIF_RADIUS = 10;
-static const double M_TIME_FOR_SIMULATION = 100.0; //100
+static const double M_TIME_FOR_SIMULATION = 600; //100
 
 class TestDeltaNotch: public AbstractCellBasedWithTimingsTestSuite
 {
 private:
 
-    void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells)
+    void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells, double divisionProbability)
     {
-        double typical_transit_cell_cycle_duration = 12.0;
-
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<WildTypeCellMutationState>());
-        //boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
         boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
 
         for (unsigned i=0; i<num_cells; i++)
@@ -67,13 +65,16 @@ private:
             initial_conditions.push_back(RandomNumberGenerator::Instance()->ranf());
             initial_conditions.push_back(RandomNumberGenerator::Instance()->ranf());
 
-            DeltaNotchCellCycleModel* p_model = new DeltaNotchCellCycleModel();
+            RandomDivisionDeltaNotchCellCycleModel* p_model = new RandomDivisionDeltaNotchCellCycleModel();
             p_model->SetInitialConditions(initial_conditions);
             p_model->SetDimension(2);
-            p_model->SetMaxTransitGenerations(UINT_MAX);
+            p_model->SetDivisionProbability(divisionProbability);
+
             CellPtr p_cell(new Cell(p_state, p_model));
             p_cell->SetCellProliferativeType(p_prolif_type);
-            double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * typical_transit_cell_cycle_duration;
+
+            // Set birth time to -1 to not mess up areas intialy (all cells shrink if age<1)
+            double birth_time = -1.0;
             p_cell->SetBirthTime(birth_time);
             rCells.push_back(p_cell);
         }
@@ -84,36 +85,38 @@ public:
     void noTestVertexMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
+        double division_probability = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          division_probability = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-prob_division").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_PDIV_" << division_probability;
         std::string output_directory = "DeltaNotch/Vertex/" +  out.str();
 
         // Create a simple 2D MutableVertexMesh
-        HoneycombVertexMeshGenerator generator(2*M_TISSUE_RADIUS,2*M_TISSUE_RADIUS);
+        HoneycombVertexMeshGenerator generator(2*M_TISSUE_RADIUS,2.5*M_TISSUE_RADIUS);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
         p_mesh->SetCellRearrangementThreshold(0.1);
         p_mesh->Translate(-M_TISSUE_RADIUS,-M_TISSUE_RADIUS);
 
         // Slows things down but can use a larger timestep and diffusion forces.
-        p_mesh->SetCheckForInternalIntersections(true);
+        //p_mesh->SetCheckForInternalIntersections(true);
 
-        // ASsociate each cell with a cell-cycle model that incorporates a Delta-Notch ODE system
+        // Associate each cell with a cell-cycle model that incorporates a Delta-Notch ODE system
         std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumElements(),cells);
+        GenerateCells(p_mesh->GetNumElements(),cells,division_probability);
 
         // Create cell population
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<CellDeltaNotchWriter>();
+        //cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
@@ -164,18 +167,20 @@ public:
    }
 
 
-    void noTestPottsMonolayerDeltaNotch() throw (Exception)
+    void NoTestPottsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
+        double division_probability = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          division_probability = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-prob_division").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_PDIV_" << division_probability;
         std::string output_directory = "DeltaNotch/Potts/" +  out.str();
 
         // Create a simple 2D PottsMesh
@@ -187,7 +192,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumElements(),cells);
+        GenerateCells(p_mesh->GetNumElements(),cells,division_probability);
 
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -243,15 +248,17 @@ public:
     void NoTestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
+        double division_probability = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          division_probability = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-prob_division").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_PDIV_" << division_probability;
         std::string output_directory = "DeltaNotch/MeshGhost/" +  out.str();
 
         // Create a simple mesh
@@ -263,7 +270,7 @@ public:
         // Set up cells, one for each non ghost Node
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();//**Changed**//
         std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells);
+        GenerateCells(location_indices.size(),cells,division_probability);
 
         // Create cell population
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
@@ -312,92 +319,23 @@ public:
         // Test no births or deaths
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-   }
+}
 
-    void TestMeshBasedMonolayerDeltaNotch() throw (Exception)
-    {
+
+void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
+{
         double sim_index = 0;
+        double division_probability = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          division_probability = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-prob_division").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
-        std::string output_directory = "DeltaNotch/Mesh/" +  out.str();
-
-        // Create a simple mesh
-        unsigned num_ghosts = 0;
-        HoneycombMeshGenerator generator(2*M_TISSUE_RADIUS, 2.5*M_TISSUE_RADIUS, num_ghosts);
-        MutableMesh<2,2>* p_mesh = generator.GetMesh();
-        p_mesh->Translate(-M_TISSUE_RADIUS,-M_TISSUE_RADIUS);
-
-        // Set up cells, one for each Node
-        std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumNodes(),cells);
-
-        // Create cell population
-        MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
-
-        // Set population to output all data to results files
-        cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<CellDeltaNotchWriter>();
-        cell_population.SetWriteVtkAsPoints(false);
-        cell_population.AddPopulationWriter<VoronoiDataWriter>();
-
-        // Set up cell-based simulation and output directory
-        OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory(output_directory);
-
-        // Set time step and end time for simulation
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
-        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
-
-        // Add DeltaNotch modifier
-        MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
-        simulator.AddSimulationModifier(p_modifier);
-
-        // Add RadialDifferentiationModifier modifier
-        MAKE_PTR(RadialDifferentiationModifier<2>, p_differentiation_modifier);
-        p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
-        simulator.AddSimulationModifier(p_differentiation_modifier);
-
-
-        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_force);
-        simulator.AddForce(p_force);
-
-
-        // Add a cell killer
-        MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
-        simulator.AddCellKiller(p_killer);
-
-          // Run simulation
-        simulator.Solve();
-
-        // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
-
-        // Test no births or deaths
-        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-    }
-
-
-    void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
-    {
-        double sim_index = 0;
-        if (M_USING_COMMAND_LINE_ARGS)
-        {
-          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
-        }
-        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
-
-        //Create output directory
-        std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_PDIV_" << division_probability;
         std::string output_directory = "DeltaNotch/Node/" +  out.str();
 
         // Create a simple mesh
@@ -413,7 +351,7 @@ public:
 
         // Set up cells, one for each Node
         std::vector<CellPtr> cells;
-        GenerateCells(mesh.GetNumNodes(),cells);
+        GenerateCells(mesh.GetNumNodes(),cells,division_probability);
 
         // Create cell population
         NodeBasedCellPopulation<2> cell_population(mesh, cells);
@@ -441,7 +379,6 @@ public:
         p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
         simulator.AddSimulationModifier(p_differentiation_modifier);
 
-
         MAKE_PTR(RepulsionForce<2>, p_force);
         simulator.AddForce(p_force);
 
@@ -460,18 +397,20 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-    void TestCaBasedMonolayerDeltaNotch() throw (Exception)
-    {
+   void TestCaBasedMonolayerDeltaNotch() throw (Exception)
+   {
         double sim_index = 0;
+        double division_probability = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          division_probability = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-prob_division").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_PDIV_" << division_probability;
         std::string output_directory = "DeltaNotch/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh
@@ -494,7 +433,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells);
+        GenerateCells(location_indices.size(),cells,division_probability);
 
         // Create cell population
         CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
@@ -530,6 +469,4 @@ public:
 
         simulator.Solve();
     }
-
-
 };

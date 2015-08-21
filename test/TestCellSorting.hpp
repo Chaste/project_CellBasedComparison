@@ -9,7 +9,7 @@
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
 #include "StochasticDurationGenerationBasedCellCycleModel.hpp"
-#include "DifferentiatedCellProliferativeType.hpp"
+#include "TransitCellProliferativeType.hpp"
 
 #include "HeterotypicBoundaryLengthWriter.hpp"
 
@@ -49,19 +49,19 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = false;
-static const double M_TIME_TO_STEADY_STATE = 5.0;
-static const double M_TIME_FOR_SIMULATION = 100.0; //100
-static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
+static const bool M_USING_COMMAND_LINE_ARGS = true;
+static const double M_TIME_TO_STEADY_STATE = 10.0;
+static const double M_TIME_FOR_SIMULATION = 300.0; //100
+static const double M_NUM_CELLS_ACROSS = 10; //20 // this ^2 cells
 
 class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
 {
 private:
 
-    void RandomlyLabelCells(std::list<CellPtr>& rCells, boost::shared_ptr<AbstractCellProperty> pLabel, double labelledRatio)
+    void RandomlyLabelCells(std::list<CellPtr>& rCells, boost::shared_ptr<AbstractCellProperty> pLabel, double labelledRatio, double cellCycleDuration)
     {
-        double typical_transit_cell_cycle_duration = 12.0;
-        boost::shared_ptr<AbstractCellProperty> p_diff_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
+
+        boost::shared_ptr<AbstractCellProperty> p_prolif_type(CellPropertyRegistry::Instance()->Get<TransitCellProliferativeType>());
 
         for (std::list<CellPtr>::iterator cell_iter = rCells.begin();
              cell_iter != rCells.end();
@@ -71,11 +71,26 @@ private:
             {
                (*cell_iter)->AddCellProperty(pLabel);
             }
-            (*cell_iter)->SetCellProliferativeType(p_diff_type);
-            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(2u);
-            (*cell_iter)->InitialiseCellCycleModel(); // So gets a new G1 Duration
 
-            double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * typical_transit_cell_cycle_duration;
+            (*cell_iter)->SetCellProliferativeType(p_prolif_type);
+
+            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(1u);
+
+            // Make total Cell cycle duration  U[cellCycleDuration-1, cellCycleDuration+1]
+            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMDuration(1.0);
+            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetSDuration(0.1);
+            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetG2Duration(0.1);
+            assert(cellCycleDuration>3.2);  // So positive G1 phase
+            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetTransitCellG1Duration(cellCycleDuration - 1.2);
+
+            (*cell_iter)->InitialiseCellCycleModel(); // So gets a new CCM Duration
+
+            // Set birth time so randomly divide at start.
+            double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * cellCycleDuration;
+            if (cellCycleDuration==DBL_MAX)
+            {
+                birth_time = 0; //i.e no division
+            }
             (*cell_iter)->SetBirthTime(birth_time);
         }
     }
@@ -96,15 +111,17 @@ public:
     void TestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
+        double cell_cycle_duration = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          cell_cycle_duration = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CCD").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CCD_" << cell_cycle_duration;
         std::string output_directory = "CellSorting/Vertex/" +  out.str();
 
         // Create a simple 2D MutableVertexMesh
@@ -159,7 +176,7 @@ public:
 
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5, cell_cycle_duration);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -181,15 +198,17 @@ public:
     void TestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
+        double cell_cycle_duration = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          cell_cycle_duration = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CCD").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CCD_" << cell_cycle_duration;
         std::string output_directory = "CellSorting/Potts/" +  out.str();
 
         // Create a simple 2D PottsMesh
@@ -239,7 +258,7 @@ public:
 
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5, cell_cycle_duration);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -257,15 +276,17 @@ public:
     void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
+        double cell_cycle_duration = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          cell_cycle_duration = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CCD").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CCD_" << cell_cycle_duration;
         std::string output_directory = "CellSorting/MeshGhost/" +  out.str();
 
         // Create a simple mesh
@@ -306,7 +327,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.01);
+        p_random_force->SetMovementParameter(0.001);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -314,7 +335,7 @@ public:
 
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5, cell_cycle_duration);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -331,15 +352,17 @@ public:
     void TestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
+        double cell_cycle_duration = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          cell_cycle_duration = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CCD").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CCD_" << cell_cycle_duration;
         std::string output_directory = "CellSorting/Node/" +  out.str();
 
         // Create a simple mesh
@@ -383,7 +406,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.01);
+        p_random_force->SetMovementParameter(0.001);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -391,7 +414,7 @@ public:
 
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5, cell_cycle_duration);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -408,19 +431,21 @@ public:
     void TestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
+        double cell_cycle_duration = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          cell_cycle_duration = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CCD").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
         //Create output directory
         std::stringstream out;
-        out << sim_index;
+        out << sim_index << "_CCD_" << cell_cycle_duration;
         std::string output_directory = "CellSorting/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh
-        unsigned domain_wide = 2*M_NUM_CELLS_ACROSS;
+        unsigned domain_wide = 4*M_NUM_CELLS_ACROSS;
 
         PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
         PottsMesh<2>* p_mesh = generator.GetMesh();
@@ -475,7 +500,7 @@ public:
 
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5, cell_cycle_duration);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
