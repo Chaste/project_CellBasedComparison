@@ -58,6 +58,7 @@ private:
     {
         archive & boost::serialization::base_object<AbstractCellCycleModel>(*this);
         archive & mDivisionProbability;
+//        archive & mMinimumDivisionAge;
     }
 
 protected:
@@ -65,6 +66,11 @@ protected:
      * Probability of division of the cell in one hour.
      */
     double mDivisionProbability;
+
+//    /**
+//     *  Minimum age of division HAVING THIS MEMBER VARIABLE CAUSES SEG FAULTS AS MODIFIER CASTS TO A DNCCM
+//     */
+//    double mMinimumDivisionAge;
 
 public:
 

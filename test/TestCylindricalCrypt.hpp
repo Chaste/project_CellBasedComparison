@@ -87,7 +87,7 @@ private:
 
 public:
 
-    void TestVertexCrypt() throw (Exception)
+    void NoTestVertexCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -168,7 +168,7 @@ public:
         Warnings::Instance()->QuietDestroy();
     }
 
-    void TestMeshBasedCrypt() throw (Exception)
+    void NoTestMeshBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -249,7 +249,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void TestNodeBasedCrypt() throw (Exception)
+    void NoTestNodeBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -380,8 +380,8 @@ public:
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(0.04); // Vary See Osborne et al 2015
+        simulator.SetSamplingTimestepMultiple(25);
         simulator.SetEndTime(M_END_STEADY_STATE);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
@@ -414,7 +414,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void TestCaCrypt() throw (Exception)
+    void NoTestCaCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;

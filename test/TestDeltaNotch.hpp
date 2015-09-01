@@ -39,6 +39,7 @@
 
 #include "CellDeltaNotchWriter.hpp"
 #include "CellIdWriter.hpp"
+#include "CellAgesWriter.hpp"
 #include "CellMutationStatesWriter.hpp"
 #include "VoronoiDataWriter.hpp"
 #include "CellVolumesWriter.hpp"
@@ -46,9 +47,9 @@
 #include "PetscSetupAndFinalize.hpp"
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TISSUE_RADIUS = 20;
-static const double M_PROLIF_RADIUS = 10;
-static const double M_TIME_FOR_SIMULATION = 600; //100
+static const double M_TISSUE_RADIUS = 15;
+static const double M_PROLIF_RADIUS = 5;
+static const double M_TIME_FOR_SIMULATION = 1000; //100
 
 class TestDeltaNotch: public AbstractCellBasedWithTimingsTestSuite
 {
@@ -69,23 +70,25 @@ private:
             p_model->SetInitialConditions(initial_conditions);
             p_model->SetDimension(2);
             p_model->SetDivisionProbability(divisionProbability);
+            //p_model->SetMinimumDivisionAge(1.0);
 
             CellPtr p_cell(new Cell(p_state, p_model));
             p_cell->SetCellProliferativeType(p_prolif_type);
 
-            // Set birth time to -1 to not mess up areas intialy (all cells shrink if age<1)
-            double birth_time = -1.0;
+            double birth_time = 0.0;
             p_cell->SetBirthTime(birth_time);
+
+            p_cell->GetCellData()->SetItem("target area", 1.0);
             rCells.push_back(p_cell);
         }
     }
 
 public:
 
-    void noTestVertexMonolayerDeltaNotch() throw (Exception)
+    void NoTestVertexMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
-        double division_probability = 10.0;
+        double division_probability = 0.1;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -116,11 +119,13 @@ public:
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
-        //cell_population.AddCellWriter<CellDeltaNotchWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
+        simulator.SetOutputDivisionLocations(true);
 
         // Set time step and end time for simulation
         simulator.SetDt(1.0/200.0);
@@ -137,18 +142,17 @@ public:
         simulator.AddSimulationModifier(p_differentiation_modifier);
 
 
-        // Create Forces and pass to simulation NOTE: PARAMETERS CHOSEN TO GET CIRCULAR MONOLAYER
+        // Create Forces and pass to simulation NOTE : these are not the default ones and chosen to give a stable growing monolayer
         MAKE_PTR(NagaiHondaForce<2>, p_force);
-        p_force->SetNagaiHondaDeformationEnergyParameter(5.5);
-        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
-        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(0.6);
-        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.2);
+        p_force->SetNagaiHondaDeformationEnergyParameter(10.0); //5.5
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0); //0.0
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0); //0.6
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.0); //1.2
         simulator.AddForce(p_force);
 
-        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
-        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
-        simulator.AddSimulationModifier(p_growth_modifier);
-
+//        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
+//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
+//        simulator.AddSimulationModifier(p_growth_modifier);
 
         // Add a cell killer
         MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
@@ -170,7 +174,7 @@ public:
     void NoTestPottsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
-        double division_probability = 10.0;
+        double division_probability = 0.1;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -197,17 +201,19 @@ public:
         // Create cell population
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
-        //cell_population.SetNumSweepsPerTimestep(10);
-       // cell_population.SetTemperature(0.01);// This is the default value
+        cell_population.SetNumSweepsPerTimestep(1);
+        cell_population.SetTemperature(0.01);
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
+        simulator.SetOutputDivisionLocations(true);
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.1); // This is the default value
-        simulator.SetSamplingTimestepMultiple(10);
+        simulator.SetDt(0.01); // This is the default value
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
@@ -216,14 +222,14 @@ public:
 
         // Add RadialDifferentiationModifier modifier
         MAKE_PTR(RadialDifferentiationModifier<2>, p_differentiation_modifier);
-        p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
+        p_differentiation_modifier->SetRadius(element_size*M_PROLIF_RADIUS);
         simulator.AddSimulationModifier(p_differentiation_modifier);
 
 
         // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
-        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.2);
+        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);  // 0.2
         simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
 
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
@@ -245,7 +251,7 @@ public:
     }
 
 
-    void NoTestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
+    void TestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 10.0;
@@ -259,10 +265,10 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_PDIV_" << division_probability;
-        std::string output_directory = "DeltaNotch/MeshGhost/" +  out.str();
+        std::string output_directory = "DeltaNotch/Mesh/" +  out.str();
 
         // Create a simple mesh
-        unsigned num_ghosts = 2;
+        unsigned num_ghosts = 0;
         HoneycombMeshGenerator generator(2*M_TISSUE_RADIUS, 2.5*M_TISSUE_RADIUS, num_ghosts);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
         p_mesh->Translate(-M_TISSUE_RADIUS,-M_TISSUE_RADIUS);
@@ -277,8 +283,8 @@ public:
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
-        cell_population.AddCellWriter<CellVolumesWriter>();
 
         cell_population.SetWriteVtkAsPoints(false);
         cell_population.AddPopulationWriter<VoronoiDataWriter>();
@@ -286,6 +292,7 @@ public:
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
+        simulator.SetOutputDivisionLocations(true);
 
         // Set time step and end time for simulation
         simulator.SetDt(0.01);
@@ -322,7 +329,7 @@ public:
 }
 
 
-void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
+void NoTestNodeBasedMonolayerDeltaNotch() throw (Exception)
 {
         double sim_index = 0;
         double division_probability = 10.0;
@@ -358,12 +365,13 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
-        cell_population.AddPopulationWriter<VoronoiDataWriter>();
 
         // Set up cell-based simulation and output directory
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
+        simulator.SetOutputDivisionLocations(true);
 
         // Set time step and end time for simulation
         simulator.SetDt(0.01);
@@ -397,7 +405,7 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-   void TestCaBasedMonolayerDeltaNotch() throw (Exception)
+   void NoTestCaBasedMonolayerDeltaNotch() throw (Exception)
    {
         double sim_index = 0;
         double division_probability = 10.0;
@@ -440,11 +448,14 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
+        simulator.SetOutputDivisionLocations(true);
+
         simulator.SetDt(0.1);
         simulator.SetSamplingTimestepMultiple(10);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);

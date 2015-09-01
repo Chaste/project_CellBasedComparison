@@ -42,6 +42,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 RandomDivisionCellCycleModel::RandomDivisionCellCycleModel()
     : AbstractCellCycleModel(),
       mDivisionProbability(0.1) // Defaults to roughly dividing every 10 hours
+      //mMinProbabilityAge(1.0)
 {
 }
 
@@ -53,13 +54,21 @@ bool RandomDivisionCellCycleModel::ReadyToDivide()
     {
         UpdateCellCyclePhase(); // This calls the ODEs in the Delta Notch CCM
 
-        double dt = SimulationTime::Instance()->GetTimeStep();
-        if (!(mpCell->GetCellProliferativeType()->IsType<DifferentiatedCellProliferativeType>()))
+        double minimum_division_age = 1.0;
+
+        if (GetAge()>minimum_division_age)
         {
-            RandomNumberGenerator* p_gen = RandomNumberGenerator::Instance();
-            if (p_gen->ranf()<mDivisionProbability*dt)
+            double dt = SimulationTime::Instance()->GetTimeStep();
+            if (!(mpCell->GetCellProliferativeType()->IsType<DifferentiatedCellProliferativeType>()))
             {
-                mReadyToDivide = true;
+                RandomNumberGenerator* p_gen = RandomNumberGenerator::Instance();
+
+                double p_division = mDivisionProbability*dt;
+
+                if (p_gen->ranf()<mDivisionProbability*dt)
+                {
+                    mReadyToDivide = true;
+                }
             }
         }
     }
