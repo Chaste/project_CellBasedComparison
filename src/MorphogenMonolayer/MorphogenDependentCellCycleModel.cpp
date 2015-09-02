@@ -74,6 +74,7 @@ bool MorphogenDependentCellCycleModel::ReadyToDivide()
 
 
 	// Equation 16 from Smith et al 2011
+	// This is not independent of dt so need to use the same timestep!!! Its Comound interest
 	mCurrentMass *= 1.0 + dt*mGrowthRate*(1.0+mMorphogenInfluence*morphogen_level)*(1.0-mCurrentMass/mTargetMass);
 
 	double division_rate = 0.1; // Per cell per hour

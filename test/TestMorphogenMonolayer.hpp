@@ -50,8 +50,8 @@
 
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TIME_FOR_SIMULATION = 1.0;
-static const double M_NUM_CELLS_ACROSS = 10; // this ^2 cells
+static const double M_TIME_FOR_SIMULATION = 200.0;
+static const double M_NUM_CELLS_ACROSS = 10;
 static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
 static const double M_DUDT_COEFFICIENT = 1.0; // Not used in paper so 1
@@ -76,14 +76,16 @@ private:
             CellPtr p_cell(new Cell(p_state, p_cycle_model));
             p_cell->SetCellProliferativeType(p_transit_type);
 
-            // TODO REMOVE THIS AS MAY SKEW AGE PLOTS!
-            double typical_cell_cycle_duration = 12.0;
-            double birth_time = - p_gen->ranf() * typical_cell_cycle_duration;
-            p_cell->SetBirthTime(birth_time);
+            // Note the first few recorded ages will be too short as cells start with some mass.
+            p_cell->SetBirthTime(0.0);
 
             p_cell->InitialiseCellCycleModel();
+
+            // Initial Condition for Morphogen PDE
             p_cell->GetCellData()->SetItem("morphogen",0.0);
 
+            // Set Target Area so dont need to use a growth model in
+            p_cell->GetCellData()->SetItem("target area", 1.0);
             rCells.push_back(p_cell);
         }
      }
@@ -156,9 +158,9 @@ public:
 		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
 		simulator.AddSimulationModifier(p_pde_modifier);
 
-        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
-        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
-        simulator.AddSimulationModifier(p_growth_modifier);
+//        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
+//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
+//        simulator.AddSimulationModifier(p_growth_modifier);
 
         simulator.Solve();
     }
@@ -304,7 +306,7 @@ public:
 
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.SetTemperature(0.1);
-        cell_population.SetNumSweepsPerTimestep(100);
+        cell_population.SetNumSweepsPerTimestep(1);
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
@@ -314,16 +316,17 @@ public:
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0);
-        simulator.SetSamplingTimestepMultiple(1);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
 
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
+        p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
+        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.2);  // Default is 0.2
         simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
-        MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_area_update_rule);
-        simulator.AddPottsUpdateRule(p_surface_area_update_rule);
+
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
@@ -387,8 +390,8 @@ public:
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0);
-        simulator.SetSamplingTimestepMultiple(1);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
