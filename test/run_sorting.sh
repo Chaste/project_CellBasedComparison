@@ -7,12 +7,12 @@
 # scons co=1 b=GccOpt ts=projects/Ozzy/test/CellBasedComparison/TestCylindricalCrypt.hpp
 #
 
-start_sim=9;
-end_sim=10;
+start_sim=0;
+end_sim=2;
 
-CCD[0]="10.0"
-CCD[1]="50.0"
-CCD[2]="100.0"
+#CCD[0]="10.0"
+#CCD[1]="50.0"
+CCD[0]="-1"
 
 for (( i=${start_sim} ; i<${end_sim} ; i++))
 do

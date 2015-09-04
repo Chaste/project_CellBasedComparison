@@ -51,8 +51,8 @@
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_TIME_TO_STEADY_STATE = 10.0;
-static const double M_TIME_FOR_SIMULATION = 300.0; //100
-static const double M_NUM_CELLS_ACROSS = 10; //20 // this ^2 cells
+static const double M_TIME_FOR_SIMULATION = 100.0; //100
+static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
 class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
 {
@@ -72,26 +72,32 @@ private:
                (*cell_iter)->AddCellProperty(pLabel);
             }
 
-            (*cell_iter)->SetCellProliferativeType(p_prolif_type);
+            if (cellCycleDuration<0)
+            {
+                (*cell_iter)->SetCellProliferativeType(p_prolif_type);
 
-            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(1u);
 
-            // Make total Cell cycle duration  U[cellCycleDuration-1, cellCycleDuration+1]
-            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMDuration(1.0);
-            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetSDuration(0.1);
-            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetG2Duration(0.1);
-            assert(cellCycleDuration>3.2);  // So positive G1 phase
-            dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetTransitCellG1Duration(cellCycleDuration - 1.2);
+                dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMaxTransitGenerations(0u);
+
+                // Make total Cell cycle duration  U[cellCycleDuration-1, cellCycleDuration+1]
+                dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetMDuration(1.0);
+                dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetSDuration(0.1);
+                dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetG2Duration(0.1);
+                //assert(cellCycleDuration>3.2);  // So positive G1 phase
+                dynamic_cast<StochasticDurationGenerationBasedCellCycleModel*>((*cell_iter)->GetCellCycleModel())->SetTransitCellG1Duration(cellCycleDuration - 1.2);
+            }
 
             (*cell_iter)->InitialiseCellCycleModel(); // So gets a new CCM Duration
 
             // Set birth time so randomly divide at start.
             double birth_time = SimulationTime::Instance()->GetTime() - RandomNumberGenerator::Instance()->ranf() * cellCycleDuration;
-            if (cellCycleDuration==DBL_MAX)
+            if (cellCycleDuration<0)
             {
                 birth_time = 0; //i.e no division
             }
             (*cell_iter)->SetBirthTime(birth_time);
+
+
         }
     }
 
@@ -130,13 +136,19 @@ public:
         p_mesh->SetCellRearrangementThreshold(0.1);
 
         // Slows things down but can use a larger timestep and diffusion forces
-        p_mesh->SetCheckForInternalIntersections(true);
+        //p_mesh->SetCheckForInternalIntersections(true);
 
         // Set up cells, one for each VertexElement
         std::vector<CellPtr> cells;
         boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
         CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_cell_type);
+
+        for (unsigned i=0; i<cells.size(); i++)
+        {
+            // Set a target area rather than setting a growth modifier. (the modifiers doesn't work as making very long G1 phases)
+            cells[i]->GetCellData()->SetItem("target area", 1.0);
+        }
 
         // Create cell population
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
@@ -152,8 +164,8 @@ public:
         simulator.SetOutputDirectory(output_directory);
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Set up force law and pass it to the simulation
@@ -167,9 +179,9 @@ public:
         p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(1.2); // 40.0
         simulator.AddForce(p_force);
 
-        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
-        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
-        simulator.AddSimulationModifier(p_growth_modifier);
+//        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
+//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
+//        simulator.AddSimulationModifier(p_growth_modifier);
 
         // Run simulation
         simulator.Solve();
@@ -213,7 +225,7 @@ public:
 
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
-        unsigned domain_size = M_NUM_CELLS_ACROSS * element_size * 2; // Twice the initial domain size
+        unsigned domain_size = M_NUM_CELLS_ACROSS * element_size * 3; // Three times the initial domain size
         PottsMeshGenerator<2> generator(domain_size, M_NUM_CELLS_ACROSS, element_size, domain_size, M_NUM_CELLS_ACROSS, element_size);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 

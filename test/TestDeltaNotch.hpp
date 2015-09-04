@@ -85,7 +85,7 @@ private:
 
 public:
 
-    void TestVertexMonolayerDeltaNotch() throw (Exception)
+    void noTestVertexMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 0.1;
@@ -251,7 +251,7 @@ public:
     }
 
 
-    void TestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
+    void noTestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 10.0;
@@ -329,7 +329,7 @@ public:
 }
 
 
-void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
+void noTestNodeBasedMonolayerDeltaNotch() throw (Exception)
 {
         double sim_index = 0;
         double division_probability = 10.0;
@@ -405,7 +405,7 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-   void TestCaBasedMonolayerDeltaNotch() throw (Exception)
+   void noTestCaBasedMonolayerDeltaNotch() throw (Exception)
    {
         double sim_index = 0;
         double division_probability = 10.0;

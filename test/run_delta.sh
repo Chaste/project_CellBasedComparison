@@ -7,7 +7,7 @@
 # scons co=1 b=GccOpt ts=projects/Ozzy/test/CellBasedComparison/TestDeltaNotch.hpp
 #
 
-num_sims=10;
+num_sims=1;
 
 PDIV[0]="0.1"
 PDIV[1]="0.05";

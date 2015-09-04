@@ -9,14 +9,14 @@
 
 num_sims=10;
 
-CI_LEVEL[0]="1.0"
-CI_LEVEL[1]="0.9"
-CI_LEVEL[2]="0.8"
-CI_LEVEL[3]="0.7"
-CI_LEVEL[4]="0.6"
-CI_LEVEL[5]="0.5"
+#CI_LEVEL[0]="1.0"
+CI_LEVEL[0]="0.9"
+CI_LEVEL[1]="0.8"
+CI_LEVEL[2]="0.7"
+#CI_LEVEL[4]="0.6"
+#CI_LEVEL[5]="0.5"
 
-for (( i=0 ; i<${num_sims} ; i++))
+for (( i=2 ; i<${num_sims} ; i++))
 do
     echo "Run " $i;
     for (( j=0 ; j<${#CI_LEVEL[*]} ; j++))
