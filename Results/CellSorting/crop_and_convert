@@ -1,9 +1,0 @@
-#!/bin/bash
-for f in image*.png; 
-do 
-	echo $f;
-	convert $f  -depth 8 -crop 510x510+95+95 ${f};
-	#convert ${f}_cropped.png -> ${f}.eps
-done
-
-

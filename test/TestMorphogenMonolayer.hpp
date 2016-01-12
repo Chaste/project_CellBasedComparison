@@ -15,7 +15,7 @@
 #include "VolumeTrackingModifier.hpp"
 
 #include "MorphogenDependentCellCycleModel.hpp"
-#include "CellMorphogenWriter.hpp"
+#include "CellDataItemWriter.hpp"
 #include "OffLatticeSimulation.hpp"
 #include "OnLatticeSimulation.hpp"
 #include "CellsGenerator.hpp"
@@ -49,9 +49,9 @@
 #include "PetscSetupAndFinalize.hpp"
 
 
-static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TIME_FOR_SIMULATION = 200.0;
-static const double M_NUM_CELLS_ACROSS = 10;
+static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const double M_TIME_FOR_SIMULATION = 100; //100
+static const double M_NUM_CELLS_ACROSS = 10; // 10
 static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
 static const double M_DUDT_COEFFICIENT = 1.0; // Not used in paper so 1
@@ -84,7 +84,7 @@ private:
             // Initial Condition for Morphogen PDE
             p_cell->GetCellData()->SetItem("morphogen",0.0);
 
-            // Set Target Area so dont need to use a growth model in
+            // Set Target Area so dont need to use a growth model in vertex simulations
             p_cell->GetCellData()->SetItem("target area", 1.0);
             rCells.push_back(p_cell);
         }
@@ -96,7 +96,7 @@ private:
      */
 
 public:
-    void noTestVertexBasedMonolayer() throw (Exception)
+    void TestVertexBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -124,8 +124,11 @@ public:
         VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMorphogenWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //Make cell date writer so can pass in variabl name
+        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
+        cell_population.AddCellWriter(p_cell_data_item_writer);
+
 
         // Create Simulation
         OffLatticeSimulation<2> simulator(cell_population);
@@ -165,7 +168,7 @@ public:
         simulator.Solve();
     }
 
-    void noTestNodeBasedMonolayer() throw (Exception)
+    void TestNodeBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -192,8 +195,10 @@ public:
         NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMorphogenWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //Make cell date writer so can pass in variabl name
+        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
+        cell_population.AddCellWriter(p_cell_data_item_writer);
 
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
@@ -221,7 +226,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void noTestMeshBasedMonolayer() throw (Exception)
+    void TestMeshBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -248,8 +253,10 @@ public:
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMorphogenWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //Make cell date writer so can pass in variabl name
+        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
+        cell_population.AddCellWriter(p_cell_data_item_writer);
 
         cell_population.SetWriteVtkAsPoints(true);
         cell_population.AddPopulationWriter<VoronoiDataWriter>();
@@ -280,7 +287,7 @@ public:
         simulator.Solve();
     }
 
-    void noTestPottsBasedMonolayer() throw (Exception)
+    void TestPottsBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -301,6 +308,8 @@ public:
 
         p_mesh->Translate(-(double)domain_width*0.5+0.5,-(double)domain_width*0.5+0.5);
 
+        p_mesh->Scale(0.25,0.25);
+
         std::vector<CellPtr> cells;
         GenerateCells(p_mesh->GetNumElements(),cells);
 
@@ -311,8 +320,10 @@ public:
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMorphogenWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //Make cell date writer so can pass in variabl name
+        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
+        cell_population.AddCellWriter(p_cell_data_item_writer);
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
@@ -331,8 +342,9 @@ public:
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
         // Make the Pde and BCS
-        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,(double)cell_width*(double)cell_width*M_DIFFUSION_CONSTANT,M_UPTAKE_RATE, 8.0);
-		ConstBoundaryCondition<2> bc(0.0);
+        //MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,(double)cell_width*(double)cell_width*M_DIFFUSION_CONSTANT,M_UPTAKE_RATE, 8.0);
+        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+        ConstBoundaryCondition<2> bc(0.0);
 		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
 		pde_and_bc.SetDependentVariableName("morphogen");
 
@@ -385,8 +397,10 @@ public:
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMorphogenWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //Make cell date writer so can pass in variabl name
+        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
+        cell_population.AddCellWriter(p_cell_data_item_writer);
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);

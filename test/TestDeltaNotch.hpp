@@ -8,7 +8,8 @@
 #include "CellLabel.hpp"
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
-#include "RandomDivisionDeltaNotchCellCycleModel.hpp"
+#include "RandomDivisionCellCycleModel.hpp"
+#include "DeltaNotchSrnModel.hpp"
 
 #include "WildTypeCellMutationState.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
@@ -46,10 +47,10 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TISSUE_RADIUS = 15;
-static const double M_PROLIF_RADIUS = 5;
-static const double M_TIME_FOR_SIMULATION = 1000; //100
+static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const double M_TISSUE_RADIUS = 15; // 15
+static const double M_PROLIF_RADIUS = 5; // 5
+static const double M_TIME_FOR_SIMULATION = 100; //100
 
 class TestDeltaNotch: public AbstractCellBasedWithTimingsTestSuite
 {
@@ -66,13 +67,14 @@ private:
             initial_conditions.push_back(RandomNumberGenerator::Instance()->ranf());
             initial_conditions.push_back(RandomNumberGenerator::Instance()->ranf());
 
-            RandomDivisionDeltaNotchCellCycleModel* p_model = new RandomDivisionDeltaNotchCellCycleModel();
-            p_model->SetInitialConditions(initial_conditions);
-            p_model->SetDimension(2);
-            p_model->SetDivisionProbability(divisionProbability);
-            //p_model->SetMinimumDivisionAge(1.0);
+            RandomDivisionCellCycleModel* p_cc_model = new RandomDivisionCellCycleModel();
+            p_cc_model->SetDimension(2);
+            p_cc_model->SetDivisionProbability(divisionProbability);
 
-            CellPtr p_cell(new Cell(p_state, p_model));
+            DeltaNotchSrnModel* p_srn_model = new DeltaNotchSrnModel();
+            p_srn_model->SetInitialConditions(initial_conditions);
+
+            CellPtr p_cell(new Cell(p_state, p_cc_model, p_srn_model));
             p_cell->SetCellProliferativeType(p_prolif_type);
 
             double birth_time = 0.0;
@@ -85,7 +87,7 @@ private:
 
 public:
 
-    void noTestVertexMonolayerDeltaNotch() throw (Exception)
+    void TestVertexMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 0.1;
@@ -251,10 +253,10 @@ public:
     }
 
 
-    void noTestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
+    void TestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
-        double division_probability = 10.0;
+        double division_probability = 0.1;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -329,7 +331,7 @@ public:
 }
 
 
-void noTestNodeBasedMonolayerDeltaNotch() throw (Exception)
+void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
 {
         double sim_index = 0;
         double division_probability = 10.0;
@@ -405,7 +407,7 @@ void noTestNodeBasedMonolayerDeltaNotch() throw (Exception)
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-   void noTestCaBasedMonolayerDeltaNotch() throw (Exception)
+   void TestCaBasedMonolayerDeltaNotch() throw (Exception)
    {
         double sim_index = 0;
         double division_probability = 10.0;

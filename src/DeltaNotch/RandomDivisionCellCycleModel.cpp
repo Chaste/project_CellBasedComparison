@@ -41,8 +41,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 RandomDivisionCellCycleModel::RandomDivisionCellCycleModel()
     : AbstractCellCycleModel(),
-      mDivisionProbability(0.1) // Defaults to roughly dividing every 10 hours
-      //mMinProbabilityAge(1.0)
+      mDivisionProbability(0.1), // Defaults to roughly dividing every 10 hours
+      mMinimumDivisionAge(1.0) // Defaults to minimum of 1 hour to allow cells to relax
 {
 }
 
@@ -54,9 +54,7 @@ bool RandomDivisionCellCycleModel::ReadyToDivide()
     {
         UpdateCellCyclePhase(); // This calls the ODEs in the Delta Notch CCM
 
-        double minimum_division_age = 1.0;
-
-        if (GetAge()>minimum_division_age)
+        if (GetAge()>mMinimumDivisionAge)
         {
             double dt = SimulationTime::Instance()->GetTimeStep();
             if (!(mpCell->GetCellProliferativeType()->IsType<DifferentiatedCellProliferativeType>()))
@@ -113,6 +111,7 @@ AbstractCellCycleModel* RandomDivisionCellCycleModel::CreateCellCycleModel()
     p_model->SetG2Duration(mG2Duration);
     p_model->SetMDuration(mMDuration);
     p_model->SetDivisionProbability(mDivisionProbability);
+    p_model->SetMinimumDivisionAge(mMinimumDivisionAge);
 
     return p_model;
 }
@@ -126,6 +125,16 @@ void RandomDivisionCellCycleModel::SetDivisionProbability(double divisionProbabi
 double RandomDivisionCellCycleModel::GetDivisionProbability()
 {
     return mDivisionProbability;
+}
+
+void RandomDivisionCellCycleModel::SetMinimumDivisionAge(double minimumDivisionAge)
+{
+    mMinimumDivisionAge = minimumDivisionAge;
+}
+
+double RandomDivisionCellCycleModel::GetMinimumDivisionAge()
+{
+    return mMinimumDivisionAge;
 }
 
 void RandomDivisionCellCycleModel::OutputCellCycleModelParameters(out_stream& rParamsFile)

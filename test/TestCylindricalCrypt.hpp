@@ -48,14 +48,11 @@
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = true;
+static const bool M_USING_COMMAND_LINE_ARGS = false;
 static const double M_END_STEADY_STATE = 100.0; //100
 static const double M_END_TIME = 1100; //1100
 static const double M_CRYPT_DIAMETER = 16;
 static const double M_CRYPT_LENGTH = 12;
-//static const double M_CONTACT_INHIBITION_LEVEL = 0.8;
-
-
 
 class TestCryptSimulationComparison : public AbstractCellBasedWithTimingsTestSuite
 {
@@ -87,7 +84,7 @@ private:
 
 public:
 
-    void NoTestVertexCrypt() throw (Exception)
+    void TestVertexCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -168,7 +165,7 @@ public:
         Warnings::Instance()->QuietDestroy();
     }
 
-    void NoTestMeshBasedCrypt() throw (Exception)
+    void TestMeshBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -249,7 +246,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void NoTestNodeBasedCrypt() throw (Exception)
+    void TestNodeBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -414,7 +411,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void NoTestCaCrypt() throw (Exception)
+    void TestCaCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;

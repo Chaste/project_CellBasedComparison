@@ -8,11 +8,11 @@
 #
 
 start_sim=0;
-end_sim=2;
+end_sim=10;
 
-#CCD[0]="10.0"
-#CCD[1]="50.0"
-CCD[0]="-1"
+CCD[0]="10.0"
+CCD[1]="50.0"
+CCD[2]="-1"
 
 for (( i=${start_sim} ; i<${end_sim} ; i++))
 do

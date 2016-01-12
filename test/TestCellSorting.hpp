@@ -49,8 +49,8 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TIME_TO_STEADY_STATE = 10.0;
+static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const double M_TIME_TO_STEADY_STATE = 10.0; //10
 static const double M_TIME_FOR_SIMULATION = 100.0; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
@@ -72,7 +72,7 @@ private:
                (*cell_iter)->AddCellProperty(pLabel);
             }
 
-            if (cellCycleDuration<0)
+            if (cellCycleDuration>=0)
             {
                 (*cell_iter)->SetCellProliferativeType(p_prolif_type);
 
@@ -178,6 +178,11 @@ public:
         p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.2);
         p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(1.2); // 40.0
         simulator.AddForce(p_force);
+
+        // Add some noise to avoid local minimum
+        MAKE_PTR(RandomMotionForce<2>, p_random_force);
+        p_random_force->SetMovementParameter(0.01);
+        simulator.AddForce(p_random_force);
 
 //        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
 //        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
@@ -302,7 +307,7 @@ public:
         std::string output_directory = "CellSorting/MeshGhost/" +  out.str();
 
         // Create a simple mesh
-        unsigned num_ghosts = 5;
+        unsigned num_ghosts = 8;
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, num_ghosts);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
@@ -334,12 +339,12 @@ public:
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2>, p_differential_adhesion_force);
         p_differential_adhesion_force->SetHomotypicLabelledSpringConstantMultiplier(1.0);
-        p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.01);
+        p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.1);
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.001);
+        p_random_force->SetMovementParameter(0.01);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -412,13 +417,13 @@ public:
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2>, p_differential_adhesion_force);
         p_differential_adhesion_force->SetHomotypicLabelledSpringConstantMultiplier(1.0);
-        p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.01);
-        p_differential_adhesion_force->SetCutOffLength(1.5);
+        p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.1);
+        p_differential_adhesion_force->SetCutOffLength(2.0);
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.001);
+        p_random_force->SetMovementParameter(0.01);
         simulator.AddForce(p_random_force);
 
         // Run simulation

@@ -58,7 +58,7 @@ private:
     {
         archive & boost::serialization::base_object<AbstractCellCycleModel>(*this);
         archive & mDivisionProbability;
-//        archive & mMinimumDivisionAge;
+        archive & mMinimumDivisionAge;
     }
 
 protected:
@@ -67,10 +67,10 @@ protected:
      */
     double mDivisionProbability;
 
-//    /**
-//     *  Minimum age of division HAVING THIS MEMBER VARIABLE CAUSES SEG FAULTS AS MODIFIER CASTS TO A DNCCM
-//     */
-//    double mMinimumDivisionAge;
+    /**
+     *  Minimum age of division
+     */
+    double mMinimumDivisionAge;
 
 public:
 
@@ -121,6 +121,17 @@ public:
      * @return mDivisionProbability
      */
     double GetDivisionProbability();
+
+    /**
+     * @param minimumDivisionAge
+     */
+    void SetMinimumDivisionAge(double minimumDivisionAge);
+
+    /**
+     * @return mMinimumDivisionAge
+     */
+    double GetMinimumDivisionAge();
+
 
     /**
      * Outputs cell cycle model parameters to file.

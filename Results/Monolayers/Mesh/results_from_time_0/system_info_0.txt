@@ -1,8 +1,0 @@
-Process 0 of 1.
-uname sysname  = Darwin
-uname nodename = Jamess-MacBook-Pro-10.local
-uname release  = 13.1.0
-uname version  = Darwin Kernel Version 13.1.0: Thu Jan 16 19:40:37 PST 2014; root:xnu-2422.90.20~2/RELEASE_X86_64
-uname machine  = x86_64
-
-Information on number and type processors, and cache and memory sizes (in bytes)
