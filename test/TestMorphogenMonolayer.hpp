@@ -49,8 +49,8 @@
 #include "PetscSetupAndFinalize.hpp"
 
 
-static const bool M_USING_COMMAND_LINE_ARGS = false;
-static const double M_TIME_FOR_SIMULATION = 100; //100
+static const bool M_USING_COMMAND_LINE_ARGS = true;
+static const double M_TIME_FOR_SIMULATION = 50; //100
 static const double M_NUM_CELLS_ACROSS = 10; // 10
 static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
@@ -96,7 +96,7 @@ private:
      */
 
 public:
-    void TestVertexBasedMonolayer() throw (Exception)
+    void noTestVertexBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -113,6 +113,7 @@ public:
         // Create Mesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS+2);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
+        p_mesh->SetCellRearrangementThreshold(0.1);
 
         p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-(double)M_NUM_CELLS_ACROSS*0.5);
 
@@ -139,12 +140,12 @@ public:
 
         simulator.SetOutputDivisionLocations(true);
 
-        // Create Forces and pass to simulation NOTE: PARAMETERS CHOSEN TO GET CIRCULAR MONOLAYER
+        // Create Forces and pass to simulation NOTE : these are not the default ones and chosen to give a stable growing monolayer
         MAKE_PTR(NagaiHondaForce<2>, p_force);
-        p_force->SetNagaiHondaDeformationEnergyParameter(55.0);
-        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
-        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(6.0);
-        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(12.0);
+        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
         simulator.AddForce(p_force);
 
         // Create Modifiers and pass to simulation
@@ -177,6 +178,8 @@ public:
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
+        double cut_off_length = 1.5; //this is the default
+
         //Create output directory
         std::stringstream out;
         out << sim_index;
@@ -185,7 +188,7 @@ public:
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS+2,0);
         MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
         NodesOnlyMesh<2>* p_mesh = new NodesOnlyMesh<2>;
-        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh, 1.5);
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh, cut_off_length);
 
         p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-(double)M_NUM_CELLS_ACROSS*0.5);
 
@@ -202,14 +205,17 @@ public:
 
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0/120.0);
-        simulator.SetSamplingTimestepMultiple(120);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
 
-        MAKE_PTR(RepulsionForce<2>, p_force);
-        simulator.AddForce(p_force);
+        // Create a force law and pass it to the simulation
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(cut_off_length);
+        simulator.AddForce(p_linear_force);
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
@@ -226,7 +232,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void TestMeshBasedMonolayer() throw (Exception)
+    void NoTestMeshBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -264,15 +270,16 @@ public:
 
         OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0/120.0);
-        simulator.SetSamplingTimestepMultiple(120);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
 
-        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_force);
-        p_force->SetCutOffLength(1.5);
-        simulator.AddForce(p_force);
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(1.5);
+        simulator.AddForce(p_linear_force);
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
@@ -287,7 +294,7 @@ public:
         simulator.Solve();
     }
 
-    void TestPottsBasedMonolayer() throw (Exception)
+    void noTestPottsBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -325,20 +332,31 @@ public:
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 
+        // Set the Temperature
+        cell_population.SetTemperature(0.1); //Default is 0.1
+
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
 
+        // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
-        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.2);  // Default is 0.2
+        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
         simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
 
+        MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
+        p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
+        p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);
+        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
+        p_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
+        p_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
         // Make the Pde and BCS
@@ -355,7 +373,7 @@ public:
         simulator.Solve();
     }
 
-    void TestCaBasedMonolayer() throw (Exception)
+    void NoTestCaBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -404,8 +422,8 @@ public:
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(0.1/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);

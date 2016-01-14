@@ -52,7 +52,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template<unsigned DIM>
 class DifferentialAdhesionCaSwitchingUpdateRule : public AbstractCaSwitchingUpdateRule<DIM>
 {
-friend class TestCaUpdateRules;
+friend class TestCaSwitchingUpdateRules;
 
 private:
     /**
@@ -90,6 +90,12 @@ private:
      */
     double mLabelledCellBoundaryAdhesionEnergyParameter;
 
+    /**
+     * Temperature, i.e. how much the cells fluctuate
+     * (defaults to 0.1)
+     */
+    double mTemperature;
+
     friend class boost::serialization::access;
     /**
      * Boost Serialization method for archiving/checkpointing.
@@ -107,6 +113,7 @@ private:
         archive & mLabelledCellCellAdhesionEnergyParameter;
         archive & mCellBoundaryAdhesionEnergyParameter;
         archive & mLabelledCellBoundaryAdhesionEnergyParameter;
+        archive & mTemperature;
     }
 
 public:
@@ -121,10 +128,22 @@ public:
      */
     ~DifferentialAdhesionCaSwitchingUpdateRule();
 
+
     /**
-      * Calculate the probability of a given switch. Here this is hust
+      * Helper method to calculate the hamiltoninandifference of a given switch.
       *
-      * mSwitchingParameter * dt
+      * @param currentNodeIndex The index of the current node/lattice site
+      * @param neighbourNodeIndex The index of the neighbour node/lattice site
+      * @param rCellPopulation The cell population
+
+      * @return The hamiltonian difference from switching.
+      */
+     double EvaluateHamiltonian(unsigned currentNodeIndex,
+                                unsigned neighbourNodeIndex,
+                                CaBasedCellPopulation<DIM>& rCellPopulation);
+
+    /**
+      * Calculate the probability of a given switch. Here this is TODO...
       *
       * @param currentNodeIndex The index of the current node/lattice site
       * @param neighbourNodeIndex The index of the neighbour node/lattice site
@@ -197,6 +216,19 @@ public:
       * @param labelledCellBoundaryAdhesionEnergyParameter the new value of mLabelledCellBoundaryAdhesionEnergyParameter
       */
      void SetLabelledCellBoundaryAdhesionEnergyParameter(double labelledCellBoundaryAdhesionEnergyParameter);
+
+     /**
+       * @return mTemperature
+       */
+      double GetTemperature();
+
+     /**
+      * Set mTemperature.
+      *
+      * @param temperature the new value of mTemperature
+      */
+     void SetTemperature(double temperature);
+
 
      /**
       * Overridden OutputSwitchingUpdateRuleParameters() method.

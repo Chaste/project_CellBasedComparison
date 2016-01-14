@@ -156,6 +156,11 @@ public:
     double GetMorphogenInfluence();
 
     /**
+     * Helper method to generate the mGrowthRate from a truncated normal distribution.
+     */
+    void GenerateGrowthRate();
+
+    /**
      * Outputs cell cycle model parameters to file.
      *
      * @param rParamsFile the file stream to which the parameters are output

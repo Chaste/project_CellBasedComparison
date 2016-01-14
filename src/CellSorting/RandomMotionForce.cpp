@@ -65,16 +65,12 @@ void RandomMotionForce<DIM>::AddForceContribution(AbstractCellPopulation<DIM>& r
 {
     double dt = SimulationTime::Instance()->GetTimeStep();
 
-    // Loop over the cells
-    for (typename AbstractCellPopulation<DIM>::Iterator cell_iter = rCellPopulation.Begin();
-         cell_iter != rCellPopulation.End();
-         ++cell_iter)
+    // Iterate over the nodes
+    for (typename AbstractMesh<DIM, DIM>::NodeIterator node_iter = rCellPopulation.rGetMesh().GetNodeIteratorBegin();
+         node_iter != rCellPopulation.rGetMesh().GetNodeIteratorEnd();
+         ++node_iter)
     {
-        // Get the node index associated with this cell
-        unsigned node_index = rCellPopulation.GetLocationIndexUsingCell(*cell_iter);
-        Node<DIM>* p_node = rCellPopulation.GetNode(node_index);
-
-        c_vector<double, DIM> force_contribution;
+                c_vector<double, DIM> force_contribution;
         for (unsigned i=0; i<DIM; i++)
         {
             /*
@@ -90,7 +86,7 @@ void RandomMotionForce<DIM>::AddForceContribution(AbstractCellPopulation<DIM>& r
 
             force_contribution[i] = (sqrt(2.0*mMovementParameter*dt)/dt)*xi;
         }
-        p_node->AddAppliedForceContribution(force_contribution);
+        node_iter->AddAppliedForceContribution(force_contribution);
     }
 }
 

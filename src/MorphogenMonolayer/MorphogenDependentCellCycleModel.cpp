@@ -45,19 +45,7 @@ MorphogenDependentCellCycleModel::MorphogenDependentCellCycleModel()
 	  mTargetMass(1.0),
 	  mMorphogenInfluence(DOUBLE_UNSET)
 {
-
-	double minimum_growth_rate = 0.01;
-	double mean_growth_rate = 0.05;
-	double sd = 0.01;
-    RandomNumberGenerator* p_gen =RandomNumberGenerator::Instance();
-
-	//Genrate a truncated normal for the Growth rate
-	mGrowthRate = 0.0;
-	while ( mGrowthRate < minimum_growth_rate)
-	{
-		mGrowthRate = p_gen->NormalRandomDeviate(mean_growth_rate,sd);
-
-	}
+    GenerateGrowthRate();
 }
 
 bool MorphogenDependentCellCycleModel::ReadyToDivide()
@@ -74,13 +62,13 @@ bool MorphogenDependentCellCycleModel::ReadyToDivide()
 
 
 	// Equation 16 from Smith et al 2011
-	// This is not independent of dt so need to use the same timestep!!! Its Comound interest
+	// This is not independent of dt so need to use the same timestep for each simulation!!!
 	mCurrentMass *= 1.0 + dt*mGrowthRate*(1.0+mMorphogenInfluence*morphogen_level)*(1.0-mCurrentMass/mTargetMass);
 
 	double division_rate = 0.1; // Per cell per hour
 
 
-	double p_division = division_rate * dt *  (mCurrentMass/mTargetMass - 0.5);
+	double p_division = division_rate * dt *  (mCurrentMass/mTargetMass);
 	RandomNumberGenerator* p_gen = RandomNumberGenerator::Instance();
 	 if (p_gen->ranf()<p_division)
 	 {
@@ -100,6 +88,9 @@ void MorphogenDependentCellCycleModel::ResetForDivision()
     mBirthTime = SimulationTime::Instance()->GetTime();
     // Halve the mass as half goes to each daughter cell
     mCurrentMass *= 0.5;
+
+    //Reset the Growth Rate
+    GenerateGrowthRate();
 }
 
 void MorphogenDependentCellCycleModel::UpdateCellCyclePhase()
@@ -137,6 +128,8 @@ AbstractCellCycleModel* MorphogenDependentCellCycleModel::CreateCellCycleModel()
     p_model->SetTargetMass(mTargetMass);
     p_model->SetMorphogenInfluence(mMorphogenInfluence);
 
+    // Note don't set mGrowthRate as this is generated in the constructor.
+
     return p_model;
 }
 
@@ -171,6 +164,20 @@ double MorphogenDependentCellCycleModel::GetMorphogenInfluence()
     return mMorphogenInfluence;
 }
 
+void MorphogenDependentCellCycleModel::GenerateGrowthRate()
+{
+    double minimum_growth_rate = 0.01;
+    double mean_growth_rate = 0.05;
+    double sd = 0.01;
+    RandomNumberGenerator* p_gen =RandomNumberGenerator::Instance();
+
+    //Genrate a truncated normal for the Growth rate
+    mGrowthRate = 0.0;
+    while ( mGrowthRate < minimum_growth_rate)
+    {
+        mGrowthRate = p_gen->NormalRandomDeviate(mean_growth_rate,sd);
+    }
+}
 
 void MorphogenDependentCellCycleModel::OutputCellCycleModelParameters(out_stream& rParamsFile)
 {

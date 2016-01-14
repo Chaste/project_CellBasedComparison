@@ -34,6 +34,8 @@
 #include "DiffusionCaUpdateRule.hpp"
 #include "VolumeConstraintPottsUpdateRule.hpp"
 #include "AdhesionPottsUpdateRule.hpp"
+#include "SurfaceAreaConstraintPottsUpdateRule.hpp"
+
 
 #include "SimpleTargetAreaModifier.hpp"
 #include "VolumeTrackingModifier.hpp"
@@ -48,7 +50,7 @@
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_END_STEADY_STATE = 100.0; //100
 static const double M_END_TIME = 1100; //1100
 static const double M_CRYPT_DIAMETER = 16;
@@ -84,7 +86,7 @@ private:
 
 public:
 
-    void TestVertexCrypt() throw (Exception)
+    void NoTestVertexCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -103,6 +105,8 @@ public:
         // Create mesh
         CylindricalHoneycombVertexMeshGenerator generator(M_CRYPT_DIAMETER, M_CRYPT_LENGTH, true);
         Cylindrical2dVertexMesh* p_mesh = generator.GetCylindricalMesh();
+        p_mesh->SetCellRearrangementThreshold(0.1);
+
 
         // Create cells
         std::vector<CellPtr> cells;
@@ -133,9 +137,13 @@ public:
         MAKE_PTR(VolumeTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
 
-        // Create a force law and pass it to the simulation
-        MAKE_PTR(NagaiHondaForce<2>, p_nagai_honda_force);
-        simulator.AddForce(p_nagai_honda_force);
+        // Create Forces and pass to simulation NOTE : these are not the default ones and chosen to give a stable growing monolayer
+        MAKE_PTR(NagaiHondaForce<2>, p_force);
+        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
+        simulator.AddForce(p_force);
 
         // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
         MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
@@ -165,7 +173,7 @@ public:
         Warnings::Instance()->QuietDestroy();
     }
 
-    void TestMeshBasedCrypt() throw (Exception)
+    void NoTestMeshBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -257,6 +265,8 @@ public:
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
+        double cut_off_length = 1.5; //this is the default
+
         //Create output directory
         std::stringstream out;
         out << sim_index << "_CI_" << contact_inhibition_level;
@@ -305,9 +315,10 @@ public:
         simulator.AddSimulationModifier(p_modifier);
 
         // Create a force law and pass it to the simulation
-        MAKE_PTR(RepulsionForce<2>, p_repulsion_force);
-        p_repulsion_force->SetMeinekeSpringStiffness(25.0);
-        simulator.AddForce(p_repulsion_force);
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(cut_off_length);
+        simulator.AddForce(p_linear_force);
 
         // Solid base boundary condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
@@ -335,7 +346,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void TestPottsCrypt() throw (Exception)
+    void noTestPottsCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -369,6 +380,10 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAncestorWriter>();
 
+        // Set the Temperature
+        cell_population.SetTemperature(0.1); //Default is 0.1
+
+
         // Create an instance of a Wnt concentration
         WntConcentration<2>::Instance()->SetType(LINEAR);
         WntConcentration<2>::Instance()->SetCellPopulation(cell_population);
@@ -393,8 +408,18 @@ public:
 
         // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
+        p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
+        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
         simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
+
+        MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
+        p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
+        p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);
+        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
+        p_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
+        p_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
         // Run simulation
@@ -411,7 +436,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void TestCaCrypt() throw (Exception)
+    void NoTestCaCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -457,7 +482,8 @@ public:
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_END_STEADY_STATE);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);

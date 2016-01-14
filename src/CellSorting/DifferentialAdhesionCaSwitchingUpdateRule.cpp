@@ -34,6 +34,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "DifferentialAdhesionCaSwitchingUpdateRule.hpp"
+#include "Debug.hpp"
 
 template<unsigned DIM>
 DifferentialAdhesionCaSwitchingUpdateRule<DIM>::DifferentialAdhesionCaSwitchingUpdateRule()
@@ -42,7 +43,8 @@ DifferentialAdhesionCaSwitchingUpdateRule<DIM>::DifferentialAdhesionCaSwitchingU
       mLabelledCellLabelledCellAdhesionEnergyParameter(0.2), // Educated guess
       mLabelledCellCellAdhesionEnergyParameter(0.1), // Educated guess
       mCellBoundaryAdhesionEnergyParameter(0.2), // Educated guess
-      mLabelledCellBoundaryAdhesionEnergyParameter(0.2) // Educated guess
+      mLabelledCellBoundaryAdhesionEnergyParameter(0.2), // Educated guess
+      mTemperature(0.1) // Educated guess
 {
 }
 
@@ -52,176 +54,299 @@ DifferentialAdhesionCaSwitchingUpdateRule<DIM>::~DifferentialAdhesionCaSwitching
 }
 
 template<unsigned DIM>
+double DifferentialAdhesionCaSwitchingUpdateRule<DIM>::EvaluateHamiltonian(unsigned currentNodeIndex,
+                                                                      unsigned neighbourNodeIndex,
+                                                                      CaBasedCellPopulation<DIM>& rCellPopulation)
+{
+    // Energy before and after switch
+    double H_0=0.0;
+    double H_1=0.0;
+
+    bool is_cell_on_node_1 = rCellPopulation.IsCellAttachedToLocationIndex(currentNodeIndex);
+    bool is_cell_on_node_2 = rCellPopulation.IsCellAttachedToLocationIndex(neighbourNodeIndex);
+
+    bool is_cell_1_labelled = false;
+    if (is_cell_on_node_1)
+    {
+        CellPtr p_cell_1 = rCellPopulation.GetCellUsingLocationIndex(currentNodeIndex);
+        is_cell_1_labelled = p_cell_1->HasCellProperty<CellLabel>();
+    }
+    bool is_cell_2_labelled = false;
+    if (is_cell_on_node_2)
+    {
+        CellPtr p_cell_2 = rCellPopulation.GetCellUsingLocationIndex(neighbourNodeIndex);
+        is_cell_2_labelled = p_cell_2->HasCellProperty<CellLabel>();
+    }
+
+
+    //PRINT_3_VARIABLES(currentNodeIndex,is_cell_on_node_1,is_cell_1_labelled)
+
+    std::set<unsigned> node_1_neighbouring_node_indices = rCellPopulation.rGetMesh().GetVonNeumannNeighbouringNodeIndices(currentNodeIndex);
+
+    // Remove node 2 from neighbouring indices
+    node_1_neighbouring_node_indices.erase(neighbourNodeIndex);
+
+    for (std::set<unsigned>::iterator iter = node_1_neighbouring_node_indices.begin();
+                 iter != node_1_neighbouring_node_indices.end();
+                 ++iter)
+    {
+        //PRINT_2_VARIABLES(H_0,H_1);
+        //PRINT_VARIABLE(*iter);
+
+        if(rCellPopulation.IsCellAttachedToLocationIndex(*iter))
+        {
+            // Cell attached to neighbour node
+
+
+            bool is_neighbour_labelled = rCellPopulation.GetCellUsingLocationIndex(*iter)->template HasCellProperty<CellLabel>();
+            //PRINT_VARIABLE(is_neighbour_labelled)
+
+            if (is_neighbour_labelled)
+            {
+                if (is_cell_on_node_1)
+                {
+                    if (is_cell_1_labelled)
+                    {
+                        H_0 += mLabelledCellLabelledCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_0 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 1
+                {
+                    H_0 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+
+                if (is_cell_on_node_2)
+                {
+                    if (is_cell_2_labelled)
+                    {
+                        H_1 += mLabelledCellLabelledCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_1 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 2
+                {
+                    H_1 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+            else // Neighbour not labeled
+            {
+                if (is_cell_on_node_1)
+                {
+                    if (is_cell_1_labelled)
+                    {
+                        H_0 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_0 += mCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 1
+                {
+                    H_0 += mCellBoundaryAdhesionEnergyParameter;
+                }
+                if (is_cell_on_node_2)
+                {
+                    if (is_cell_2_labelled)
+                    {
+                        H_1 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_1 += mCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 2
+                {
+                    H_1 += mCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+        }
+        else // No cell on neighbour node
+        {
+            if (is_cell_on_node_1)
+            {
+                if (is_cell_1_labelled)
+                {
+                    H_0 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+                else
+                {
+                    H_0 += mCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+            // else // no cell on node 1 or neighbour so no contribution
+            if (is_cell_on_node_2)
+            {
+                if (is_cell_2_labelled)
+                {
+                    H_1 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+                else
+                {
+                    H_1 += mCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+            //else // no cell on node 2 or neighbour so no contribution
+
+        }
+    }
+
+    //PRINT_2_VARIABLES(H_0,H_1);
+
+    std::set<unsigned> node_2_neighbouring_node_indices = rCellPopulation.rGetMesh().GetVonNeumannNeighbouringNodeIndices(neighbourNodeIndex);
+    // Remove node 2 from neighbouring indices
+    node_2_neighbouring_node_indices.erase(currentNodeIndex);
+
+
+    //PRINT_3_VARIABLES(neighbourNodeIndex,is_cell_on_node_2,is_cell_2_labelled)
+
+    for (std::set<unsigned>::iterator iter = node_2_neighbouring_node_indices.begin();
+                 iter != node_2_neighbouring_node_indices.end();
+                 ++iter)
+    {
+        //PRINT_2_VARIABLES(H_0,H_1);
+        //PRINT_VARIABLE(*iter);
+
+
+        if(rCellPopulation.IsCellAttachedToLocationIndex(*iter))
+        {
+            // Cell attached to neighbour node
+
+            bool is_neighbour_labelled = rCellPopulation.GetCellUsingLocationIndex(*iter)->template HasCellProperty<CellLabel>();
+
+            //PRINT_VARIABLE(is_neighbour_labelled)
+
+            if (is_neighbour_labelled)
+            {
+                if (is_cell_on_node_1)
+                {
+                    if (is_cell_1_labelled)
+                    {
+                        H_1 += mLabelledCellLabelledCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_1 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 1
+                {
+                    H_1 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+                if (is_cell_on_node_2)
+                {
+                    if (is_cell_2_labelled)
+                    {
+                        H_0 += mLabelledCellLabelledCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_0 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 2
+                {
+                    H_0 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+            else // Neighbour not labeled
+            {
+                if (is_cell_on_node_1)
+                {
+                    if (is_cell_1_labelled)
+                    {
+                        H_1 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_1 += mCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 1
+                {
+                   H_1 += mCellBoundaryAdhesionEnergyParameter;
+                }
+                if (is_cell_on_node_2)
+                {
+                    if (is_cell_2_labelled)
+                    {
+                        H_0 += mLabelledCellCellAdhesionEnergyParameter;
+                    }
+                    else
+                    {
+                        H_0 += mCellCellAdhesionEnergyParameter;
+                    }
+                }
+                else // no cell on node 2
+                {
+                    H_0 += mCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+        }
+        else // No cell on neighbour node
+        {
+            if (is_cell_on_node_1)
+            {
+                if (is_cell_1_labelled)
+                {
+                    H_1 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+                else
+                {
+                    H_1 += mCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+            // else // no cell on node 1 or neighbour so no contribution
+            if (is_cell_on_node_2)
+            {
+                if (is_cell_2_labelled)
+                {
+                    H_0 += mLabelledCellBoundaryAdhesionEnergyParameter;
+                }
+                else
+                {
+                    H_0 += mCellBoundaryAdhesionEnergyParameter;
+                }
+            }
+            // else // no cell on node 1 or neighbour so no contribution
+        }
+    }
+    //PRINT_2_VARIABLES(H_0,H_1);
+
+    return H_1-H_0;
+}
+
+template<unsigned DIM>
 double DifferentialAdhesionCaSwitchingUpdateRule<DIM>::EvaluateSwitchingProbability(unsigned currentNodeIndex,
                                                                       unsigned neighbourNodeIndex,
                                                                       CaBasedCellPopulation<DIM>& rCellPopulation,
                                                                       double dt,
                                                                       double deltaX)
 {
-    CellPtr p_cell_1 = rCellPopulation.GetCellUsingLocationIndex(currentNodeIndex);
-    CellPtr p_cell_2 = rCellPopulation.GetCellUsingLocationIndex(neighbourNodeIndex);
-    bool is_cell_1_labelled = p_cell_1->HasCellProperty<CellLabel>();
-    bool is_cell_2_labelled = p_cell_2->HasCellProperty<CellLabel>();
 
-    // Energy before and after switch
-    double H_0=0.0;
-    double H_1=0.0;
-
-    std::set<unsigned> node_1_neighbouring_node_indices = rCellPopulation.rGetMesh().GetMooreNeighbouringNodeIndices(currentNodeIndex);
-
-    for (std::set<unsigned>::iterator iter = node_1_neighbouring_node_indices.begin();
-                 iter != node_1_neighbouring_node_indices.end();
-                 ++iter)
-    {
-        if(rCellPopulation.IsCellAttachedToLocationIndex(*iter))
-        {
-            // Cell attached to neighbour cell
-
-            bool is_neighbour_labelled = rCellPopulation.GetCellUsingLocationIndex(*iter)->template HasCellProperty<CellLabel>();
-
-            if (is_neighbour_labelled)
-            {
-                if (is_cell_1_labelled)
-                {
-                    H_0 += mLabelledCellLabelledCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_0 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-                if (is_cell_2_labelled)
-                {
-                    H_1 += mLabelledCellLabelledCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_1 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-
-            }
-            else
-            {
-                if (is_cell_1_labelled)
-                {
-                    H_0 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_0 += mCellCellAdhesionEnergyParameter;
-                }
-                if (is_cell_2_labelled)
-                {
-                    H_1 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_1 += mCellCellAdhesionEnergyParameter;
-                }
-            }
-        }
-        else // No cell on neighbour
-        {
-            if (is_cell_1_labelled)
-            {
-                H_0 += mLabelledCellBoundaryAdhesionEnergyParameter;
-            }
-            else
-            {
-                H_0 += mCellBoundaryAdhesionEnergyParameter;
-            }
-            if (is_cell_2_labelled)
-            {
-                H_1 += mLabelledCellBoundaryAdhesionEnergyParameter;
-            }
-            else
-            {
-                H_1 += mCellBoundaryAdhesionEnergyParameter;
-            }
-        }
-    }
-
-
-    std::set<unsigned> node_2_neighbouring_node_indices = rCellPopulation.rGetMesh().GetMooreNeighbouringNodeIndices(neighbourNodeIndex);
-
-    for (std::set<unsigned>::iterator iter = node_2_neighbouring_node_indices.begin();
-                 iter != node_2_neighbouring_node_indices.end();
-                 ++iter)
-    {
-        if(rCellPopulation.IsCellAttachedToLocationIndex(*iter))
-        {
-            // Cell attached to neighbour cell
-
-            bool is_neighbour_labelled = rCellPopulation.GetCellUsingLocationIndex(*iter)->template HasCellProperty<CellLabel>();
-
-            if (is_neighbour_labelled)
-            {
-                if (is_cell_1_labelled)
-                {
-                    H_1 += mLabelledCellLabelledCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_1 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-                if (is_cell_2_labelled)
-                {
-                    H_0 += mLabelledCellLabelledCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_0 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-
-            }
-            else
-            {
-                if (is_cell_1_labelled)
-                {
-                    H_1 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_1 += mCellCellAdhesionEnergyParameter;
-                }
-                if (is_cell_2_labelled)
-                {
-                    H_0 += mLabelledCellCellAdhesionEnergyParameter;
-                }
-                else
-                {
-                    H_0 += mCellCellAdhesionEnergyParameter;
-                }
-            }
-        }
-        else // No cell on neighbour
-        {
-            if (is_cell_1_labelled)
-            {
-                H_1 += mLabelledCellBoundaryAdhesionEnergyParameter;
-            }
-            else
-            {
-                H_1 += mCellBoundaryAdhesionEnergyParameter;
-            }
-            if (is_cell_2_labelled)
-            {
-                H_0 += mLabelledCellBoundaryAdhesionEnergyParameter;
-            }
-            else
-            {
-                H_0 += mCellBoundaryAdhesionEnergyParameter;
-            }
-        }
-    }
 
     double probability_of_switch = 0.0;
 
-    if (H_1-H_0>0)
+    double hamiltonian_difference = EvaluateHamiltonian(currentNodeIndex,neighbourNodeIndex,rCellPopulation);
+
+    if (hamiltonian_difference<=0)
     {
-        probability_of_switch =  (H_1-H_0)*dt;
+        probability_of_switch =  dt;
+    }
+    else
+    {
+        probability_of_switch = dt*exp(-hamiltonian_difference/mTemperature);
     }
 
-     return probability_of_switch;
+   return probability_of_switch;
 
 
 }
@@ -287,6 +412,18 @@ void DifferentialAdhesionCaSwitchingUpdateRule<DIM>::SetLabelledCellBoundaryAdhe
 }
 
 template<unsigned DIM>
+double DifferentialAdhesionCaSwitchingUpdateRule<DIM>::GetTemperature()
+{
+    return mTemperature;
+}
+
+template<unsigned DIM>
+void DifferentialAdhesionCaSwitchingUpdateRule<DIM>::SetTemperature(double temperature)
+{
+    mTemperature = temperature;
+}
+
+template<unsigned DIM>
 void DifferentialAdhesionCaSwitchingUpdateRule<DIM>::OutputSwitchingUpdateRuleParameters(out_stream& rParamsFile)
 {
     *rParamsFile << "\t\t\t<CellCellAdhesionEnergyParameter>" << mCellCellAdhesionEnergyParameter << "</CellCellAdhesionEnergyParameter>\n";
@@ -294,6 +431,7 @@ void DifferentialAdhesionCaSwitchingUpdateRule<DIM>::OutputSwitchingUpdateRulePa
     *rParamsFile << "\t\t\t<LabelledCellCellAdhesionEnergyParameter>" << mLabelledCellCellAdhesionEnergyParameter << "</LabelledCellCellAdhesionEnergyParameter>\n";
     *rParamsFile << "\t\t\t<CellBoundaryAdhesionEnergyParameter>" << mCellBoundaryAdhesionEnergyParameter << "</CellBoundaryAdhesionEnergyParameter>\n";
     *rParamsFile << "\t\t\t<LabelledCellBoundaryAdhesionEnergyParameter>" << mLabelledCellBoundaryAdhesionEnergyParameter << "</LabelledCellBoundaryAdhesionEnergyParameter>\n";
+    *rParamsFile << "\t\t\t<Temperature>" << mTemperature << "</Temperature>\n";
 
     // Call method on direct parent class
     AbstractCaSwitchingUpdateRule<DIM>::OutputSwitchingUpdateRuleParameters(rParamsFile);

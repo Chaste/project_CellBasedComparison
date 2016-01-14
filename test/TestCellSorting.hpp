@@ -36,6 +36,7 @@
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
 #include "VolumeConstraintPottsUpdateRule.hpp"
+#include "SurfaceAreaConstraintPottsUpdateRule.hpp"
 #include "AdhesionPottsUpdateRule.hpp"
 #include "DifferentialAdhesionPottsUpdateRule.hpp"
 
@@ -114,10 +115,10 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void TestVertexMonolayerCellSorting() throw (Exception)
+    void noTestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
-        double cell_cycle_duration = 10.0;
+        double cell_cycle_duration = DBL_MAX;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -146,7 +147,7 @@ public:
 
         for (unsigned i=0; i<cells.size(); i++)
         {
-            // Set a target area rather than setting a growth modifier. (the modifiers doesn't work as making very long G1 phases)
+            // Set a target area rather than setting a growth modifier. (the modifiers don't work correctly as making very long G1 phases)
             cells[i]->GetCellData()->SetItem("target area", 1.0);
         }
 
@@ -170,23 +171,19 @@ public:
 
         // Set up force law and pass it to the simulation
         MAKE_PTR(NagaiHondaDifferentialAdhesionForce<2>, p_force);
-        p_force->SetNagaiHondaDeformationEnergyParameter(5.5);
-        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0);
-        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(0.1);
-        p_force->SetNagaiHondaLabelledCellCellAdhesionEnergyParameter(0.6);
-        p_force->SetNagaiHondaLabelledCellLabelledCellAdhesionEnergyParameter(0.1); //3.0
-        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.2);
-        p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(1.2); // 40.0
+        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
+        p_force->SetNagaiHondaLabelledCellCellAdhesionEnergyParameter(2.0);
+        p_force->SetNagaiHondaLabelledCellLabelledCellAdhesionEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
+        p_force->SetNagaiHondaLabelledCellBoundaryAdhesionEnergyParameter(20.0);
         simulator.AddForce(p_force);
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.01);
+        p_random_force->SetMovementParameter(0.1);
         simulator.AddForce(p_random_force);
-
-//        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
-//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
-//        simulator.AddSimulationModifier(p_growth_modifier);
 
         // Run simulation
         simulator.Solve();
@@ -212,10 +209,10 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-    void TestPottsMonolayerCellSorting() throw (Exception)
+    void noTestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
-        double cell_cycle_duration = 10.0;
+        double cell_cycle_duration = DBL_MAX;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -247,6 +244,9 @@ public:
         cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
         cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
 
+        // Set the Temperature
+        cell_population.SetTemperature(0.1); //Default is 0.1
+
         // Set up cell-based simulation and output directory
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
@@ -259,15 +259,20 @@ public:
         // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
-        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.2);
+        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
         simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
 
+        MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
+        p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
+        p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);//0.01
+        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+
         MAKE_PTR(DifferentialAdhesionPottsUpdateRule<2>, p_differential_adhesion_update_rule);
-        p_differential_adhesion_update_rule->SetLabelledCellLabelledCellAdhesionEnergyParameter(0.2);
-        p_differential_adhesion_update_rule->SetLabelledCellCellAdhesionEnergyParameter(0.4); //0.11
-        p_differential_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.2); //0.2
-        p_differential_adhesion_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(0.2); //0.16
-        p_differential_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2); //0.16
+        p_differential_adhesion_update_rule->SetLabelledCellLabelledCellAdhesionEnergyParameter(0.1);
+        p_differential_adhesion_update_rule->SetLabelledCellCellAdhesionEnergyParameter(0.5); // 1.0
+        p_differential_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1); //0.1
+        p_differential_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2); // 1.0
+        p_differential_adhesion_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(1.0); // 2.0
         simulator.AddPottsUpdateRule(p_differential_adhesion_update_rule);
 
         // Run simulation
@@ -290,10 +295,10 @@ public:
     }
 
 
-    void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+    void noTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
-        double cell_cycle_duration = 10.0;
+        double cell_cycle_duration = DBL_MAX;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -332,19 +337,20 @@ public:
         simulator.SetOutputDirectory(output_directory);
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2>, p_differential_adhesion_force);
+        p_differential_adhesion_force->SetMeinekeSpringStiffness(50.0);
         p_differential_adhesion_force->SetHomotypicLabelledSpringConstantMultiplier(1.0);
         p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.1);
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.01);
+        p_random_force->SetMovementParameter(0.02);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -366,16 +372,18 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-    void TestNodeBasedMonolayerCellSorting() throw (Exception)
+    void noTestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
-        double cell_cycle_duration = 10.0;
+        double cell_cycle_duration = DBL_MAX;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
           cell_cycle_duration = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-CCD").c_str());
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        double cut_off_length = 2.5; //Extended to allow sorting for longer distances
 
         //Create output directory
         std::stringstream out;
@@ -388,7 +396,7 @@ public:
 
         // Convert this to a NodesOnlyMesh
         NodesOnlyMesh<2> mesh;
-        mesh.ConstructNodesWithoutMesh(*p_generating_mesh, 1.5);
+        mesh.ConstructNodesWithoutMesh(*p_generating_mesh, cut_off_length);
 
         // Set up cells, one for each Node
         std::vector<CellPtr> cells;
@@ -410,20 +418,21 @@ public:
         simulator.SetOutputDirectory(output_directory);
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Create a force law and pass it to the simulation
         MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2>, p_differential_adhesion_force);
+        p_differential_adhesion_force->SetMeinekeSpringStiffness(50.0);
         p_differential_adhesion_force->SetHomotypicLabelledSpringConstantMultiplier(1.0);
         p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.1);
-        p_differential_adhesion_force->SetCutOffLength(2.0);
+        p_differential_adhesion_force->SetCutOffLength(cut_off_length);
         simulator.AddForce(p_differential_adhesion_force);
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.01);
+        p_random_force->SetMovementParameter(0.02); //0.1 causes dissasociation
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -448,7 +457,7 @@ public:
     void TestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
-        double cell_cycle_duration = 10.0;
+        double cell_cycle_duration = DBL_MAX;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -462,7 +471,7 @@ public:
         std::string output_directory = "CellSorting/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh
-        unsigned domain_wide = 4*M_NUM_CELLS_ACROSS;
+        unsigned domain_wide = 2*M_NUM_CELLS_ACROSS;
 
         PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
         PottsMesh<2>* p_mesh = generator.GetMesh();
@@ -495,8 +504,8 @@ public:
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(0.1);
-        simulator.SetSamplingTimestepMultiple(10);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
 
         // Add Division Rule
@@ -505,12 +514,14 @@ public:
 
         // Add switching Update Rule
         MAKE_PTR(DifferentialAdhesionCaSwitchingUpdateRule<2u>, p_switching_update_rule);
+        p_switching_update_rule->SetLabelledCellLabelledCellAdhesionEnergyParameter(0.1);
+        p_switching_update_rule->SetLabelledCellCellAdhesionEnergyParameter(0.2);
+        p_switching_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
+        p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
+        p_switching_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(0.4);
+        p_switching_update_rule->SetTemperature(0.1);
+
         simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
-
-
-        MAKE_PTR(RandomCaSwitchingUpdateRule<2u>, p_random_switching_update_rule);
-        p_random_switching_update_rule->SetSwitchingParameter(0.01);
-        simulator.AddCaSwitchingUpdateRule(p_random_switching_update_rule);
 
 
         simulator.Solve();

@@ -33,8 +33,10 @@
 #include "PottsBasedCellPopulation.hpp"
 #include "PottsMeshGenerator.hpp"
 #include "VolumeConstraintPottsUpdateRule.hpp"
+
 #include "AdhesionPottsUpdateRule.hpp"
-#include "DifferentialAdhesionPottsUpdateRule.hpp"
+#include "SurfaceAreaConstraintPottsUpdateRule.hpp"
+
 
 #include "ShovingCaBasedDivisionRule.hpp"
 
@@ -47,7 +49,7 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_TISSUE_RADIUS = 15; // 15
 static const double M_PROLIF_RADIUS = 5; // 5
 static const double M_TIME_FOR_SIMULATION = 100; //100
@@ -87,7 +89,7 @@ private:
 
 public:
 
-    void TestVertexMonolayerDeltaNotch() throw (Exception)
+    void NoTestVertexMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 0.1;
@@ -146,10 +148,10 @@ public:
 
         // Create Forces and pass to simulation NOTE : these are not the default ones and chosen to give a stable growing monolayer
         MAKE_PTR(NagaiHondaForce<2>, p_force);
-        p_force->SetNagaiHondaDeformationEnergyParameter(10.0); //5.5
-        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(0.0); //0.0
-        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0); //0.6
-        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(1.0); //1.2
+        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
         simulator.AddForce(p_force);
 
 //        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
@@ -173,7 +175,7 @@ public:
    }
 
 
-    void TestPottsMonolayerDeltaNotch() throw (Exception)
+    void NoTestPottsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 0.1;
@@ -206,7 +208,9 @@ public:
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
         cell_population.SetNumSweepsPerTimestep(1);
-        cell_population.SetTemperature(0.01);
+
+        // Set the Temperature
+        cell_population.SetTemperature(0.1); //Default is 0.1
 
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
@@ -231,10 +235,17 @@ public:
         // Create update rules and pass to the simulation
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
-        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);  // 0.2
+        p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
         simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
 
+        MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
+        p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
+        p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);
+        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
+        p_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
+        p_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
         simulator.AddPottsUpdateRule(p_adhesion_update_rule);
 
         // Add a cell killer
@@ -253,7 +264,7 @@ public:
     }
 
 
-    void TestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
+    void NoTestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 0.1;
@@ -297,8 +308,8 @@ public:
         simulator.SetOutputDivisionLocations(true);
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
@@ -310,10 +321,10 @@ public:
         p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
         simulator.AddSimulationModifier(p_differentiation_modifier);
 
-
-        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_force);
-        simulator.AddForce(p_force);
-
+        // Create a force law and pass it to the simulation
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        simulator.AddForce(p_linear_force);
 
         // Add a cell killer
         MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
@@ -342,6 +353,8 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         }
         RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
 
+        double cut_off_length = 1.0;
+
         //Create output directory
         std::stringstream out;
         out << sim_index << "_PDIV_" << division_probability;
@@ -356,7 +369,7 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
 
         // Convert this to a NodesOnlyMesh
         NodesOnlyMesh<2> mesh;
-        mesh.ConstructNodesWithoutMesh(*p_generating_mesh, 1.5);
+        mesh.ConstructNodesWithoutMesh(*p_generating_mesh, cut_off_length);
 
         // Set up cells, one for each Node
         std::vector<CellPtr> cells;
@@ -376,8 +389,8 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         simulator.SetOutputDivisionLocations(true);
 
         // Set time step and end time for simulation
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add DeltaNotch modifier
@@ -389,8 +402,11 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
         simulator.AddSimulationModifier(p_differentiation_modifier);
 
-        MAKE_PTR(RepulsionForce<2>, p_force);
-        simulator.AddForce(p_force);
+        // Create a force law and pass it to the simulation
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(cut_off_length);
+        simulator.AddForce(p_linear_force);
 
         // Add a cell killer
         MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
@@ -407,7 +423,7 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-   void TestCaBasedMonolayerDeltaNotch() throw (Exception)
+   void NoTestCaBasedMonolayerDeltaNotch() throw (Exception)
    {
         double sim_index = 0;
         double division_probability = 10.0;
@@ -458,8 +474,8 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         simulator.SetOutputDirectory(output_directory);
         simulator.SetOutputDivisionLocations(true);
 
-        simulator.SetDt(0.1);
-        simulator.SetSamplingTimestepMultiple(10);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         // Add Division Rule
