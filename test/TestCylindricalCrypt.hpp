@@ -50,7 +50,7 @@
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_END_STEADY_STATE = 100.0; //100
 static const double M_END_TIME = 1100; //1100
 static const double M_CRYPT_DIAMETER = 16;

@@ -8,7 +8,7 @@
 #
 
 start_sim=0;
-end_sim=1;
+end_sim=10;
 
 noise[0]="100"
 noise[1]="10"
