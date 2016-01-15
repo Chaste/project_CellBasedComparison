@@ -80,13 +80,18 @@ private:
             p_cell->SetCellProliferativeType(p_cell_type);
             double birth_time = - RandomNumberGenerator::Instance()->ranf() * typical_cell_cycle_duration;
             p_cell->SetBirthTime(birth_time);
+
+            // Set Target Area so dont need to use a growth model in vertex simulations
+            p_cell->GetCellData()->SetItem("target area", 1.0);
+            rCells.push_back(p_cell);
+
             rCells.push_back(p_cell);
         }
     }
 
 public:
 
-    void NoTestVertexCrypt() throw (Exception)
+    void TestVertexCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -146,8 +151,8 @@ public:
         simulator.AddForce(p_force);
 
         // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
-        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
-        simulator.AddSimulationModifier(p_growth_modifier);
+//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
+//        simulator.AddSimulationModifier(p_growth_modifier);
 
         // Solid base Boundary condition
         MAKE_PTR_ARGS(PlaneBoundaryCondition<2>, p_bcs, (&cell_population, zero_vector<double>(2), -unit_vector<double>(2,1)));
@@ -173,7 +178,7 @@ public:
         Warnings::Instance()->QuietDestroy();
     }
 
-    void NoTestMeshBasedCrypt() throw (Exception)
+    void TestMeshBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -199,7 +204,7 @@ public:
 
         // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells,sqrt(3.0)/2.0,contact_inhibition_level);  //mature_volume = sqrt(3.0)/2.0 =
+        GenerateCells(location_indices.size(),cells,sqrt(3.0)/2.0,contact_inhibition_level);  //mature_volume = sqrt(3.0)/2.0
 
         // Create tissue
         MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
@@ -346,7 +351,8 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void noTestPottsCrypt() throw (Exception)
+    void
+    TestPottsCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -392,8 +398,8 @@ public:
         // Set up cell-based simulation
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(0.04); // Vary See Osborne et al 2015
-        simulator.SetSamplingTimestepMultiple(25);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_END_STEADY_STATE);
         simulator.SetOutputDivisionLocations(true);
         simulator.SetOutputCellVelocities(true);
@@ -436,7 +442,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void NoTestCaCrypt() throw (Exception)
+    void TestCaCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;

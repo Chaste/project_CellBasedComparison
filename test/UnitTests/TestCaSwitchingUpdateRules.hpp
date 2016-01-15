@@ -132,6 +132,8 @@ public:
         TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(0,1,cell_population,delta_t,delta_x),delta_t*exp(-11.0/10),1e-6);
         TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(4,5,cell_population),11,1e-6);
         TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(5,8,cell_population),11,1e-6);
+        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(5,8,cell_population,delta_t,delta_x),0,1e-6); // 0 as would cause cell dissociation
+        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(8,5,cell_population,delta_t,delta_x),0,1e-6); // //For coverage
         TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(5,9,cell_population),16,1e-6);
 
         // Non Labeled cells with empty nodes

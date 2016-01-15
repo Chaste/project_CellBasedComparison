@@ -52,7 +52,7 @@
 
 static const bool M_USING_COMMAND_LINE_ARGS = false;
 static const double M_TIME_TO_STEADY_STATE = 10.0; //10
-static const double M_TIME_FOR_SIMULATION = 100.0; //100
+static const double M_TIME_FOR_SIMULATION = 500.0; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
 class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
@@ -115,7 +115,7 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void noTestVertexMonolayerCellSorting() throw (Exception)
+    void NoTestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_cycle_duration = DBL_MAX;
@@ -209,7 +209,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-    void noTestPottsMonolayerCellSorting() throw (Exception)
+    void NoTestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_cycle_duration = DBL_MAX;
@@ -295,7 +295,7 @@ public:
     }
 
 
-    void noTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+    void NoTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_cycle_duration = DBL_MAX;
@@ -372,7 +372,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-    void noTestNodeBasedMonolayerCellSorting() throw (Exception)
+    void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_cycle_duration = DBL_MAX;
@@ -452,7 +452,7 @@ public:
         // Test no births or deaths
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-   }
+    }
 
     void TestCaBasedMonolayerCellSorting() throw (Exception)
     {
@@ -520,9 +520,7 @@ public:
         p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
         p_switching_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(0.4);
         p_switching_update_rule->SetTemperature(0.1);
-
         simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
-
 
         simulator.Solve();
 

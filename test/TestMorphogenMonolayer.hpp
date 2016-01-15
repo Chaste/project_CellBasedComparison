@@ -50,7 +50,7 @@
 
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TIME_FOR_SIMULATION = 50; //100
+static const double M_TIME_FOR_SIMULATION = 60; //100
 static const double M_NUM_CELLS_ACROSS = 10; // 10
 static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
@@ -96,7 +96,7 @@ private:
      */
 
 public:
-    void noTestVertexBasedMonolayer() throw (Exception)
+    void TestVertexBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -126,7 +126,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell date writer so can pass in variabl name
+        //Make cell date writer so can pass in variable name
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 
@@ -136,11 +136,11 @@ public:
         simulator.SetOutputDirectory(output_directory);
         simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(M_TIME_FOR_SIMULATION);//20
+        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
 
-        // Create Forces and pass to simulation NOTE : these are not the default ones and chosen to give a stable growing monolayer
+        // Create Forces and pass to simulation NOTE: these are not the default ones and chosen to give a stable growing monolayer
         MAKE_PTR(NagaiHondaForce<2>, p_force);
         p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
         p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
@@ -161,10 +161,6 @@ public:
 		// Create a PDE Modifier object using this pde and bcs object
 		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
 		simulator.AddSimulationModifier(p_pde_modifier);
-
-//        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
-//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
-//        simulator.AddSimulationModifier(p_growth_modifier);
 
         simulator.Solve();
     }
@@ -199,7 +195,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell date writer so can pass in variabl name
+        //Make cell date writer so can pass in variable name
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 
@@ -232,7 +228,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void NoTestMeshBasedMonolayer() throw (Exception)
+    void TestMeshBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -294,7 +290,7 @@ public:
         simulator.Solve();
     }
 
-    void noTestPottsBasedMonolayer() throw (Exception)
+    void TestPottsBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -328,7 +324,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell date writer so can pass in variabl name
+        //Make cell date writer so can pass in variable name
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 
@@ -373,7 +369,7 @@ public:
         simulator.Solve();
     }
 
-    void NoTestCaBasedMonolayer() throw (Exception)
+    void TestCaBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -416,7 +412,7 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell date writer so can pass in variabl name
+        //Make cell date writer so can pass in variable name
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 

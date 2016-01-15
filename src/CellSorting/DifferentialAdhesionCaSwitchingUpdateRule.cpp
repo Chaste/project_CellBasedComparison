@@ -332,18 +332,77 @@ double DifferentialAdhesionCaSwitchingUpdateRule<DIM>::EvaluateSwitchingProbabil
                                                                       double deltaX)
 {
 
+    // Check if cell will have a moore neighbour after the move?
+    bool cells_connected = false;
 
-    double probability_of_switch = 0.0;
+    bool is_cell_on_node_1 = rCellPopulation.IsCellAttachedToLocationIndex(currentNodeIndex);
+    bool is_cell_on_node_2 = rCellPopulation.IsCellAttachedToLocationIndex(neighbourNodeIndex);
 
-    double hamiltonian_difference = EvaluateHamiltonian(currentNodeIndex,neighbourNodeIndex,rCellPopulation);
+    // To get here need al teast one cell
+    assert(is_cell_on_node_1 || is_cell_on_node_2);
 
-    if (hamiltonian_difference<=0)
+    if ( !is_cell_on_node_1 || !is_cell_on_node_2 )
     {
-        probability_of_switch =  dt;
+        if (is_cell_on_node_1)
+        {
+            assert(!is_cell_on_node_2);
+
+            std::set<unsigned> node_2_neighbouring_node_indices = rCellPopulation.rGetMesh().GetMooreNeighbouringNodeIndices(neighbourNodeIndex);
+            // Remove node 1 from neighbouring indices
+            node_2_neighbouring_node_indices.erase(currentNodeIndex);
+
+            for (std::set<unsigned>::iterator iter = node_2_neighbouring_node_indices.begin();
+                             iter != node_2_neighbouring_node_indices.end();
+                             ++iter)
+            {
+                if(rCellPopulation.IsCellAttachedToLocationIndex(*iter))
+                {
+                    cells_connected = true;
+                }
+            }
+        }
+        else
+        {
+            assert(is_cell_on_node_2);
+            assert(!is_cell_on_node_1);
+
+            std::set<unsigned> node_1_neighbouring_node_indices = rCellPopulation.rGetMesh().GetMooreNeighbouringNodeIndices(currentNodeIndex);
+            // Remove node 1 from neighbouring indices
+            node_1_neighbouring_node_indices.erase(neighbourNodeIndex);
+
+            for (std::set<unsigned>::iterator iter = node_1_neighbouring_node_indices.begin();
+                            iter != node_1_neighbouring_node_indices.end();
+                            ++iter)
+            {
+                if(rCellPopulation.IsCellAttachedToLocationIndex(*iter))
+                {
+                    cells_connected = true;
+                }
+            }
+        }
+
     }
     else
     {
-        probability_of_switch = dt*exp(-hamiltonian_difference/mTemperature);
+        // Two cells so must be connected after move
+        cells_connected = true;
+    }
+
+
+    double probability_of_switch = 0.0;
+
+    if(cells_connected)
+    {
+        double hamiltonian_difference = EvaluateHamiltonian(currentNodeIndex,neighbourNodeIndex,rCellPopulation);
+
+        if (hamiltonian_difference<=0)
+        {
+            probability_of_switch =  dt;
+        }
+        else
+        {
+            probability_of_switch = dt*exp(-hamiltonian_difference/mTemperature);
+        }
     }
 
    return probability_of_switch;
