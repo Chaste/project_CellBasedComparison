@@ -5,7 +5,7 @@
 
 cd ../../../
 
-scons co=1 b=GccOpt ts=projects/CellBasedComparison/test/TestCellSorting.hpp
+scons co=1 b=GccOpt -j6 ts=projects/CellBasedComparison/test/TestCellSorting.hpp
 
 cd projects/CellBasedComparison/test
 
