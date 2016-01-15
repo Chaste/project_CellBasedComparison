@@ -50,7 +50,7 @@
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = true;
+static const bool M_USING_COMMAND_LINE_ARGS = false;
 static const double M_END_STEADY_STATE = 100.0; //100
 static const double M_END_TIME = 1100; //1100
 static const double M_CRYPT_DIAMETER = 16;
@@ -83,7 +83,6 @@ private:
 
             // Set Target Area so dont need to use a growth model in vertex simulations
             p_cell->GetCellData()->SetItem("target area", 1.0);
-            rCells.push_back(p_cell);
 
             rCells.push_back(p_cell);
         }
