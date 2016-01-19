@@ -7,22 +7,22 @@
 # scons co=1 b=GccOpt ts=projects/Ozzy/test/CellBasedComparison/TestCylindricalCrypt.hpp
 #
 
-start_sim=0;
-end_sim=10;
+start_sim=1;
+end_sim=1;
 
-noise[0]="100"
-noise[1]="10"
-noise[2]="1"
-noise[3]="10"
-noise[4]="100"
+noise[0]="10"
+#noise[1]="3.1623"
+noise[1]="1"
+#noise[3]="0.3162"
+noise[2]="0.1"
 
 
-for (( i=${start_sim} ; i<${end_sim} ; i++))
+for (( i=${start_sim} ; i<=${end_sim} ; i++))
 do
     echo "Run " $i;
     for (( j=0 ; j<${#noise[*]} ; j++))
     do
-    	echo " Mean  noise " ${noise[$j]};
+    	echo "noise " ${noise[$j]};
     	# NB "nice -20" gives the jobs low priority (good if they are going to dominate the server and no slower if nothing else is going on)
     	# ">" directs std::cout to the file.
     	# "2>&1" directs std::cerr to the same place.

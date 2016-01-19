@@ -50,7 +50,7 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const bool M_USING_COMMAND_LINE_ARGS = false;
+static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_TIME_TO_STEADY_STATE = 10.0; //10
 static const double M_TIME_FOR_SIMULATION = 500.0; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
@@ -85,7 +85,7 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void NoTestVertexMonolayerCellSorting() throw (Exception)
+    void TestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -152,7 +152,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.1*cell_fluctuation);
+        p_random_force->SetMovementParameter(0.1);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -161,6 +161,9 @@ public:
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+        // Adjust parameters
+        p_random_force->SetMovementParameter(0.1*cell_fluctuation);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -179,7 +182,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-    void NoTestPottsMonolayerCellSorting() throw (Exception)
+    void TestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -215,7 +218,7 @@ public:
         cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
 
         // Set the Temperature
-        cell_population.SetTemperature(0.1/cell_fluctuation); //Default is 0.1
+        cell_population.SetTemperature(0.2); //Default is 0.1
 
         // Set up cell-based simulation and output directory
         OnLatticeSimulation<2> simulator(cell_population);
@@ -252,6 +255,9 @@ public:
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
+        // Adjust Parameters
+        dynamic_cast <PottsBasedCellPopulation<2>*>(&(simulator.rGetCellPopulation()))->SetTemperature(0.2*cell_fluctuation);
+
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
         simulator.Solve();
@@ -265,7 +271,7 @@ public:
     }
 
 
-    void NoTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+    void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -320,7 +326,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.01*cell_fluctuation);
+        p_random_force->SetMovementParameter(0.01);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -329,6 +335,9 @@ public:
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+        // Adjust parameters
+        p_random_force->SetMovementParameter(0.01*cell_fluctuation); //0.1 causes dissasociation
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -342,7 +351,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-    void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
+    void TestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -402,7 +411,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.01*cell_fluctuation); //0.1 causes dissasociation
+        p_random_force->SetMovementParameter(0.01); //0.1 causes dissasociation, 0.001 is not enough
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -411,6 +420,10 @@ public:
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+        // Adjust parameters
+        p_random_force->SetMovementParameter(0.01*cell_fluctuation); //0.1 causes dissasociation
+
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -489,7 +502,7 @@ public:
         p_switching_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
         p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
         p_switching_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(0.4);
-        p_switching_update_rule->SetTemperature(0.1/cell_fluctuation);
+        p_switching_update_rule->SetTemperature(0.1);
         simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
 
         simulator.Solve();
@@ -497,6 +510,10 @@ public:
         // Now label some cells
         boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
+
+        // modify parameters
+        p_switching_update_rule->SetTemperature(0.1*cell_fluctuation);
+
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);

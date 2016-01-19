@@ -90,7 +90,7 @@ private:
 
 public:
 
-    void TestVertexCrypt() throw (Exception)
+    void NoTestVertexCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -177,7 +177,7 @@ public:
         Warnings::Instance()->QuietDestroy();
     }
 
-    void TestMeshBasedCrypt() throw (Exception)
+    void NoTestMeshBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -258,7 +258,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void TestNodeBasedCrypt() throw (Exception)
+    void NoTestNodeBasedCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -350,8 +350,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void
-    TestPottsCrypt() throw (Exception)
+    void TestPottsCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
@@ -441,7 +440,7 @@ public:
         WntConcentration<2>::Instance()->Destroy();
     }
 
-    void TestCaCrypt() throw (Exception)
+    void NoTestCaCrypt() throw (Exception)
     {
         double sim_index = 0;
         double contact_inhibition_level = 0.8;
