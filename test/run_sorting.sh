@@ -4,18 +4,19 @@
 #
 # 
 # This script assumes that the following has been run successfully:
-# scons co=1 b=GccOpt ts=projects/Ozzy/test/CellBasedComparison/TestCylindricalCrypt.hpp
+# scons co=1 b=GccOpt ts=projects/Ozzy/test/CellBasedComparison/TestCellSorting.hpp
 #
 
-start_sim=1;
-end_sim=1;
+start_sim=0;
+end_sim=9;
 
-noise[0]="10"
-#noise[1]="3.1623"
-noise[1]="1"
-#noise[3]="0.3162"
-noise[2]="0.1"
-
+noise[0]="31.623"
+noise[1]="10"
+noise[2]="3.1623"
+noise[3]="1"
+noise[4]="0.31623"
+noise[5]="0.1"
+noise[6]="0.031623"
 
 for (( i=${start_sim} ; i<=${end_sim} ; i++))
 do
