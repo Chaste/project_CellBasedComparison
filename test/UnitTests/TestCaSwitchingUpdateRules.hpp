@@ -43,7 +43,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "AbstractCaSwitchingUpdateRule.hpp"
 #include "DifferentialAdhesionCaSwitchingUpdateRule.hpp"
-#include "DifferentialAdhesionCaSwitchingUpdateRule.hpp"
+#include "AdhesionCaSwitchingUpdateRule.hpp"
 #include "CellsGenerator.hpp"
 #include "FixedDurationGenerationBasedCellCycleModel.hpp"
 #include "CaBasedCellPopulation.hpp"
@@ -64,6 +64,83 @@ public:
     /*
      * Now test the switching rules.
      */
+    void TestAdhesionCaSwitchingUpdateRuleIn2d() throw (Exception)
+    {
+        // Set the timestep and size of domain to let us calculate the probabilities of movement
+        double delta_t = 0.1;
+        double delta_x = 1;
+
+        // Create an update law system
+        AdhesionCaSwitchingUpdateRule<2> switching_update_rule;
+
+        // Test get/set methods
+        TS_ASSERT_DELTA(switching_update_rule.GetCellCellAdhesionEnergyParameter(), 0.2, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetCellBoundaryAdhesionEnergyParameter(), 0.2, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetTemperature(), 0.1, 1e-12);
+
+
+        switching_update_rule.SetCellCellAdhesionEnergyParameter(1.0);
+        switching_update_rule.SetCellBoundaryAdhesionEnergyParameter(2.0);
+        switching_update_rule.SetTemperature(10);
+
+
+        TS_ASSERT_DELTA(switching_update_rule.GetCellCellAdhesionEnergyParameter(), 1.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetCellBoundaryAdhesionEnergyParameter(), 2.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetTemperature(), 10.0, 1e-12);
+
+        // Test EvaluateProbability()
+
+        // Create a simple 2D PottsMesh
+        PottsMeshGenerator<2> generator(4, 0, 0, 4, 0, 0);
+        PottsMesh<2>* p_mesh = generator.GetMesh();
+
+        // Create cells
+        std::vector<CellPtr> cells;
+        MAKE_PTR(DifferentiatedCellProliferativeType, p_diff_type);
+        CellsGenerator<FixedDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        cells_generator.GenerateBasicRandom(cells, 4u, p_diff_type);
+
+        // Specify where cells lie here we have 2 cells in the centre on each of the on the bottom two rows
+        std::vector<unsigned> location_indices;
+
+        location_indices.push_back(1);
+        location_indices.push_back(2);
+
+        location_indices.push_back(5);
+        location_indices.push_back(6);
+
+        // Create cell population
+        CaBasedCellPopulation<2u> cell_population(*p_mesh, cells, location_indices);
+
+        // cells with empty nodes
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(0,1,cell_population),4.0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(0,1,cell_population,delta_t,delta_x),delta_t*exp(-4.0/10),1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(4,5,cell_population),4,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(5,8,cell_population),4,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(5,8,cell_population,delta_t,delta_x),0,1e-6); // 0 as would cause cell dissociation
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(8,5,cell_population,delta_t,delta_x),0,1e-6); // //For coverage
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(5,9,cell_population),6,1e-6);
+
+        // More Cells with empty nodes
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(2,3,cell_population),4,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(6,7,cell_population),4,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(6,10,cell_population),6,1e-6);
+
+        // Both cells
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(1,5,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(2,6,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(2,6,cell_population,delta_t,delta_x),0.0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(5,6,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(5,6,cell_population,delta_t,delta_x),0.0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(1,2,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(1,6,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(2,5,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(2,5,cell_population,delta_t,delta_x),0.0,1e-6);
+
+
+
+    }
+
     void TestDifferentialAdhesionCaSwitchingUpdateRuleIn2d() throw (Exception)
     {
         // Set the timestep and size of domain to let us calculate the probabilities of movement
@@ -71,31 +148,31 @@ public:
         double delta_x = 1;
 
         // Create an update law system
-        DifferentialAdhesionCaSwitchingUpdateRule<2> random_switching_update_rule;
+        DifferentialAdhesionCaSwitchingUpdateRule<2> switching_update_rule;
 
         // Test get/set methods
-        TS_ASSERT_DELTA(random_switching_update_rule.GetLabelledCellLabelledCellAdhesionEnergyParameter(), 0.2, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetLabelledCellCellAdhesionEnergyParameter(), 0.1, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetCellCellAdhesionEnergyParameter(), 0.2, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetCellBoundaryAdhesionEnergyParameter(), 0.2, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetLabelledCellBoundaryAdhesionEnergyParameter(), 0.2, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetTemperature(), 0.1, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetLabelledCellLabelledCellAdhesionEnergyParameter(), 0.2, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetLabelledCellCellAdhesionEnergyParameter(), 0.1, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetCellCellAdhesionEnergyParameter(), 0.2, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetCellBoundaryAdhesionEnergyParameter(), 0.2, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetLabelledCellBoundaryAdhesionEnergyParameter(), 0.2, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetTemperature(), 0.1, 1e-12);
 
 
-        random_switching_update_rule.SetLabelledCellLabelledCellAdhesionEnergyParameter(1.0);
-        random_switching_update_rule.SetLabelledCellCellAdhesionEnergyParameter(2.0);
-        random_switching_update_rule.SetCellCellAdhesionEnergyParameter(3.0);
-        random_switching_update_rule.SetCellBoundaryAdhesionEnergyParameter(4.0);
-        random_switching_update_rule.SetLabelledCellBoundaryAdhesionEnergyParameter(5.0);
-        random_switching_update_rule.SetTemperature(10);
+        switching_update_rule.SetLabelledCellLabelledCellAdhesionEnergyParameter(1.0);
+        switching_update_rule.SetLabelledCellCellAdhesionEnergyParameter(2.0);
+        switching_update_rule.SetCellCellAdhesionEnergyParameter(3.0);
+        switching_update_rule.SetCellBoundaryAdhesionEnergyParameter(4.0);
+        switching_update_rule.SetLabelledCellBoundaryAdhesionEnergyParameter(5.0);
+        switching_update_rule.SetTemperature(10);
 
 
-        TS_ASSERT_DELTA(random_switching_update_rule.GetLabelledCellLabelledCellAdhesionEnergyParameter(), 1.0, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetLabelledCellCellAdhesionEnergyParameter(), 2.0, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetCellCellAdhesionEnergyParameter(), 3.0, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetCellBoundaryAdhesionEnergyParameter(), 4.0, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetLabelledCellBoundaryAdhesionEnergyParameter(), 5.0, 1e-12);
-        TS_ASSERT_DELTA(random_switching_update_rule.GetTemperature(), 10.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetLabelledCellLabelledCellAdhesionEnergyParameter(), 1.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetLabelledCellCellAdhesionEnergyParameter(), 2.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetCellCellAdhesionEnergyParameter(), 3.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetCellBoundaryAdhesionEnergyParameter(), 4.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetLabelledCellBoundaryAdhesionEnergyParameter(), 5.0, 1e-12);
+        TS_ASSERT_DELTA(switching_update_rule.GetTemperature(), 10.0, 1e-12);
 
         // Test EvaluateProbability()
 
@@ -128,35 +205,36 @@ public:
         CaBasedCellPopulation<2u> cell_population(*p_mesh, cells, location_indices);
 
         // Labeled cells with empty nodes
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(0,1,cell_population),11.0,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(0,1,cell_population,delta_t,delta_x),delta_t*exp(-11.0/10),1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(4,5,cell_population),11,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(5,8,cell_population),11,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(5,8,cell_population,delta_t,delta_x),0,1e-6); // 0 as would cause cell dissociation
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(8,5,cell_population,delta_t,delta_x),0,1e-6); // //For coverage
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(5,9,cell_population),16,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(0,1,cell_population),11.0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(0,1,cell_population,delta_t,delta_x),delta_t*exp(-11.0/10),1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(4,5,cell_population),11,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(5,8,cell_population),11,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(5,8,cell_population,delta_t,delta_x),0,1e-6); // 0 as would cause cell dissociation
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(8,5,cell_population,delta_t,delta_x),0,1e-6); // //For coverage
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(5,9,cell_population),16,1e-6);
 
         // Non Labeled cells with empty nodes
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(2,3,cell_population),8,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(6,7,cell_population),8,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(6,10,cell_population),12,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(2,3,cell_population),8,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(6,7,cell_population),8,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(6,10,cell_population),12,1e-6);
 
         // Same cell types
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(1,5,cell_population),0,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(2,6,cell_population),0,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(2,6,cell_population,delta_t,delta_x),delta_t,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(1,5,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(2,6,cell_population),0,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(2,6,cell_population,delta_t,delta_x),delta_t,1e-6);
 
 
         // Labeled Cells with Non labeled ones
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(5,6,cell_population),0,1e-6);// 0 as to 3+1 = 2 + 2
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(1,2,cell_population),0,1e-6);// 0 as to 3+1 = 2 + 2
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(1,6,cell_population),1,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateHamiltonian(2,5,cell_population),-1,1e-6);
-        TS_ASSERT_DELTA(random_switching_update_rule.EvaluateSwitchingProbability(2,5,cell_population,delta_t,delta_x),delta_t,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(5,6,cell_population),0,1e-6);// 0 as to 3+1 = 2 + 2
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(1,2,cell_population),0,1e-6);// 0 as to 3+1 = 2 + 2
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(1,6,cell_population),1,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateHamiltonian(2,5,cell_population),-1,1e-6);
+        TS_ASSERT_DELTA(switching_update_rule.EvaluateSwitchingProbability(2,5,cell_population,delta_t,delta_x),delta_t,1e-6);
 
 
 
     }
+
 
     void noTestArchiveDifferentialAdhesionCaSwitchingUpdateRule() throw(Exception)
     {
@@ -201,18 +279,18 @@ public:
         OutputFileHandler output_file_handler(output_directory, false);
 
         // Test with DifferentialAdhesionCaSwitchingUpdateRule
-        DifferentialAdhesionCaSwitchingUpdateRule<2> random_switching_update_rule;
-        //random_switching_update_rule.SetSwitchingParameter(1.0);
+        DifferentialAdhesionCaSwitchingUpdateRule<2> switching_update_rule;
+        //switching_update_rule.SetSwitchingParameter(1.0);
 
-        TS_ASSERT_EQUALS(random_switching_update_rule.GetIdentifier(), "DifferentialAdhesionCaSwitchingUpdateRule-2");
+        TS_ASSERT_EQUALS(switching_update_rule.GetIdentifier(), "DifferentialAdhesionCaSwitchingUpdateRule-2");
 
-        out_stream random_switching_update_rule_parameter_file = output_file_handler.OpenOutputFile("random_switching_update_rule_results.parameters");
-        random_switching_update_rule.OutputUpdateRuleInfo(random_switching_update_rule_parameter_file);
-        random_switching_update_rule_parameter_file->close();
+        out_stream switching_update_rule_parameter_file = output_file_handler.OpenOutputFile("differential_adhesion_switching_update_rule_results.parameters");
+        switching_update_rule.OutputUpdateRuleInfo(switching_update_rule_parameter_file);
+        switching_update_rule_parameter_file->close();
 
         // Compare the generated file in test output with a reference copy in the source code.
-        FileFinder generated = output_file_handler.FindFile("random_switching_update_rule_results.parameters");
-        FileFinder reference("cell_based/test/data/TestCaUpdateRules/random_switching_update_rule_results.parameters",
+        FileFinder generated = output_file_handler.FindFile("differential_adhesion_switching_update_rule_results.parameters");
+        FileFinder reference("cell_based/test/data/TestCaUpdateRules/differential_adhesion_switching_update_rule_results.parameters",
                 RelativeTo::ChasteSourceRoot);
         FileComparison comparer(generated, reference);
         TS_ASSERT(comparer.CompareFiles());

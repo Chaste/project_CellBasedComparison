@@ -74,7 +74,7 @@ private:
 
 public:
 
-    void TestCaBasedMonolayerCellSorting() throw (Exception)
+   void NoTestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -168,7 +168,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-    void TestPottsMonolayerCellSorting() throw (Exception)
+   void NoTestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -256,7 +256,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-    void TestNodeBasedMonolayerCellSorting() throw (Exception)
+   void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -343,7 +343,7 @@ public:
     }
 
 
-//    void TestMeshBasedMolayerCellSorting() throw (Exception)
+//   void NoTestMeshBasedMolayerCellSorting() throw (Exception)
 //    {
 //        double sim_index = 0;
 //        double cell_fluctuation = 1.0;
@@ -420,7 +420,7 @@ public:
 //        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
 //    }
 
-    void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+   void noTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -475,7 +475,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.02);
+        p_random_force->SetMovementParameter(0.05);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -486,7 +486,7 @@ public:
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
         // Adjust parameters
-        p_random_force->SetMovementParameter(0.02*cell_fluctuation); //0.1 causes dissasociation
+        p_random_force->SetMovementParameter(0.05*cell_fluctuation); //0.1 causes dissasociation
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -512,7 +512,7 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-    void TestVertexMonolayerCellSorting() throw (Exception)
+   void TestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -534,7 +534,7 @@ public:
         p_mesh->SetCellRearrangementThreshold(0.1);
 
         // Slows things down but can use a larger timestep and diffusion forces
-        p_mesh->SetCheckForInternalIntersections(true);
+        //p_mesh->SetCheckForInternalIntersections(true);
 
         // Set up cells, one for each VertexElement
         std::vector<CellPtr> cells;
@@ -579,7 +579,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.1);
+        p_random_force->SetMovementParameter(0.05);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -590,7 +590,7 @@ public:
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
         // Adjust parameters
-        p_random_force->SetMovementParameter(0.1*cell_fluctuation);
+        p_random_force->SetMovementParameter(0.05*cell_fluctuation);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);

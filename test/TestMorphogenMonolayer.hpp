@@ -42,6 +42,7 @@
 #include "CaBasedCellPopulation.hpp"
 #include "DiffusionCaUpdateRule.hpp"
 #include "ShovingCaBasedDivisionRule.hpp"
+#include "AdhesionCaSwitchingUpdateRule.hpp"
 
 #include "CommandLineArguments.hpp"
 #include "CommandLineArgumentsMocker.hpp"
@@ -96,7 +97,7 @@ private:
      */
 
 public:
-    void TestVertexBasedMonolayer() throw (Exception)
+    void NoTestVertexBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -165,7 +166,7 @@ public:
         simulator.Solve();
     }
 
-    void TestNodeBasedMonolayer() throw (Exception)
+    void NoTestNodeBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -228,7 +229,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void TestMeshBasedMonolayer() throw (Exception)
+    void NoTestMeshBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -290,7 +291,7 @@ public:
         simulator.Solve();
     }
 
-    void TestPottsBasedMonolayer() throw (Exception)
+    void NoTestPottsBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -384,7 +385,7 @@ public:
         std::string output_directory = "ParabolicMonolayers/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh
-        unsigned domain_wide = 20*M_NUM_CELLS_ACROSS;
+        unsigned domain_wide = 10*M_NUM_CELLS_ACROSS;
 
         PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
         PottsMesh<2>* p_mesh = generator.GetMesh();
@@ -418,7 +419,7 @@ public:
 
         OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(0.1/200.0);
+        simulator.SetDt(1/200.0);
         simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
@@ -427,6 +428,13 @@ public:
         // Add Division Rule
         boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
         cell_population.SetCaBasedDivisionRule(p_division_rule);
+
+        // Add switching Update Rule to smooth out the edge of the monolayer note no Temp as don't want random switches
+        MAKE_PTR(AdhesionCaSwitchingUpdateRule<2u>, p_switching_update_rule);
+        p_switching_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
+        p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
+        p_switching_update_rule->SetTemperature(0.0); //
+        simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
