@@ -51,7 +51,7 @@
 
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
-static const double M_TIME_FOR_SIMULATION = 60; //100
+static const double M_TIME_FOR_SIMULATION = 100; //100
 static const double M_NUM_CELLS_ACROSS = 10; // 10
 static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
@@ -97,7 +97,7 @@ private:
      */
 
 public:
-    void NoTestVertexBasedMonolayer() throw (Exception)
+    void TestVertexBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -112,11 +112,26 @@ public:
         std::string output_directory = "ParabolicMonolayers/Vertex/" +  out.str();
 
         // Create Mesh
-        HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS+2);
+        HoneycombVertexMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS, 3.0*M_NUM_CELLS_ACROSS);
         MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
         p_mesh->SetCellRearrangementThreshold(0.1);
 
-        p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-(double)M_NUM_CELLS_ACROSS*0.5);
+        p_mesh->Translate(-M_NUM_CELLS_ACROSS,-sqrt(3.0)*M_NUM_CELLS_ACROSS+ sqrt(3.0)/6.0);
+
+        //Remove all elements outside the specified initial radius
+        for (VertexMesh<2,2>::VertexElementIterator elem_iter = p_mesh->GetElementIteratorBegin();
+                 elem_iter != p_mesh->GetElementIteratorEnd();
+                 ++elem_iter)
+        {
+            unsigned elem_index = elem_iter->GetIndex();
+            c_vector<double,2> element_centre = p_mesh->GetCentroidOfElement(elem_index);
+
+            if (norm_2(element_centre)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            {
+                p_mesh->DeleteElementPriorToReMesh(elem_index);
+            }
+        }
+        p_mesh->ReMesh();
 
         // Create Cells
         std::vector<CellPtr> cells;
@@ -166,7 +181,7 @@ public:
         simulator.Solve();
     }
 
-    void NoTestNodeBasedMonolayer() throw (Exception)
+    void TestNodeBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -182,12 +197,29 @@ public:
         out << sim_index;
         std::string output_directory = "ParabolicMonolayers/Node/" +  out.str();
 
-        HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS+2,0);
+        HoneycombMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS, 3.0*M_NUM_CELLS_ACROSS,0);
         MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
+
+
+        p_generating_mesh->Translate(-M_NUM_CELLS_ACROSS,-sqrt(3.0)*M_NUM_CELLS_ACROSS);
+
+        //Remove all elements outside the specified initial radius
+        for (AbstractMesh<2, 2>::NodeIterator node_iter = p_generating_mesh->GetNodeIteratorBegin();
+             node_iter != p_generating_mesh->GetNodeIteratorEnd();
+             ++node_iter)
+        {
+            unsigned node_index = node_iter->GetIndex();
+            c_vector<double,2> node_location = node_iter->rGetLocation();
+
+            if (norm_2(node_location)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            {
+                p_generating_mesh->DeleteNodePriorToReMesh(node_index);
+            }
+        }
+        p_generating_mesh->ReMesh();
+
         NodesOnlyMesh<2>* p_mesh = new NodesOnlyMesh<2>;
         p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh, cut_off_length);
-
-        p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-(double)M_NUM_CELLS_ACROSS*0.5);
 
         std::vector<CellPtr> cells;
         GenerateCells(p_mesh->GetNumNodes(),cells);
@@ -229,7 +261,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void NoTestMeshBasedMonolayer() throw (Exception)
+    void TestMeshBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -243,10 +275,27 @@ public:
         out << sim_index;
         std::string output_directory = "ParabolicMonolayers/MeshPoint/" +  out.str();
 
-        HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS,M_NUM_CELLS_ACROSS+2,0);
+        HoneycombMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS,3.0*M_NUM_CELLS_ACROSS);
         MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
-        p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-(double)M_NUM_CELLS_ACROSS*0.5);
+        p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-sqrt(3)*M_NUM_CELLS_ACROSS);
+
+        //Remove all elements outside the specified initial radius
+        for (AbstractMesh<2, 2>::NodeIterator node_iter = p_mesh->GetNodeIteratorBegin();
+             node_iter != p_mesh->GetNodeIteratorEnd();
+             ++node_iter)
+        {
+            unsigned node_index = node_iter->GetIndex();
+            c_vector<double,2> node_location = node_iter->rGetLocation();
+
+            if (norm_2(node_location)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            {
+                p_mesh->DeleteNodePriorToReMesh(node_index);
+            }
+        }
+        p_mesh->ReMesh();
+
+
 
         std::vector<CellPtr> cells;
         GenerateCells(p_mesh->GetNumNodes(),cells);
@@ -291,7 +340,7 @@ public:
         simulator.Solve();
     }
 
-    void NoTestPottsBasedMonolayer() throw (Exception)
+    void TestPottsBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -306,17 +355,31 @@ public:
         std::string output_directory = "ParabolicMonolayers/Potts/" +  out.str();
 
         unsigned cell_width = 4;
-        unsigned domain_width = M_NUM_CELLS_ACROSS*cell_width*20;
-        PottsMeshGenerator<2> generator(domain_width, M_NUM_CELLS_ACROSS, cell_width, domain_width, M_NUM_CELLS_ACROSS, cell_width);
+        unsigned domain_width = M_NUM_CELLS_ACROSS*cell_width*10;
+        PottsMeshGenerator<2> generator(domain_width, 2*M_NUM_CELLS_ACROSS, cell_width, domain_width, 2*M_NUM_CELLS_ACROSS, cell_width);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
         p_mesh->Translate(-(double)domain_width*0.5+0.5,-(double)domain_width*0.5+0.5);
 
         p_mesh->Scale(0.25,0.25);
 
+        //Remove all elements outside the specified initial radius
+        for (PottsMesh<2>::PottsElementIterator elem_iter = p_mesh->GetElementIteratorBegin();
+                 elem_iter != p_mesh->GetElementIteratorEnd();
+                 ++elem_iter)
+        {
+            unsigned elem_index = elem_iter->GetIndex();
+            c_vector<double,2> element_centre = p_mesh->GetCentroidOfElement(elem_index);
+
+            if (norm_2(element_centre)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            {
+                p_mesh->DeleteElement(elem_index);
+            }
+        }
+        p_mesh->RemoveDeletedElements();
+
         std::vector<CellPtr> cells;
         GenerateCells(p_mesh->GetNumElements(),cells);
-
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.SetTemperature(0.1);
         cell_population.SetNumSweepsPerTimestep(1);
@@ -367,7 +430,7 @@ public:
 		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
 		simulator.AddSimulationModifier(p_pde_modifier);
 
-        simulator.Solve();
+		simulator.Solve();
     }
 
     void TestCaBasedMonolayer() throw (Exception)
@@ -392,14 +455,18 @@ public:
 
         p_mesh->Translate(-(double)domain_wide*0.5 + 0.5,-(double)domain_wide*0.5 + 0.5);
 
-        // Specify where cells lie
+        // Specify where cells lie, i.e only within the specified initial radius
         std::vector<unsigned> location_indices;
-        for (unsigned i=0; i<M_NUM_CELLS_ACROSS; i++)
+        for (AbstractMesh<2, 2>::NodeIterator node_iter = p_mesh->GetNodeIteratorBegin();
+             node_iter != p_mesh->GetNodeIteratorEnd();
+             ++node_iter)
         {
-            for (unsigned j=0; j<M_NUM_CELLS_ACROSS; j++)
+            unsigned node_index = node_iter->GetIndex();
+            c_vector<double,2> node_location = node_iter->rGetLocation();
+
+            if (norm_2(node_location)<0.5*M_NUM_CELLS_ACROSS + 1e-5)
             {
-                unsigned offset = (domain_wide+1) * (domain_wide-M_NUM_CELLS_ACROSS)/2;
-                location_indices.push_back(offset + j + i * domain_wide );
+                location_indices.push_back(node_index);
             }
         }
 
