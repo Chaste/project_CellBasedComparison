@@ -74,7 +74,7 @@ private:
 
 public:
 
-   void TestCaBasedMonolayerCellSorting() throw (Exception)
+   void NoTestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -168,7 +168,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-   void TestPottsMonolayerCellSorting() throw (Exception)
+   void NoTestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -256,7 +256,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-   void TestNodeBasedMonolayerCellSorting() throw (Exception)
+   void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
