@@ -52,7 +52,7 @@
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_TIME_TO_STEADY_STATE = 10; //10
-static const double M_TIME_FOR_SIMULATION = 100; //100
+static const double M_TIME_FOR_SIMULATION = 1000; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
 class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
@@ -74,7 +74,7 @@ private:
 
 public:
 
-   void NoTestCaBasedMonolayerCellSorting() throw (Exception)
+   void TestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -168,7 +168,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-   void NoTestPottsMonolayerCellSorting() throw (Exception)
+   void TestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -256,7 +256,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-   void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
+   void TestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -512,7 +512,7 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-   void NoTestVertexMonolayerCellSorting() throw (Exception)
+   void TestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
