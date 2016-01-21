@@ -97,7 +97,7 @@ private:
      */
 
 public:
-    void TestVertexBasedMonolayer() throw (Exception)
+    void noTestVertexBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -181,7 +181,7 @@ public:
         simulator.Solve();
     }
 
-    void TestNodeBasedMonolayer() throw (Exception)
+    void noTestNodeBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -261,7 +261,7 @@ public:
         delete p_mesh; // to stop memory leaks
     }
 
-    void TestMeshBasedMonolayer() throw (Exception)
+    void noTestMeshBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -340,7 +340,7 @@ public:
         simulator.Solve();
     }
 
-    void TestPottsBasedMonolayer() throw (Exception)
+    void noTestPottsBasedMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -355,7 +355,7 @@ public:
         std::string output_directory = "ParabolicMonolayers/Potts/" +  out.str();
 
         unsigned cell_width = 4;
-        unsigned domain_width = M_NUM_CELLS_ACROSS*cell_width*10;
+        unsigned domain_width = M_NUM_CELLS_ACROSS*cell_width*20;
         PottsMeshGenerator<2> generator(domain_width, 2*M_NUM_CELLS_ACROSS, cell_width, domain_width, 2*M_NUM_CELLS_ACROSS, cell_width);
         PottsMesh<2>* p_mesh = generator.GetMesh();
 
@@ -448,7 +448,7 @@ public:
         std::string output_directory = "ParabolicMonolayers/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh
-        unsigned domain_wide = 10*M_NUM_CELLS_ACROSS;
+        unsigned domain_wide = 20*M_NUM_CELLS_ACROSS;
 
         PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
         PottsMesh<2>* p_mesh = generator.GetMesh();
