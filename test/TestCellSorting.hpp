@@ -74,7 +74,7 @@ private:
 
 public:
 
-   void NoTestCaBasedMonolayerCellSorting() throw (Exception)
+   void TestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -168,7 +168,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-   void NoTestPottsMonolayerCellSorting() throw (Exception)
+   void TestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -256,7 +256,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-   void NoTestNodeBasedMonolayerCellSorting() throw (Exception)
+   void TestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -343,7 +343,7 @@ public:
     }
 
 
-//   void NoTestMeshBasedMolayerCellSorting() throw (Exception)
+//   void TestMeshBasedMolayerCellSorting() throw (Exception)
 //    {
 //        double sim_index = 0;
 //        double cell_fluctuation = 1.0;
@@ -420,7 +420,7 @@ public:
 //        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
 //    }
 
-   void noTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+   void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -512,7 +512,7 @@ public:
      * whereas Nagai and Honda (who denote the parameter by nu) take the
      * value 0.01.
      */
-   void TestVertexMonolayerCellSorting() throw (Exception)
+   void NoTestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
