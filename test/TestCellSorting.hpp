@@ -52,7 +52,7 @@
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_TIME_TO_STEADY_STATE = 10; //10
-static const double M_TIME_FOR_SIMULATION = 10000; //100
+static const double M_TIME_FOR_SIMULATION = 100; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
 class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
@@ -420,7 +420,7 @@ public:
 //        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
 //    }
 
-   void noTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+   void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -475,7 +475,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.05);
+        p_random_force->SetMovementParameter(0.1);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -486,7 +486,7 @@ public:
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
         // Adjust parameters
-        p_random_force->SetMovementParameter(0.05*cell_fluctuation); //0.1 causes dissasociation
+        p_random_force->SetMovementParameter(0.1*cell_fluctuation); //0.1 causes dissasociation
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
@@ -579,7 +579,7 @@ public:
 
         // Add some noise to avoid local minimum
         MAKE_PTR(RandomMotionForce<2>, p_random_force);
-        p_random_force->SetMovementParameter(0.05);
+        p_random_force->SetMovementParameter(0.1);
         simulator.AddForce(p_random_force);
 
         // Run simulation
@@ -590,7 +590,7 @@ public:
         RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
 
         // Adjust parameters
-        p_random_force->SetMovementParameter(0.05*cell_fluctuation);
+        p_random_force->SetMovementParameter(0.1*cell_fluctuation);
 
         // Run simulation
         simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);

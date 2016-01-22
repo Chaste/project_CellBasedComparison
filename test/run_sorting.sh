@@ -11,17 +11,15 @@ start_sim=0;
 end_sim=0;
 
 
-#noise[0]="31.623"
-#noise[1]="10"
-#noise[0]="3.1623"
-noise[0]="2'
-noise[1]="1"
-noise[1]="4"
-#noise[2]="0.31623"
-#noise[5]="0.1"
-#noise[6]="0.031623"
-#noise[0]="0.01"
-#noise[1]="100"
+noise[0]="31.623"
+noise[1]="10"
+noise[2]="3.1623"
+noise[3]="1"
+noise[4]="0.31623"
+noise[5]="0.1"
+noise[6]="0.031623"
+noise[7]="0.01"
+noise[8]="100"
 
 for (( i=${start_sim} ; i<=${end_sim} ; i++))
 do
