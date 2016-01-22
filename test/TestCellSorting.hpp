@@ -52,7 +52,7 @@
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_TIME_TO_STEADY_STATE = 10; //10
-static const double M_TIME_FOR_SIMULATION = 1000; //100
+static const double M_TIME_FOR_SIMULATION = 10000; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
 class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
@@ -74,7 +74,7 @@ private:
 
 public:
 
-   void TestCaBasedMonolayerCellSorting() throw (Exception)
+   void noTestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -168,7 +168,7 @@ public:
      * Simulate a population of cells exhibiting cell sorting using the
      * Potts model.
      */
-   void TestPottsMonolayerCellSorting() throw (Exception)
+   void noTestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -256,7 +256,7 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-   void TestNodeBasedMonolayerCellSorting() throw (Exception)
+   void noTestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -420,7 +420,7 @@ public:
 //        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
 //    }
 
-   void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+   void noTestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
