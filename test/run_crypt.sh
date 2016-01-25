@@ -7,12 +7,12 @@
 # scons co=1 b=GccOpt ts=projects/Ozzy/test/CellBasedComparison/TestCylindricalCrypt.hpp
 #
 
-num_sims=1;
+num_sims=10;
 
 #CI_LEVEL[0]="1.0"
-#CI_LEVEL[0]="0.9"
-CI_LEVEL[0]="0.8"
-#CI_LEVEL[2]="0.7"
+CI_LEVEL[0]="0.9"
+CI_LEVEL[1]="0.8"
+CI_LEVEL[2]="0.7"
 #CI_LEVEL[4]="0.6"
 #CI_LEVEL[5]="0.5"
 

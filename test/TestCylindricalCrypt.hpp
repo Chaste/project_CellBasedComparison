@@ -52,7 +52,7 @@
 
 static const bool M_USING_COMMAND_LINE_ARGS = true;
 static const double M_END_STEADY_STATE = 100.0; //100
-static const double M_END_TIME = 10100; //1100
+static const double M_END_TIME = 1100; //1100
 static const double M_CRYPT_DIAMETER = 16;
 static const double M_CRYPT_LENGTH = 12;
 
