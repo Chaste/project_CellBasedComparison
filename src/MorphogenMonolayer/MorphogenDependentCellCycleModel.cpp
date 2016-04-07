@@ -85,7 +85,6 @@ bool MorphogenDependentCellCycleModel::ReadyToDivide()
 void MorphogenDependentCellCycleModel::ResetForDivision()
 {
     AbstractCellCycleModel::ResetForDivision();
-    mBirthTime = SimulationTime::Instance()->GetTime();
     // Halve the mass as half goes to each daughter cell
     mCurrentMass *= 0.5;
 
