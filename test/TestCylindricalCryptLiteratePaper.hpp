@@ -1,6 +1,3 @@
-#ifndef TESTCRYPTSIMULATIONCOMPARISON_HPP_
-#define TESTCRYPTSIMULATIONCOMPARISON_HPP_
-
 #include <cxxtest/TestSuite.h>
 
 // Must be included before any other cell_based headers
@@ -467,5 +464,3 @@ public:
         Warnings::Instance()->QuietDestroy();
     }
 };
-
-#endif /*TESTCRYPTSIMULATIONCOMPARISON_HPP_*/
