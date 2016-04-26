@@ -52,7 +52,7 @@ There are two folders - `src` and `test`.
 [[Image(source:projects/CellBasedComparison/figures/DN_Mesh_01_t1000.png, link=wiki:PaperTutorials/CellBasedComparison/DeltaNotch, height=100px)]]
 [[Image(source:projects/CellBasedComparison/figures/DN_Vertex_01_t1000.png, link=wiki:PaperTutorials/CellBasedComparison/DeltaNotch, height=100px)]]
 
-[[Image(source:projects/CellBasedComparison/figures/Morph_CA_t100.png, link=wiki:PaperTutorials/CellBasedComparison/MorphogenMonolayer, height=100px)]]
+[[Image(source:projects/CellBasedComparison/figures/Morph_Ca_t100.png, link=wiki:PaperTutorials/CellBasedComparison/MorphogenMonolayer, height=100px)]]
 [[Image(source:projects/CellBasedComparison/figures/Morph_Potts_t100.png, link=wiki:PaperTutorials/CellBasedComparison/MorphogenMonolayer, height=100px)]]
 [[Image(source:projects/CellBasedComparison/figures/Morph_Node_t100.png, link=wiki:PaperTutorials/CellBasedComparison/MorphogenMonolayer, height=100px)]]
 [[Image(source:projects/CellBasedComparison/figures/Morph_Mesh_t100.png, link=wiki:PaperTutorials/CellBasedComparison/MorphogenMonolayer, height=100px)]]
