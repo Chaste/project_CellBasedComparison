@@ -57,7 +57,7 @@ static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
 static const double M_DUDT_COEFFICIENT = 1.0; // Not used in paper so 1
 
-class TestParabolicMorphogenMonolayers : public AbstractCellBasedWithTimingsTestSuite
+class TestMorphogenMonolayerSweeps : public AbstractCellBasedWithTimingsTestSuite
 {
 private:
     void GenerateCells(unsigned num_cells, std::vector<CellPtr>& rCells)
@@ -91,15 +91,15 @@ private:
         }
      }
 
-
-    /*
-     * Simulates diffusion on a growing monolayer.
-     */
-
 public:
-    void TestVertexBasedMonolayer() throw (Exception)
+
+    /**
+     * Simulate reaction diffusion on a growing a population of cells in the
+     * Cellular Automaton model.
+     */
+    void TestCaBasedMorphogenMonolayer() throw (Exception)
     {
-        double sim_index = 0;
+        double sim_index = 1;
         if (M_USING_COMMAND_LINE_ARGS)
         {
             sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -109,178 +109,18 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index;
-        std::string output_directory = "ParabolicMonolayers/Vertex/" +  out.str();
+        std::string output_directory = "Sweeps/MorphogenMonolayers/Ca/" +  out.str();
 
-        // Create Mesh
-        HoneycombVertexMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS, 3.0*M_NUM_CELLS_ACROSS);
-        MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
-        p_mesh->SetCellRearrangementThreshold(0.1);
+        // Create a simple 2D PottsMesh
+        unsigned domain_wide = 20*M_NUM_CELLS_ACROSS;
 
-        p_mesh->Translate(-M_NUM_CELLS_ACROSS,-sqrt(3.0)*M_NUM_CELLS_ACROSS+ sqrt(3.0)/6.0);
+        PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
+        PottsMesh<2>* p_mesh = generator.GetMesh();
 
-        //Remove all elements outside the specified initial radius
-        for (VertexMesh<2,2>::VertexElementIterator elem_iter = p_mesh->GetElementIteratorBegin();
-                 elem_iter != p_mesh->GetElementIteratorEnd();
-                 ++elem_iter)
-        {
-            unsigned elem_index = elem_iter->GetIndex();
-            c_vector<double,2> element_centre = p_mesh->GetCentroidOfElement(elem_index);
+        p_mesh->Translate(-(double)domain_wide*0.5 + 0.5,-(double)domain_wide*0.5 + 0.5);
 
-            if (norm_2(element_centre)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
-            {
-                p_mesh->DeleteElementPriorToReMesh(elem_index);
-            }
-        }
-        p_mesh->ReMesh();
-
-        // Create Cells
-        std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumElements(),cells);
-
-        // Create Population
-        VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell data writer so can pass in variable name
-        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
-        cell_population.AddCellWriter(p_cell_data_item_writer);
-
-
-        // Create Simulation
-        OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0/200.0);
-        simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
-
-        simulator.SetOutputDivisionLocations(true);
-
-        // Create Forces and pass to simulation NOTE: these are not the default ones and chosen to give a stable growing monolayer
-        MAKE_PTR(NagaiHondaForce<2>, p_force);
-        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
-        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
-        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
-        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
-        simulator.AddForce(p_force);
-
-        // Create Modifiers and pass to simulation
-
-        // Create a pde modifier and pass it to the simulation Add this first so in place for SimpleTargetArea one (calls cell pop update)
-
-		// Make the Pde and BCS
-        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
-		ConstBoundaryCondition<2> bc(0.0);
-		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
-		pde_and_bc.SetDependentVariableName("morphogen");
-
-		// Create a PDE Modifier object using this pde and bcs object
-		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
-		simulator.AddSimulationModifier(p_pde_modifier);
-
-        simulator.Solve();
-    }
-
-    void TestNodeBasedMonolayer() throw (Exception)
-    {
-        double sim_index = 0;
-        if (M_USING_COMMAND_LINE_ARGS)
-        {
-            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
-        }
-        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
-
-        double cut_off_length = 1.5; //this is the default
-
-        //Create output directory
-        std::stringstream out;
-        out << sim_index;
-        std::string output_directory = "ParabolicMonolayers/Node/" +  out.str();
-
-        HoneycombMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS, 3.0*M_NUM_CELLS_ACROSS,0);
-        MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
-
-
-        p_generating_mesh->Translate(-M_NUM_CELLS_ACROSS,-sqrt(3.0)*M_NUM_CELLS_ACROSS);
-
-        //Remove all elements outside the specified initial radius
-        for (AbstractMesh<2, 2>::NodeIterator node_iter = p_generating_mesh->GetNodeIteratorBegin();
-             node_iter != p_generating_mesh->GetNodeIteratorEnd();
-             ++node_iter)
-        {
-            unsigned node_index = node_iter->GetIndex();
-            c_vector<double,2> node_location = node_iter->rGetLocation();
-
-            if (norm_2(node_location)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
-            {
-                p_generating_mesh->DeleteNodePriorToReMesh(node_index);
-            }
-        }
-        p_generating_mesh->ReMesh();
-
-        NodesOnlyMesh<2>* p_mesh = new NodesOnlyMesh<2>;
-        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh, cut_off_length);
-
-        std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumNodes(),cells);
-
-        NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
-        cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell data writer so can pass in variable name
-        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
-        cell_population.AddCellWriter(p_cell_data_item_writer);
-
-        OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0/200.0);
-        simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
-
-        simulator.SetOutputDivisionLocations(true);
-
-        // Create a force law and pass it to the simulation
-        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
-        p_linear_force->SetMeinekeSpringStiffness(50.0);
-        p_linear_force->SetCutOffLength(cut_off_length);
-        simulator.AddForce(p_linear_force);
-
-        // Make the Pde and BCS
-        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
-		ConstBoundaryCondition<2> bc(0.0);
-		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
-		pde_and_bc.SetDependentVariableName("morphogen");
-
-		// Create a PDE Modifier object using this pde and bcs object
-		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
-		simulator.AddSimulationModifier(p_pde_modifier);
-
-        simulator.Solve();
-
-        delete p_mesh; // to stop memory leaks
-    }
-
-    void TestMeshBasedMonolayer() throw (Exception)
-    {
-        double sim_index = 0;
-        if (M_USING_COMMAND_LINE_ARGS)
-        {
-            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
-        }
-        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
-
-        //Create output directory
-        std::stringstream out;
-        out << sim_index;
-        std::string output_directory = "ParabolicMonolayers/Mesh/" +  out.str();
-
-        HoneycombMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS,3.0*M_NUM_CELLS_ACROSS);
-        MutableMesh<2,2>* p_mesh = generator.GetMesh();
-
-        p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-sqrt(3)*M_NUM_CELLS_ACROSS);
-
-        //Remove all elements outside the specified initial radius
+        // Specify where cells lie, i.e only within the specified initial radius
+        std::vector<unsigned> location_indices;
         for (AbstractMesh<2, 2>::NodeIterator node_iter = p_mesh->GetNodeIteratorBegin();
              node_iter != p_mesh->GetNodeIteratorEnd();
              ++node_iter)
@@ -288,59 +128,63 @@ public:
             unsigned node_index = node_iter->GetIndex();
             c_vector<double,2> node_location = node_iter->rGetLocation();
 
-            if (norm_2(node_location)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            if (norm_2(node_location)<0.5*M_NUM_CELLS_ACROSS + 1e-5)
             {
-                p_mesh->DeleteNodePriorToReMesh(node_index);
+                location_indices.push_back(node_index);
             }
         }
-        p_mesh->ReMesh();
-
-
 
         std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumNodes(),cells);
+        GenerateCells(location_indices.size(),cells);
 
-        MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        // Create cell population
+        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell data writer so can pass in variabl name
+        //Make cell data writer so can pass in variable name
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 
-        cell_population.SetWriteVtkAsPoints(true);
-        cell_population.AddPopulationWriter<VoronoiDataWriter>();
-
-
-        OffLatticeSimulation<2> simulator(cell_population);
+        OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1.0/200.0);
+        simulator.SetDt(1/200.0);
         simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
 
-        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
-        p_linear_force->SetMeinekeSpringStiffness(50.0);
-        p_linear_force->SetCutOffLength(1.5);
-        simulator.AddForce(p_linear_force);
+        // Add Division Rule
+        boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
+        cell_population.SetCaBasedDivisionRule(p_division_rule);
+
+        // Add switching Update Rule to smooth out the edge of the monolayer note no Temp as don't want random switches
+        MAKE_PTR(AdhesionCaSwitchingUpdateRule<2u>, p_switching_update_rule);
+        p_switching_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
+        p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
+        p_switching_update_rule->SetTemperature(0.0); //
+        simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
-		ConstBoundaryCondition<2> bc(0.0);
-		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
-		pde_and_bc.SetDependentVariableName("morphogen");
+        ConstBoundaryCondition<2> bc(0.0);
+        ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
+        pde_and_bc.SetDependentVariableName("morphogen");
 
-		// Create a PDE Modifier object using this pde and bcs object
-		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
-		simulator.AddSimulationModifier(p_pde_modifier);
+        // Create a PDE Modifier object using this pde and bcs object
+        MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
+        simulator.AddSimulationModifier(p_pde_modifier);
 
         simulator.Solve();
     }
 
-    void TestPottsBasedMonolayer() throw (Exception)
+    /**
+     * Simulate reaction diffusion on a growing a population of cells in the
+     * Cellular Potts model.
+     */
+    void TestPottsBasedMorphogenMonolayer() throw (Exception)
     {
         double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -352,7 +196,7 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index;
-        std::string output_directory = "ParabolicMonolayers/Potts/" +  out.str();
+        std::string output_directory = "Sweeps/MorphogenMonolayers/Potts/" +  out.str();
 
         unsigned cell_width = 4;
         unsigned domain_width = M_NUM_CELLS_ACROSS*cell_width*20;
@@ -423,6 +267,88 @@ public:
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,(double)cell_width*(double)cell_width*M_DIFFUSION_CONSTANT,M_UPTAKE_RATE, 8.0);
         //MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
         ConstBoundaryCondition<2> bc(0.0);
+        ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
+        pde_and_bc.SetDependentVariableName("morphogen");
+
+        // Create a PDE Modifier object using this pde and bcs object
+        MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
+        simulator.AddSimulationModifier(p_pde_modifier);
+
+        simulator.Solve();
+    }
+
+    /**
+     * Simulate reaction diffusion on a growing a population of cells in the
+     * Overlapping Spheres model.
+     */
+    void TestNodeBasedMorphogenMonolayer() throw (Exception)
+    {
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        double cut_off_length = 1.5; //this is the default
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "Sweeps/MorphogenMonolayers/Node/" +  out.str();
+
+        HoneycombMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS, 3.0*M_NUM_CELLS_ACROSS,0);
+        MutableMesh<2,2>* p_generating_mesh = generator.GetMesh();
+
+
+        p_generating_mesh->Translate(-M_NUM_CELLS_ACROSS,-sqrt(3.0)*M_NUM_CELLS_ACROSS);
+
+        //Remove all elements outside the specified initial radius
+        for (AbstractMesh<2, 2>::NodeIterator node_iter = p_generating_mesh->GetNodeIteratorBegin();
+             node_iter != p_generating_mesh->GetNodeIteratorEnd();
+             ++node_iter)
+        {
+            unsigned node_index = node_iter->GetIndex();
+            c_vector<double,2> node_location = node_iter->rGetLocation();
+
+            if (norm_2(node_location)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            {
+                p_generating_mesh->DeleteNodePriorToReMesh(node_index);
+            }
+        }
+        p_generating_mesh->ReMesh();
+
+        NodesOnlyMesh<2>* p_mesh = new NodesOnlyMesh<2>;
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh, cut_off_length);
+
+        std::vector<CellPtr> cells;
+        GenerateCells(p_mesh->GetNumNodes(),cells);
+
+        NodeBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //Make cell data writer so can pass in variable name
+        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
+        cell_population.AddCellWriter(p_cell_data_item_writer);
+
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory(output_directory);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
+        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
+
+        simulator.SetOutputDivisionLocations(true);
+
+        // Create a force law and pass it to the simulation
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(cut_off_length);
+        simulator.AddForce(p_linear_force);
+
+        // Make the Pde and BCS
+        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+		ConstBoundaryCondition<2> bc(0.0);
 		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
 		pde_and_bc.SetDependentVariableName("morphogen");
 
@@ -430,12 +356,17 @@ public:
 		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
 		simulator.AddSimulationModifier(p_pde_modifier);
 
-		simulator.Solve();
-    }
+        simulator.Solve();
 
-    void TestCaBasedMonolayer() throw (Exception)
+        delete p_mesh; // to stop memory leaks
+    }
+    /**
+     * Simulate reaction diffusion on a growing a population of cells in the
+     * Voronoi Tesselation model.
+     */
+    void TestMeshBasedMorphogenMonolayer() throw (Exception)
     {
-        double sim_index = 1;
+        double sim_index = 0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
             sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -445,18 +376,14 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index;
-        std::string output_directory = "ParabolicMonolayers/Ca/" +  out.str();
+        std::string output_directory = "Sweeps/MorphogenMonolayers/Mesh/" +  out.str();
 
-        // Create a simple 2D PottsMesh
-        unsigned domain_wide = 20*M_NUM_CELLS_ACROSS;
+        HoneycombMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS,3.0*M_NUM_CELLS_ACROSS);
+        MutableMesh<2,2>* p_mesh = generator.GetMesh();
 
-        PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
-        PottsMesh<2>* p_mesh = generator.GetMesh();
+        p_mesh->Translate(-(double)M_NUM_CELLS_ACROSS*0.5,-sqrt(3)*M_NUM_CELLS_ACROSS);
 
-        p_mesh->Translate(-(double)domain_wide*0.5 + 0.5,-(double)domain_wide*0.5 + 0.5);
-
-        // Specify where cells lie, i.e only within the specified initial radius
-        std::vector<unsigned> location_indices;
+        //Remove all elements outside the specified initial radius
         for (AbstractMesh<2, 2>::NodeIterator node_iter = p_mesh->GetNodeIteratorBegin();
              node_iter != p_mesh->GetNodeIteratorEnd();
              ++node_iter)
@@ -464,19 +391,104 @@ public:
             unsigned node_index = node_iter->GetIndex();
             c_vector<double,2> node_location = node_iter->rGetLocation();
 
-            if (norm_2(node_location)<0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            if (norm_2(node_location)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
             {
-                location_indices.push_back(node_index);
+                p_mesh->DeleteNodePriorToReMesh(node_index);
             }
         }
+        p_mesh->ReMesh();
+
+
 
         std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells);
+        GenerateCells(p_mesh->GetNumNodes(),cells);
 
-        // Create cell population
-        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
+        MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
 
         // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
+        //Make cell data writer so can pass in variabl name
+        boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
+        cell_population.AddCellWriter(p_cell_data_item_writer);
+
+        cell_population.SetWriteVtkAsPoints(true);
+        cell_population.AddPopulationWriter<VoronoiDataWriter>();
+
+
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory(output_directory);
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
+        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
+
+        simulator.SetOutputDivisionLocations(true);
+
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(1.5);
+        simulator.AddForce(p_linear_force);
+
+        // Make the Pde and BCS
+        MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
+		ConstBoundaryCondition<2> bc(0.0);
+		ParabolicPdeAndBoundaryConditions<2> pde_and_bc(&pde, &bc, true);
+		pde_and_bc.SetDependentVariableName("morphogen");
+
+		// Create a PDE Modifier object using this pde and bcs object
+		MAKE_PTR_ARGS(ParabolicGrowingDomainPdeModifier<2>, p_pde_modifier, (&pde_and_bc));
+		simulator.AddSimulationModifier(p_pde_modifier);
+
+        simulator.Solve();
+    }
+
+    /**
+     * Simulate reaction diffusion on a growing a population of cells in the
+     * Cell Vertex model.
+     */
+    void TestVertexBasedMorphogenMonolayer() throw (Exception)
+    {
+        double sim_index = 0;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+            sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index;
+        std::string output_directory = "Sweeps/MorphogenMonolayers/Vertex/" +  out.str();
+
+        // Create Mesh
+        HoneycombVertexMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS, 3.0*M_NUM_CELLS_ACROSS);
+        MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
+        p_mesh->SetCellRearrangementThreshold(0.1);
+
+        p_mesh->Translate(-M_NUM_CELLS_ACROSS,-sqrt(3.0)*M_NUM_CELLS_ACROSS+ sqrt(3.0)/6.0);
+
+        //Remove all elements outside the specified initial radius
+        for (VertexMesh<2,2>::VertexElementIterator elem_iter = p_mesh->GetElementIteratorBegin();
+                 elem_iter != p_mesh->GetElementIteratorEnd();
+                 ++elem_iter)
+        {
+            unsigned elem_index = elem_iter->GetIndex();
+            c_vector<double,2> element_centre = p_mesh->GetCentroidOfElement(elem_index);
+
+            if (norm_2(element_centre)>0.5*M_NUM_CELLS_ACROSS + 1e-5)
+            {
+                p_mesh->DeleteElementPriorToReMesh(elem_index);
+            }
+        }
+        p_mesh->ReMesh();
+
+        // Create Cells
+        std::vector<CellPtr> cells;
+        GenerateCells(p_mesh->GetNumElements(),cells);
+
+        // Create Population
+        VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
@@ -484,24 +496,27 @@ public:
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 
-        OnLatticeSimulation<2> simulator(cell_population);
+
+        // Create Simulation
+        OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
-        simulator.SetDt(1/200.0);
+        simulator.SetDt(1.0/200.0);
         simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
 
         simulator.SetOutputDivisionLocations(true);
 
-        // Add Division Rule
-        boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
-        cell_population.SetCaBasedDivisionRule(p_division_rule);
+        // Create Forces and pass to simulation NOTE: these are not the default ones and chosen to give a stable growing monolayer
+        MAKE_PTR(NagaiHondaForce<2>, p_force);
+        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
+        simulator.AddForce(p_force);
 
-        // Add switching Update Rule to smooth out the edge of the monolayer note no Temp as don't want random switches
-        MAKE_PTR(AdhesionCaSwitchingUpdateRule<2u>, p_switching_update_rule);
-        p_switching_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
-        p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
-        p_switching_update_rule->SetTemperature(0.0); //
-        simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
+        // Create Modifiers and pass to simulation
+
+        // Create a pde modifier and pass it to the simulation Add this first so in place for SimpleTargetArea one (calls cell pop update)
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);

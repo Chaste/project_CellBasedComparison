@@ -16,7 +16,7 @@ do
 	# ">" directs std::cout to the file.
 	# "2>&1" directs std::cerr to the same place.
 	# "&" on the end lets the script carry on and not wait until this has finished.
-	nice -20 ../build/optimised/TestMorphogenMonolayerRunner -sim_index $i > output/MorphogenRun_${i}_Output.txt 2>&1 &
+	nice -20 ../../build/optimised/Sweeps/TestMorphogenMonolayerSweepsRunner -sim_index $i > output/MorphogenRun_${i}_Output.txt 2>&1 &
 done
 
 echo "Jobs submitted"

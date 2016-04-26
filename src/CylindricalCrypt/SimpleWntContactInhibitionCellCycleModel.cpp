@@ -46,6 +46,27 @@ SimpleWntContactInhibitionCellCycleModel::SimpleWntContactInhibitionCellCycleMod
 {
 }
 
+SimpleWntContactInhibitionCellCycleModel::SimpleWntContactInhibitionCellCycleModel(const SimpleWntContactInhibitionCellCycleModel& rModel)
+   : ContactInhibitionCellCycleModel(rModel),
+     mWntThreshold(rModel.mWntThreshold)
+{
+    /*
+     * Set each member variable of the new cell-cycle model that inherits
+     * its value from the parent.
+     *
+     * Note 1: some of the new cell-cycle model's member variables will already
+     * have been correctly initialized in its constructor or parent classes.
+     *
+     * Note 2: one or more of the new cell-cycle model's member variables
+     * may be set/overwritten as soon as InitialiseDaughterCell() is called on
+     * the new cell-cycle model.
+     *
+     * Note 3: Only set the variables defined in this class. Variables defined
+     * in parent classes will be defined there.
+     *
+     */
+}
+
 void SimpleWntContactInhibitionCellCycleModel::UpdateCellCyclePhase()
 {
     double wnt_level= GetWntLevel();
@@ -128,36 +149,7 @@ double SimpleWntContactInhibitionCellCycleModel::GetWntLevel()
 AbstractCellCycleModel* SimpleWntContactInhibitionCellCycleModel::CreateCellCycleModel()
 {
     // Create a new cell-cycle model
-    SimpleWntContactInhibitionCellCycleModel* p_model = new SimpleWntContactInhibitionCellCycleModel();
-
-    /*
-     * Set each member variable of the new cell-cycle model that inherits
-     * its value from the parent.
-     *
-     * Note 1: some of the new cell-cycle model's member variables (namely
-     * mBirthTime, mCurrentCellCyclePhase, mReadyToDivide, mTimeSpentInG1Phase,
-     * mCurrentHypoxicDuration, mCurrentHypoxiaOnsetTime) will already have been
-     * correctly initialized in its constructor.
-     *
-     * Note 2: one or more of the new cell-cycle model's member variables
-     * may be set/overwritten as soon as InitialiseDaughterCell() is called on
-     * the new cell-cycle model.
-     */
-    p_model->SetBirthTime(mBirthTime);
-    p_model->SetDimension(mDimension);
-    p_model->SetMinimumGapDuration(mMinimumGapDuration);
-    p_model->SetStemCellG1Duration(mStemCellG1Duration);
-    p_model->SetTransitCellG1Duration(mTransitCellG1Duration);
-    p_model->SetSDuration(mSDuration);
-    p_model->SetG2Duration(mG2Duration);
-    p_model->SetMDuration(mMDuration);
-    p_model->SetQuiescentVolumeFraction(this->mQuiescentVolumeFraction);
-    p_model->SetEquilibriumVolume(this->mEquilibriumVolume);
-    p_model->SetCurrentQuiescentOnsetTime(this->mCurrentQuiescentOnsetTime);
-    p_model->SetCurrentQuiescentDuration(this->mCurrentQuiescentDuration);
-    p_model->SetWntThreshold(mWntThreshold);
-
-    return p_model;
+    return new SimpleWntContactInhibitionCellCycleModel(*this);
 }
 
 void SimpleWntContactInhibitionCellCycleModel::SetWntThreshold(double wntThreshold)

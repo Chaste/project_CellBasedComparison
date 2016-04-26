@@ -31,7 +31,7 @@ do
     	# ">" directs std::cout to the file.
     	# "2>&1" directs std::cerr to the same place.
     	# "&" on the end lets the script carry on and not wait until this has finished.
-    	nice -20 ../build/optimised/TestCellSortingRunner -sim_index $i -noise ${noise[$j]} > output/SortingRun_${i}_${noise[$j]}_Output.txt 2>&1 &
+    	nice -20 ../../build/optimised/Sweeps/TestCellSortingSweepsRunner -sim_index $i -noise ${noise[$j]} > output/SortingRun_${i}_${noise[$j]}_Output.txt 2>&1 &
     done
 done
 

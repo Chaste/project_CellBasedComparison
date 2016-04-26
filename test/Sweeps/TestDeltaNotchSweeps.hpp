@@ -54,7 +54,7 @@ static const double M_TISSUE_RADIUS = 15; // 15
 static const double M_PROLIF_RADIUS = 5; // 5
 static const double M_TIME_FOR_SIMULATION = 100; //100
 
-class TestDeltaNotch: public AbstractCellBasedWithTimingsTestSuite
+class TestDeltaNotchSweeps: public AbstractCellBasedWithTimingsTestSuite
 {
 private:
 
@@ -89,10 +89,14 @@ private:
 
 public:
 
-    void TestVertexMonolayerDeltaNotch() throw (Exception)
-    {
+    /**
+     * Simulate juxtacrine signalling in a population of cells in the
+     * Cellular Automaton model.
+     */
+   void TestCaBasedDeltaNotch() throw (Exception)
+   {
         double sim_index = 0;
-        double division_probability = 0.1;
+        double division_probability = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -103,79 +107,73 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_PDIV_" << division_probability;
-        std::string output_directory = "DeltaNotch/Vertex/" +  out.str();
+        std::string output_directory = "Sweeps/DeltaNotch/Ca/" +  out.str();
 
-        // Create a simple 2D MutableVertexMesh
-        HoneycombVertexMeshGenerator generator(2*M_TISSUE_RADIUS,2.5*M_TISSUE_RADIUS);
-        MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
-        p_mesh->SetCellRearrangementThreshold(0.1);
-        p_mesh->Translate(-M_TISSUE_RADIUS,-M_TISSUE_RADIUS);
+        // Create a simple 2D PottsMesh
+        unsigned domain_wide = 3*M_TISSUE_RADIUS;
 
-        // Slows things down but can use a larger timestep and diffusion forces.
-        //p_mesh->SetCheckForInternalIntersections(true);
+        PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
+        PottsMesh<2>* p_mesh = generator.GetMesh();
 
-        // Associate each cell with a cell-cycle model that incorporates a Delta-Notch ODE system
+        p_mesh->Translate(-(double)domain_wide*0.5 + 0.5,-(double)domain_wide*0.5 + 0.5);
+
+        // Specify where cells lie
+        std::vector<unsigned> location_indices;
+        for (unsigned i=0; i<domain_wide; i++)
+        {
+          for (unsigned j=0; j<domain_wide; j++)
+          {
+              location_indices.push_back(j + i * domain_wide );
+          }
+        }
+
+        // Create cells
         std::vector<CellPtr> cells;
-        GenerateCells(p_mesh->GetNumElements(),cells,division_probability);
+        GenerateCells(location_indices.size(),cells,division_probability);
 
         // Create cell population
-        VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
-        // Set up cell-based simulation and output directory
-        OffLatticeSimulation<2> simulator(cell_population);
+        OnLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
         simulator.SetOutputDivisionLocations(true);
 
-        // Set time step and end time for simulation
-        simulator.SetDt(1.0/200.0);
-        simulator.SetSamplingTimestepMultiple(200);
+        simulator.SetDt(0.01);
+        simulator.SetSamplingTimestepMultiple(100);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
+
+        // Add Division Rule
+        boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
+        cell_population.SetCaBasedDivisionRule(p_division_rule);
 
         // Add DeltaNotch modifier
         MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
+
 
         // Add RadialDifferentiationModifier modifier
         MAKE_PTR(RadialDifferentiationModifier<2>, p_differentiation_modifier);
         p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
         simulator.AddSimulationModifier(p_differentiation_modifier);
 
-
-        // Create Forces and pass to simulation NOTE : these are not the default ones and chosen to give a stable growing monolayer
-        MAKE_PTR(NagaiHondaForce<2>, p_force);
-        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
-        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
-        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
-        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
-        simulator.AddForce(p_force);
-
-//        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
-//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
-//        simulator.AddSimulationModifier(p_growth_modifier);
-
         // Add a cell killer
         MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
         simulator.AddCellKiller(p_killer);
 
-        // Run simulation
         simulator.Solve();
+    }
 
-        // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
-
-        // Test no births or deaths
-        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-
-   }
-
-
-    void TestPottsMonolayerDeltaNotch() throw (Exception)
+    /**
+     * Simulate juxtacrine signalling in a population of cells in the
+     * Cellular Potts model.
+     */
+    void TestPottsBasedDeltaNotch() throw (Exception)
     {
         double sim_index = 0;
         double division_probability = 0.1;
@@ -189,7 +187,7 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_PDIV_" << division_probability;
-        std::string output_directory = "DeltaNotch/Potts/" +  out.str();
+        std::string output_directory = "Sweeps/DeltaNotch/Potts/" +  out.str();
 
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
@@ -263,87 +261,12 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-
-    void TestMeshBasedWithGhostsMonolayerDeltaNotch() throw (Exception)
+    /**
+     * Simulate juxtacrine signalling in a population of cells in the
+     * Overlapping Spheres model.
+     */
+    void TestNodeBasedDeltaNotch() throw (Exception)
     {
-        double sim_index = 0;
-        double division_probability = 0.1;
-        if (M_USING_COMMAND_LINE_ARGS)
-        {
-          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
-          division_probability = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-prob_division").c_str());
-        }
-        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
-
-        //Create output directory
-        std::stringstream out;
-        out << sim_index << "_PDIV_" << division_probability;
-        std::string output_directory = "DeltaNotch/Mesh/" +  out.str();
-
-        // Create a simple mesh
-        unsigned num_ghosts = 0;
-        HoneycombMeshGenerator generator(2*M_TISSUE_RADIUS, 2.5*M_TISSUE_RADIUS, num_ghosts);
-        MutableMesh<2,2>* p_mesh = generator.GetMesh();
-        p_mesh->Translate(-M_TISSUE_RADIUS,-M_TISSUE_RADIUS);
-
-        // Set up cells, one for each non ghost Node
-        std::vector<unsigned> location_indices = generator.GetCellLocationIndices();//**Changed**//
-        std::vector<CellPtr> cells;
-        GenerateCells(location_indices.size(),cells,division_probability);
-
-        // Create cell population
-        MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
-
-        // Set population to output all data to results files
-        cell_population.AddCellWriter<CellIdWriter>();
-        cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellDeltaNotchWriter>();
-
-        cell_population.SetWriteVtkAsPoints(false);
-        cell_population.AddPopulationWriter<VoronoiDataWriter>();
-
-        // Set up cell-based simulation and output directory
-        OffLatticeSimulation<2> simulator(cell_population);
-        simulator.SetOutputDirectory(output_directory);
-        simulator.SetOutputDivisionLocations(true);
-
-        // Set time step and end time for simulation
-        simulator.SetDt(1.0/200.0);
-        simulator.SetSamplingTimestepMultiple(200);
-        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
-
-        // Add DeltaNotch modifier
-        MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
-        simulator.AddSimulationModifier(p_modifier);
-
-        // Add RadialDifferentiationModifier modifier
-        MAKE_PTR(RadialDifferentiationModifier<2>, p_differentiation_modifier);
-        p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
-        simulator.AddSimulationModifier(p_differentiation_modifier);
-
-        // Create a force law and pass it to the simulation
-        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
-        p_linear_force->SetMeinekeSpringStiffness(50.0);
-        simulator.AddForce(p_linear_force);
-
-        // Add a cell killer
-        MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
-        simulator.AddCellKiller(p_killer);
-
-          // Run simulation
-        simulator.Solve();
-
-        // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
-
-        // Test no births or deaths
-        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-}
-
-
-void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
-{
         double sim_index = 0;
         double division_probability = 10.0;
         if (M_USING_COMMAND_LINE_ARGS)
@@ -358,7 +281,7 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         //Create output directory
         std::stringstream out;
         out << sim_index << "_PDIV_" << division_probability;
-        std::string output_directory = "DeltaNotch/Node/" +  out.str();
+        std::string output_directory = "Sweeps/DeltaNotch/Node/" +  out.str();
 
         // Create a simple mesh
         unsigned num_ghosts = 0;
@@ -423,10 +346,15 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
-   void TestCaBasedMonolayerDeltaNotch() throw (Exception)
-   {
+
+    /**
+     * Simulate juxtacrine signalling in a population of cells in the
+     * Voronoi Tesselation model.
+     */
+    void TestMeshBasedDeltaNotch() throw (Exception)
+    {
         double sim_index = 0;
-        double division_probability = 10.0;
+        double division_probability = 0.1;
         if (M_USING_COMMAND_LINE_ARGS)
         {
           sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
@@ -437,65 +365,154 @@ void TestNodeBasedMonolayerDeltaNotch() throw (Exception)
         //Create output directory
         std::stringstream out;
         out << sim_index << "_PDIV_" << division_probability;
-        std::string output_directory = "DeltaNotch/Ca/" +  out.str();
+        std::string output_directory = "Sweeps/DeltaNotch/Mesh/" +  out.str();
 
-        // Create a simple 2D PottsMesh
-        unsigned domain_wide = 3*M_TISSUE_RADIUS;
+        // Create a simple mesh
+        unsigned num_ghosts = 0;
+        HoneycombMeshGenerator generator(2*M_TISSUE_RADIUS, 2.5*M_TISSUE_RADIUS, num_ghosts);
+        MutableMesh<2,2>* p_mesh = generator.GetMesh();
+        p_mesh->Translate(-M_TISSUE_RADIUS,-M_TISSUE_RADIUS);
 
-        PottsMeshGenerator<2> generator(domain_wide, 0, 0, domain_wide, 0, 0);
-        PottsMesh<2>* p_mesh = generator.GetMesh();
-
-        p_mesh->Translate(-(double)domain_wide*0.5 + 0.5,-(double)domain_wide*0.5 + 0.5);
-
-        // Specify where cells lie
-        std::vector<unsigned> location_indices;
-        for (unsigned i=0; i<domain_wide; i++)
-        {
-          for (unsigned j=0; j<domain_wide; j++)
-          {
-              location_indices.push_back(j + i * domain_wide );
-          }
-        }
-
-        // Create cells
+        // Set up cells, one for each non ghost Node
+        std::vector<unsigned> location_indices = generator.GetCellLocationIndices();//**Changed**//
         std::vector<CellPtr> cells;
         GenerateCells(location_indices.size(),cells,division_probability);
 
         // Create cell population
-        CaBasedCellPopulation<2> cell_population(*p_mesh, cells, location_indices);
+        MeshBasedCellPopulationWithGhostNodes<2> cell_population(*p_mesh, cells, location_indices);
 
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
-        cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
-        OnLatticeSimulation<2> simulator(cell_population);
+        cell_population.SetWriteVtkAsPoints(false);
+        cell_population.AddPopulationWriter<VoronoiDataWriter>();
+
+        // Set up cell-based simulation and output directory
+        OffLatticeSimulation<2> simulator(cell_population);
         simulator.SetOutputDirectory(output_directory);
         simulator.SetOutputDivisionLocations(true);
 
-        simulator.SetDt(0.01);
-        simulator.SetSamplingTimestepMultiple(100);
+        // Set time step and end time for simulation
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
         simulator.SetEndTime(M_TIME_FOR_SIMULATION);
-
-        // Add Division Rule
-        boost::shared_ptr<AbstractCaBasedDivisionRule<2> > p_division_rule(new ShovingCaBasedDivisionRule<2>());
-        cell_population.SetCaBasedDivisionRule(p_division_rule);
 
         // Add DeltaNotch modifier
         MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
         simulator.AddSimulationModifier(p_modifier);
-
 
         // Add RadialDifferentiationModifier modifier
         MAKE_PTR(RadialDifferentiationModifier<2>, p_differentiation_modifier);
         p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
         simulator.AddSimulationModifier(p_differentiation_modifier);
 
+        // Create a force law and pass it to the simulation
+        MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
+        p_linear_force->SetMeinekeSpringStiffness(50.0);
+        simulator.AddForce(p_linear_force);
+
         // Add a cell killer
         MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
         simulator.AddCellKiller(p_killer);
 
+          // Run simulation
         simulator.Solve();
+
+        // Check that the same number of cells
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+
+        // Test no births or deaths
+        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
+        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
+
+    /**
+     * Simulate juxtacrine signalling in a population of cells
+     * Cell Vertex model.
+     */
+    void TestVertexBasedDeltaNotch() throw (Exception)
+    {
+        double sim_index = 0;
+        double division_probability = 0.1;
+        if (M_USING_COMMAND_LINE_ARGS)
+        {
+          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
+          division_probability = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-prob_division").c_str());
+        }
+        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
+
+        //Create output directory
+        std::stringstream out;
+        out << sim_index << "_PDIV_" << division_probability;
+        std::string output_directory = "Sweeps/DeltaNotch/Vertex/" +  out.str();
+
+        // Create a simple 2D MutableVertexMesh
+        HoneycombVertexMeshGenerator generator(2*M_TISSUE_RADIUS,2.5*M_TISSUE_RADIUS);
+        MutableVertexMesh<2,2>* p_mesh = generator.GetMesh();
+        p_mesh->SetCellRearrangementThreshold(0.1);
+        p_mesh->Translate(-M_TISSUE_RADIUS,-M_TISSUE_RADIUS);
+
+        // Slows things down but can use a larger timestep and diffusion forces.
+        //p_mesh->SetCheckForInternalIntersections(true);
+
+        // Associate each cell with a cell-cycle model that incorporates a Delta-Notch ODE system
+        std::vector<CellPtr> cells;
+        GenerateCells(p_mesh->GetNumElements(),cells,division_probability);
+
+        // Create cell population
+        VertexBasedCellPopulation<2> cell_population(*p_mesh, cells);
+
+        // Set population to output all data to results files
+        cell_population.AddCellWriter<CellIdWriter>();
+        cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellDeltaNotchWriter>();
+
+        // Set up cell-based simulation and output directory
+        OffLatticeSimulation<2> simulator(cell_population);
+        simulator.SetOutputDirectory(output_directory);
+        simulator.SetOutputDivisionLocations(true);
+
+        // Set time step and end time for simulation
+        simulator.SetDt(1.0/200.0);
+        simulator.SetSamplingTimestepMultiple(200);
+        simulator.SetEndTime(M_TIME_FOR_SIMULATION);
+
+        // Add DeltaNotch modifier
+        MAKE_PTR(DeltaNotchTrackingModifier<2>, p_modifier);
+        simulator.AddSimulationModifier(p_modifier);
+
+        // Add RadialDifferentiationModifier modifier
+        MAKE_PTR(RadialDifferentiationModifier<2>, p_differentiation_modifier);
+        p_differentiation_modifier->SetRadius(M_PROLIF_RADIUS);
+        simulator.AddSimulationModifier(p_differentiation_modifier);
+
+
+        // Create Forces and pass to simulation NOTE : these are not the default ones and chosen to give a stable growing monolayer
+        MAKE_PTR(NagaiHondaForce<2>, p_force);
+        p_force->SetNagaiHondaDeformationEnergyParameter(50.0);
+        p_force->SetNagaiHondaMembraneSurfaceEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellCellAdhesionEnergyParameter(1.0);
+        p_force->SetNagaiHondaCellBoundaryAdhesionEnergyParameter(10.0);
+        simulator.AddForce(p_force);
+
+//        // A NagaiHondaForce has to be used together with an AbstractTargetAreaModifier
+//        MAKE_PTR(SimpleTargetAreaModifier<2>, p_growth_modifier);
+//        simulator.AddSimulationModifier(p_growth_modifier);
+
+        // Add a cell killer
+        MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), M_TISSUE_RADIUS));
+        simulator.AddCellKiller(p_killer);
+
+        // Run simulation
+        simulator.Solve();
+
+        // Check that the same number of cells
+        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
+
+        // Test no births or deaths
+        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
+        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
+   }
 };

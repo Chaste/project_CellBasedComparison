@@ -8,7 +8,7 @@
 #include "CellLabel.hpp"
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
-#include "StochasticDurationGenerationBasedCellCycleModel.hpp"
+#include "UniformlyDistributedGenerationBasedCellCycleModel.hpp"
 #include "TransitCellProliferativeType.hpp"
 
 #include "HeterotypicBoundaryLengthWriter.hpp"
@@ -55,7 +55,7 @@ static const double M_TIME_TO_STEADY_STATE = 10; //10
 static const double M_TIME_FOR_SIMULATION = 1000; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 
-class TestCellSorting: public AbstractCellBasedWithTimingsTestSuite
+class TestCellSortingSweeps: public AbstractCellBasedWithTimingsTestSuite
 {
 private:
 
@@ -74,7 +74,11 @@ private:
 
 public:
 
-   void TestCaBasedMonolayerCellSorting() throw (Exception)
+    /**
+     * Simulate a population of cells exhibiting cell sorting using the
+     * Cellular Automaton model.
+     */
+    void TestCaBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -88,7 +92,7 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_noise_" << cell_fluctuation;
-        std::string output_directory = "CellSorting/Ca/" +  out.str();
+        std::string output_directory = "Sweeps/CellSorting/Ca/" +  out.str();
 
         // Create a simple 2D PottsMesh
         unsigned domain_wide = 2*M_NUM_CELLS_ACROSS;
@@ -110,7 +114,7 @@ public:
         }
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_differentiated_type);
 
         // Create cell population
@@ -166,9 +170,9 @@ public:
 
     /**
      * Simulate a population of cells exhibiting cell sorting using the
-     * Potts model.
+     * Cellular Potts model.
      */
-   void TestPottsMonolayerCellSorting() throw (Exception)
+    void TestPottsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -182,7 +186,7 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_noise_" << cell_fluctuation;
-        std::string output_directory = "CellSorting/Potts/" +  out.str();
+        std::string output_directory = "Sweeps/CellSorting/Potts/" +  out.str();
 
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
@@ -193,7 +197,7 @@ public:
         // Create cells
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
 
         // Create cell population
@@ -256,7 +260,11 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-   void TestNodeBasedMonolayerCellSorting() throw (Exception)
+    /**
+     * Simulate a population of cells exhibiting cell sorting using the
+     * Overlapping Sphere model.
+     */
+    void TestNodeBasedMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -272,7 +280,7 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_noise_" << cell_fluctuation;
-        std::string output_directory = "CellSorting/Node/" +  out.str();
+        std::string output_directory = "Sweeps/CellSorting/Node/" +  out.str();
 
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);
@@ -285,7 +293,7 @@ public:
         // Set up cells, one for each Node
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, mesh.GetNumNodes(), p_differentiated_type);
 
         // Create cell population
@@ -342,85 +350,11 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-
-//   void NoTestMeshBasedMolayerCellSorting() throw (Exception)
-//    {
-//        double sim_index = 0;
-//        double cell_fluctuation = 1.0;
-//        if (M_USING_COMMAND_LINE_ARGS)
-//        {
-//          sim_index = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-sim_index").c_str());
-//          cell_fluctuation = (double) atof(CommandLineArguments::Instance()->GetStringCorrespondingToOption("-noise").c_str());
-//        }
-//        RandomNumberGenerator::Instance()->Reseed(100.0*sim_index);
-//
-//        //Create output directory
-//        std::stringstream out;
-//        out << sim_index << "_noise_" << cell_fluctuation;
-//        std::string output_directory = "CellSorting/Mesh/" +  out.str();
-//
-//        // Create a simple mesh
-//        HoneycombMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS, 0);
-//        MutableMesh<2,2>* p_mesh = generator.GetMesh();
-//
-//        std::vector<CellPtr> cells;
-//        MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-//        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
-//        cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumNodes(), p_differentiated_type);
-//
-//        // Create cell population
-//        MeshBasedCellPopulation<2> cell_population(*p_mesh, cells);
-//        cell_population.AddPopulationWriter<CellPopulationAdjacencyMatrixWriter>();
-//
-//        // Set population to output all data to results files
-//        cell_population.AddCellWriter<CellIdWriter>();
-//        cell_population.AddCellWriter<CellMutationStatesWriter>();
-//        cell_population.AddPopulationWriter<HeterotypicBoundaryLengthWriter>();
-//
-//        // Set up cell-based simulation and output directory
-//        OffLatticeSimulation<2> simulator(cell_population);
-//        simulator.SetOutputDirectory(output_directory);
-//
-//        // Set time step and end time for simulation
-//        simulator.SetDt(1.0/200.0);
-//        simulator.SetSamplingTimestepMultiple(200);
-//        simulator.SetEndTime(M_TIME_TO_STEADY_STATE);
-//
-//        // Create a force law and pass it to the simulation
-//        MAKE_PTR(DifferentialAdhesionGeneralisedLinearSpringForce<2>, p_differential_adhesion_force);
-//        p_differential_adhesion_force->SetMeinekeSpringStiffness(50.0);
-//        p_differential_adhesion_force->SetHomotypicLabelledSpringConstantMultiplier(1.0);
-//        p_differential_adhesion_force->SetHeterotypicSpringConstantMultiplier(0.1);
-//        simulator.AddForce(p_differential_adhesion_force);
-//
-//        // Add some noise to avoid local minimum
-//        MAKE_PTR(RandomMotionForce<2>, p_random_force);
-//        p_random_force->SetMovementParameter(0.02);
-//        simulator.AddForce(p_random_force);
-//
-//        // Run simulation
-//        simulator.Solve();
-//
-//        // Now label some cells
-//        boost::shared_ptr<AbstractCellProperty> p_state(CellPropertyRegistry::Instance()->Get<CellLabel>());
-//        RandomlyLabelCells(simulator.rGetCellPopulation().rGetCells(), p_state, 0.5);
-//
-//        // Adjust parameters
-//        p_random_force->SetMovementParameter(0.02*cell_fluctuation); //0.1 causes dissasociation
-//
-//        // Run simulation
-//        simulator.SetEndTime(M_TIME_TO_STEADY_STATE + M_TIME_FOR_SIMULATION);
-//        simulator.Solve();
-//
-//        // Check that the same number of cells
-//        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), M_NUM_CELLS_ACROSS*M_NUM_CELLS_ACROSS);
-//
-//        // Test no births or deaths
-//        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-//        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-//    }
-
-   void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
+    /**
+     * Simulate a population of cells exhibiting cell sorting using the
+     * Voronoi tesselation model.
+     */
+    void TestMeshBasedWithGhostsMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -434,7 +368,7 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_noise_" << cell_fluctuation;
-        std::string output_directory = "CellSorting/MeshGhost/" +  out.str();
+        std::string output_directory = "Sweeps/CellSorting/MeshGhost/" +  out.str();
 
         // Create a simple mesh
         unsigned num_ghosts = 20;
@@ -445,7 +379,7 @@ public:
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_differentiated_type);
 
         // Create cell population
@@ -500,19 +434,11 @@ public:
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
-
     /**
      * Simulate a population of cells exhibiting cell sorting using the
-     * vertex dynamics model proposed by T. Nagai and H. Honda ("A dynamic
-     * cell model for the formation of epithelial tissues", Philosophical
-     * Magazine Part B 81:699-719).
-     *
-     * Each of the vertex dynamics model parameter member variables are
-     * rescaled such that mDampingConstantNormal takes the default value 1,
-     * whereas Nagai and Honda (who denote the parameter by nu) take the
-     * value 0.01.
+     * Cell Vertex model.
      */
-   void NoTestVertexMonolayerCellSorting() throw (Exception)
+    void TestVertexMonolayerCellSorting() throw (Exception)
     {
         double sim_index = 0;
         double cell_fluctuation = 1.0;
@@ -526,7 +452,7 @@ public:
         //Create output directory
         std::stringstream out;
         out << sim_index << "_noise_" << cell_fluctuation;
-        std::string output_directory = "CellSorting/Vertex/" +  out.str();
+        std::string output_directory = "Sweeps/CellSorting/Vertex/" +  out.str();
 
         // Create a simple 2D MutableVertexMesh
         HoneycombVertexMeshGenerator generator(M_NUM_CELLS_ACROSS, M_NUM_CELLS_ACROSS);
@@ -539,7 +465,7 @@ public:
         // Set up cells, one for each VertexElement
         std::vector<CellPtr> cells;
         boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
-        CellsGenerator<StochasticDurationGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_cell_type);
 
         for (unsigned i=0; i<cells.size(); i++)
@@ -603,5 +529,5 @@ public:
         // Test no births or deaths
         TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
         TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
-   }
+    }
 };
