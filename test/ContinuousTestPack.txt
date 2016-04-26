@@ -1,5 +1,4 @@
-TestCellSorting.hpp
-TestCylindricalCrypt.hpp
-TestDeltaNotch.hpp
-TestMorphogenMonolayer.hpp
-TestSimpleMonolayer.hpp
+TestCellSortingLiteratePaper.hpp
+TestCylindricalCryptLiteratePaper.hpp
+TestDeltaNotchLiteratePaper.hpp
+TestMorphogenMonolayerLiteratePaper.hpp
