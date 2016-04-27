@@ -14,6 +14,7 @@
 #include "MorphogenCellwiseSourceParabolicPde.hpp"
 #include "VolumeTrackingModifier.hpp"
 
+#include "UniformlyDistributedCellCycleModel.hpp"
 #include "MorphogenDependentCellCycleModel.hpp"
 #include "CellDataItemWriter.hpp"
 #include "OffLatticeSimulation.hpp"
@@ -65,6 +66,7 @@ private:
 
         for (unsigned i=0; i<num_cells; i++)
         {
+            //UniformlyDistributedCellCycleModel* p_cycle_model = new UniformlyDistributedCellCycleModel();
             MorphogenDependentCellCycleModel* p_cycle_model = new MorphogenDependentCellCycleModel();
             p_cycle_model->SetDimension(2);
             p_cycle_model->SetCurrentMass(0.5*(p_gen->ranf()+1.0));
@@ -74,7 +76,10 @@ private:
             p_cell->SetCellProliferativeType(p_transit_type);
 
             // Note the first few recorded ages will be too short as cells start with some mass.
-            p_cell->SetBirthTime(0.0);
+            //p_cell->SetBirthTime(0.0);
+            p_cell->SetBirthTime(-20);
+
+
 
             p_cell->InitialiseCellCycleModel();
 
@@ -128,7 +133,8 @@ public:
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
-        //Make cell data writer so can pass in variable name
+
+        // Make cell data writer so can pass in variable name
         boost::shared_ptr<CellDataItemWriter<2,2> > p_cell_data_item_writer(new CellDataItemWriter<2,2>("morphogen"));
         cell_population.AddCellWriter(p_cell_data_item_writer);
 
@@ -323,6 +329,13 @@ public:
      * Simulate reaction diffusion on a growing a population of cells in the
      * Voronoi Tesselation model.
      */
+
+    /* TODO This test runs and gives a result but now (as of 27/04/16) gives the following error
+     * 'New nonzero at (5,39) caused a malloc' which is independent of run size.
+     *
+     * Not if we just use a simple Uniformly Disctributed CCM then we dont get the error.
+     */
+
     void TestMeshBasedMorphogenMonolayer() throw (Exception)
     {
         HoneycombMeshGenerator generator(2.0*M_NUM_CELLS_ACROSS,3.0*M_NUM_CELLS_ACROSS);
