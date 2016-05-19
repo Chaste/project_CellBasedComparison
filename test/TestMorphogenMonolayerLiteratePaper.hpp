@@ -1,5 +1,8 @@
 #include <cxxtest/TestSuite.h>
+
+// Must be included before other cell_based headers
 #include "CellBasedSimulationArchiver.hpp"
+
 #include "SmartPointers.hpp"
 #include "AbstractCellBasedWithTimingsTestSuite.hpp"
 

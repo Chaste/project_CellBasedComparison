@@ -1,4 +1,3 @@
-
 #include <cxxtest/TestSuite.h>
 
 // Must be included before other cell_based headers

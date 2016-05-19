@@ -1,6 +1,3 @@
-#ifndef TESTCRYPTSIMULATIONCOMPARISON_HPP_
-#define TESTCRYPTSIMULATIONCOMPARISON_HPP_
-
 #include <cxxtest/TestSuite.h>
 
 // Must be included before any other cell_based headers
@@ -537,6 +534,3 @@ public:
         WntConcentration<2>::Instance()->Destroy();
         Warnings::Instance()->QuietDestroy();
     }
-};
-
-#endif /*TESTCRYPTSIMULATIONCOMPARISON_HPP_*/
