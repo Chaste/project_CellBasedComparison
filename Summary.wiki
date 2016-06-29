@@ -33,7 +33,19 @@ There are two folders - `src` and `test`.
   * [wiki:PaperTutorials/CellBasedComparison/CylindricalCrypt TestCylindricalCryptLiteratePaper.hpp] - this file can be run to generate the results in Figure XXX.
   * [wiki:PaperTutorials/CellBasedComparison/DeltaNotch TestDeltaNotchLiteratePaper.hpp] - this file can be run to generate the results in Figure XXX.
   * [wiki:PaperTutorials/CellBasedComparison/MorphogenMonolayer TestMorphogenMonolayerLiteratePaper.hpp] - this file can be run to generate the results in Figure XXX.
- 
+  
+  * Code to run sweeps to generate the averaged results
+   * Sweeps/TestCellSortingSweeps.hpp 
+   * Sweeps/TestCylindricalCryptSweeps.hpp 
+   * Sweeps/TestDeltaNotchSweeps.hpp 
+   * Sweeps/TestMorphogenMonolayerSweeps.hpp 
+   
+  * Scrips to run sweeps for averaged results
+  	* Sweeps/build_and_run_sorting.sh - this file can be run to generate the results in Figure XXX.
+  	* Sweeps/build_and_run_crypt.sh - this file can be run to generate the results in Figure XXX.
+  	* Sweeps/build_and_run_delta.sh - this file can be run to generate the results in Figure XXX.
+  	* Sweeps/build_and_run_morphogen.sh - this file can be run to generate the results in Figure XXX.
+
 [[Image(source:projects/CellBasedComparison/figures/Sorting_CA_1_t1000.png, link=wiki:PaperTutorials/CellBasedComparison/CellSorting, height=100px)]]
 [[Image(source:projects/CellBasedComparison/figures/Sorting_Potts_1_t1000.png, link=wiki:PaperTutorials/CellBasedComparison/CellSorting, height=100px)]]
 [[Image(source:projects/CellBasedComparison/figures/Sorting_Node_1_t1000.png, link=wiki:PaperTutorials/CellBasedComparison/CellSorting, height=100px)]]
