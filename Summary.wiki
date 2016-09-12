@@ -7,15 +7,20 @@ our paper submitted to Royal Society Interface
 
 == Getting the code and installing dependencies ==
 
-Before running these examples you will need to [wiki:InstallGuides/InstallGuide install Chaste's dependencies] and the [http://www.cs.ox.ac.uk/chaste/download.html source code for version 3.4].
-
-NEED TO CHANGE THIS TO THE LATEST DEVELOP VERSION FROM GIT.
-
+Before running these examples you will need to [wiki:InstallGuides/InstallGuide install Chaste's dependencies].
 The easiest way to do this is using an Ubuntu machine (or an Ubuntu virtual machine) as discussed on [wiki:InstallGuides/UbuntuPackage]. 
 Note that Chaste is only fully supported on !Linux/Unix systems, so users of Windows or Mac OS X may need to follow the virtual machine route.
 For manual installation of each dependency, on any version of Linux, see DeveloperInstallGuide.
 
-'''NB''': the paper was developed with release version 3.4 of Chaste. It does not work with release version 3.3 or under. It may need updating to work on newer revisions of the trunk code.
+'''NB''': the paper was developed with a specific development version of Chaste. It does not work with any older releases version 3.3 or under and it may need updating to work on newer revisions of the trunk code (Note we will tie this to the next release)
+
+To checkput the source code for the specific code revision use the command
+
+{{{
+  git clone https://chaste.cs.ox.ac.uk/git/chaste.git Chaste
+  cd Chaste
+  checkout <REVISION>
+}}}
 
 You will also need the source for the CellBasedComparison project.  This can be done by checking out the version from the repository by using the command 
 {{{
