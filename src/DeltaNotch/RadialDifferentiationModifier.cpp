@@ -1,4 +1,5 @@
 #include "RadialDifferentiationModifier.hpp"
+#include "DifferentiatedCellProliferativeType.hpp"
 
 template<unsigned DIM>
 RadialDifferentiationModifier<DIM>::RadialDifferentiationModifier()

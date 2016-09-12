@@ -291,7 +291,7 @@ public:
 
         // Convert this to a Cylindrical2dNodesOnlyMesh
         Cylindrical2dNodesOnlyMesh* p_mesh = new Cylindrical2dNodesOnlyMesh(M_CRYPT_DIAMETER);
-        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh,M_CRYPT_DIAMETER);
+        p_mesh->ConstructNodesWithoutMesh(*p_generating_mesh,2.0); // So factor of 16
 
         // Create cells
         std::vector<CellPtr> cells;
