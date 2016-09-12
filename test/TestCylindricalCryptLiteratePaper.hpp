@@ -48,8 +48,8 @@
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const double M_END_STEADY_STATE = 100; //100
-static const double M_END_TIME = 1100; //1100
+static const double M_END_STEADY_STATE = 1; //100
+static const double M_END_TIME = 2; //1100
 static const double M_CRYPT_DIAMETER = 16;
 static const double M_CRYPT_LENGTH = 12;
 static const double M_CONTACT_INHIBITION_LEVEL = 0.8;
@@ -210,17 +210,17 @@ public:
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
         p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
-        simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
+        simulator.AddUpdateRule(p_volume_constraint_update_rule);
 
         MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
         p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
         p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);
-        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+        simulator.AddUpdateRule(p_surface_constraint_update_rule);
 
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
         p_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
         p_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
-        simulator.AddPottsUpdateRule(p_adhesion_update_rule);
+        simulator.AddUpdateRule(p_adhesion_update_rule);
 
         // Run simulation
         simulator.Solve();
@@ -240,7 +240,7 @@ public:
      * Simulate cell proliferation in the colorectal crypt using the
      * Overlapping Spheres model.
      */
-    void noTestNodeBasedCrypt() throw (Exception)
+    void TestNodeBasedCrypt() throw (Exception)
     {
         // Create a simple mesh
         HoneycombMeshGenerator generator(M_CRYPT_DIAMETER, M_CRYPT_LENGTH, 0);
@@ -322,7 +322,7 @@ public:
      * Simulate cell proliferation in the colorectal crypt using the
      * Voronoi Tesselation model.
      */
-    void noTestMeshBasedCrypt() throw (Exception)
+    void TestMeshBasedCrypt() throw (Exception)
     {
         // Create mesh
         unsigned thickness_of_ghost_layer = 2;
@@ -394,7 +394,7 @@ public:
      * Simulate cell proliferation in the colorectal crypt using the
      * Cell Vertex model.
      */
-    void noTestVertexBasedCrypt() throw (Exception)
+    void TestVertexBasedCrypt() throw (Exception)
     {
         // Create mesh
         CylindricalHoneycombVertexMeshGenerator generator(M_CRYPT_DIAMETER, M_CRYPT_LENGTH, true);

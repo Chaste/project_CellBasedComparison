@@ -286,7 +286,7 @@ void AdhesionCaSwitchingUpdateRule<DIM>::SetTemperature(double temperature)
 }
 
 template<unsigned DIM>
-void AdhesionCaSwitchingUpdateRule<DIM>::OutputSwitchingUpdateRuleParameters(out_stream& rParamsFile)
+void AdhesionCaSwitchingUpdateRule<DIM>::OutputUpdateRuleParameters(out_stream& rParamsFile)
 {
     *rParamsFile << "\t\t\t<CellCellAdhesionEnergyParameter>" << mCellCellAdhesionEnergyParameter << "</CellCellAdhesionEnergyParameter>\n";
     *rParamsFile << "\t\t\t<CellBoundaryAdhesionEnergyParameter>" << mCellBoundaryAdhesionEnergyParameter << "</CellBoundaryAdhesionEnergyParameter>\n";
@@ -294,7 +294,7 @@ void AdhesionCaSwitchingUpdateRule<DIM>::OutputSwitchingUpdateRuleParameters(out
     *rParamsFile << "\t\t\t<Temperature>" << mTemperature << "</Temperature>\n";
 
     // Call method on direct parent class
-    AbstractCaSwitchingUpdateRule<DIM>::OutputSwitchingUpdateRuleParameters(rParamsFile);
+    AbstractCaSwitchingUpdateRule<DIM>::OutputUpdateRuleParameters(rParamsFile);
 }
 
 // Explicit instantiation

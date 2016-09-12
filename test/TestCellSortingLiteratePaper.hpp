@@ -7,7 +7,7 @@
 #include "CellLabel.hpp"
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
-#include "UniformlyDistributedGenerationBasedCellCycleModel.hpp"
+#include "UniformG1GenerationalCellCycleModel.hpp"
 #include "TransitCellProliferativeType.hpp"
 #include "DifferentiatedCellProliferativeType.hpp"
 
@@ -45,8 +45,8 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const double M_TIME_TO_STEADY_STATE = 10; //10
-static const double M_TIME_FOR_SIMULATION = 100; //100
+static const double M_TIME_TO_STEADY_STATE = 1; //10
+static const double M_TIME_FOR_SIMULATION = 1; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 static const double M_CELL_FLUCTUATION = 1.0;
 
@@ -95,7 +95,7 @@ public:
         }
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformG1GenerationalCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_differentiated_type);
 
         // Create cell population
@@ -125,7 +125,7 @@ public:
         p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
         p_switching_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(0.4);
         p_switching_update_rule->SetTemperature(0.1);
-        simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
+        simulator.AddUpdateRule(p_switching_update_rule);
 
         simulator.Solve();
 
@@ -164,7 +164,7 @@ public:
         // Create cells
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformG1GenerationalCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_differentiated_type);
 
         // Create cell population
@@ -190,12 +190,12 @@ public:
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
         p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
-        simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
+        simulator.AddUpdateRule(p_volume_constraint_update_rule);
 
         MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
         p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
         p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);//0.01
-        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+        simulator.AddUpdateRule(p_surface_constraint_update_rule);
 
         MAKE_PTR(DifferentialAdhesionPottsUpdateRule<2>, p_differential_adhesion_update_rule);
         p_differential_adhesion_update_rule->SetLabelledCellLabelledCellAdhesionEnergyParameter(0.1);
@@ -203,7 +203,7 @@ public:
         p_differential_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1); //0.1
         p_differential_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2); // 1.0
         p_differential_adhesion_update_rule->SetLabelledCellBoundaryAdhesionEnergyParameter(1.0); // 2.0
-        simulator.AddPottsUpdateRule(p_differential_adhesion_update_rule);
+        simulator.AddUpdateRule(p_differential_adhesion_update_rule);
 
         // Run simulation
         simulator.Solve();
@@ -247,7 +247,7 @@ public:
         // Set up cells, one for each Node
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformG1GenerationalCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, mesh.GetNumNodes(), p_differentiated_type);
 
         // Create cell population
@@ -319,7 +319,7 @@ public:
         std::vector<unsigned> location_indices = generator.GetCellLocationIndices();
         std::vector<CellPtr> cells;
         MAKE_PTR(DifferentiatedCellProliferativeType, p_differentiated_type);
-        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformG1GenerationalCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, location_indices.size(), p_differentiated_type);
 
         // Create cell population
@@ -391,7 +391,7 @@ public:
         // Set up cells, one for each VertexElement
         std::vector<CellPtr> cells;
         boost::shared_ptr<AbstractCellProperty> p_cell_type(CellPropertyRegistry::Instance()->Get<DifferentiatedCellProliferativeType>());
-        CellsGenerator<UniformlyDistributedGenerationBasedCellCycleModel, 2> cells_generator;
+        CellsGenerator<UniformG1GenerationalCellCycleModel, 2> cells_generator;
         cells_generator.GenerateBasicRandom(cells, p_mesh->GetNumElements(), p_cell_type);
 
         for (unsigned i=0; i<cells.size(); i++)

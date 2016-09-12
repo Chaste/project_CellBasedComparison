@@ -168,7 +168,7 @@ public:
         p_switching_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
         p_switching_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
         p_switching_update_rule->SetTemperature(0.0); //
-        simulator.AddCaSwitchingUpdateRule(p_switching_update_rule);
+        simulator.AddUpdateRule(p_switching_update_rule);
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);
@@ -254,17 +254,17 @@ public:
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
         p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
-        simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
+        simulator.AddUpdateRule(p_volume_constraint_update_rule);
 
         MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
         p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
         p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);
-        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+        simulator.AddUpdateRule(p_surface_constraint_update_rule);
 
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
         p_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
         p_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
-        simulator.AddPottsUpdateRule(p_adhesion_update_rule);
+        simulator.AddUpdateRule(p_adhesion_update_rule);
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,(double)cell_width*(double)cell_width*M_DIFFUSION_CONSTANT,M_UPTAKE_RATE, 8.0);

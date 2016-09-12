@@ -7,7 +7,7 @@
 #include "CellLabel.hpp"
 #include "SmartPointers.hpp"
 #include "CellsGenerator.hpp"
-#include "RandomDivisionCellCycleModel.hpp"
+#include "BernoulliTrialCellCycleModel.hpp"
 #include "DeltaNotchSrnModel.hpp"
 
 #include "WildTypeCellMutationState.hpp"
@@ -67,7 +67,7 @@ private:
             initial_conditions.push_back(RandomNumberGenerator::Instance()->ranf());
             initial_conditions.push_back(RandomNumberGenerator::Instance()->ranf());
 
-            RandomDivisionCellCycleModel* p_cc_model = new RandomDivisionCellCycleModel();
+            BernoulliTrialCellCycleModel* p_cc_model = new BernoulliTrialCellCycleModel();
             p_cc_model->SetDimension(2);
             p_cc_model->SetDivisionProbability(divisionProbability);
 
@@ -203,17 +203,17 @@ public:
         MAKE_PTR(VolumeConstraintPottsUpdateRule<2>, p_volume_constraint_update_rule);
         p_volume_constraint_update_rule->SetMatureCellTargetVolume(16); // i.e 4x4 cells
         p_volume_constraint_update_rule->SetDeformationEnergyParameter(0.1);
-        simulator.AddPottsUpdateRule(p_volume_constraint_update_rule);
+        simulator.AddUpdateRule(p_volume_constraint_update_rule);
 
         MAKE_PTR(SurfaceAreaConstraintPottsUpdateRule<2>, p_surface_constraint_update_rule);
         p_surface_constraint_update_rule->SetMatureCellTargetSurfaceArea(16); // i.e 4x4 cells
         p_surface_constraint_update_rule->SetDeformationEnergyParameter(0.01);
-        simulator.AddPottsUpdateRule(p_surface_constraint_update_rule);
+        simulator.AddUpdateRule(p_surface_constraint_update_rule);
 
         MAKE_PTR(AdhesionPottsUpdateRule<2>, p_adhesion_update_rule);
         p_adhesion_update_rule->SetCellCellAdhesionEnergyParameter(0.1);
         p_adhesion_update_rule->SetCellBoundaryAdhesionEnergyParameter(0.2);
-        simulator.AddPottsUpdateRule(p_adhesion_update_rule);
+        simulator.AddUpdateRule(p_adhesion_update_rule);
 
         // Add a cell killer
         MAKE_PTR_ARGS(RadialSloughingCellKiller, p_killer, (&cell_population, zero_vector<double>(2), element_size*M_TISSUE_RADIUS));
@@ -221,13 +221,6 @@ public:
 
         // Run simulation
         simulator.Solve();
-
-        // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
-
-        // Test no births or deaths
-        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
     /**
@@ -292,13 +285,6 @@ public:
 
         // Run simulation
         simulator.Solve();
-
-        // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
-
-        // Test no births or deaths
-        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 
 
@@ -360,13 +346,6 @@ public:
 
           // Run simulation
         simulator.Solve();
-
-        // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
-
-        // Test no births or deaths
-        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
     }
 
     /**
@@ -434,12 +413,5 @@ public:
 
         // Run simulation
         simulator.Solve();
-
-        // Check that the same number of cells
-        TS_ASSERT_EQUALS(simulator.rGetCellPopulation().GetNumRealCells(), 100u);
-
-        // Test no births or deaths
-        TS_ASSERT_EQUALS(simulator.GetNumBirths(), 0u);
-        TS_ASSERT_EQUALS(simulator.GetNumDeaths(), 0u);
    }
 };
