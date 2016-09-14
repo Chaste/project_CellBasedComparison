@@ -3,6 +3,8 @@
 // Must be included before any other cell_based headers
 #include "CellBasedSimulationArchiver.hpp"
 
+#include "SmartPointers.hpp"
+
 #include "CylindricalHoneycombVertexMeshGenerator.hpp"
 #include "CylindricalHoneycombMeshGenerator.hpp"
 #include "PottsMeshGenerator.hpp"
@@ -534,3 +536,5 @@ public:
         WntConcentration<2>::Instance()->Destroy();
         Warnings::Instance()->QuietDestroy();
     }
+
+};

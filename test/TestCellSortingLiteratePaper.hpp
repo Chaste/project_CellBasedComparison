@@ -45,8 +45,8 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const double M_TIME_TO_STEADY_STATE = 1; //10
-static const double M_TIME_FOR_SIMULATION = 1; //100
+static const double M_TIME_TO_STEADY_STATE = 10; //10
+static const double M_TIME_FOR_SIMULATION = 100; //100
 static const double M_NUM_CELLS_ACROSS = 20; //20 // this ^2 cells
 static const double M_CELL_FLUCTUATION = 1.0;
 

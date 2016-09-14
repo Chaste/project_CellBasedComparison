@@ -50,7 +50,7 @@
 #include "PetscSetupAndFinalize.hpp"
 
 
-static const double M_TIME_FOR_SIMULATION = 1; //100
+static const double M_TIME_FOR_SIMULATION = 100; //100
 static const double M_NUM_CELLS_ACROSS = 10; // 10
 static const double M_UPTAKE_RATE = 0.01; // S in paper
 static const double M_DIFFUSION_CONSTANT = 1e-4; // D in paper
@@ -466,7 +466,7 @@ public:
 
         // Create Modifiers and pass to simulation
 
-        // Create a pde modifier and pass it to the simulation Add this first so in place for SimpleTargetArea one (calls cell pop update)
+        // Create a pde modifier and pass it to the simulation 
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);

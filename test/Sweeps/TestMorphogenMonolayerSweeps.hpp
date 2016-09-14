@@ -519,7 +519,7 @@ public:
 
         // Create Modifiers and pass to simulation
 
-        // Create a pde modifier and pass it to the simulation Add this first so in place for SimpleTargetArea one (calls cell pop update)
+        // Create a pde modifier and pass it to the simulation
 
         // Make the Pde and BCS
         MorphogenCellwiseSourceParabolicPde<2> pde(cell_population, M_DUDT_COEFFICIENT,M_DIFFUSION_CONSTANT,M_UPTAKE_RATE);

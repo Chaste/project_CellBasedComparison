@@ -9,6 +9,7 @@
 #include "CellsGenerator.hpp"
 #include "UniformG1GenerationalCellCycleModel.hpp"
 #include "TransitCellProliferativeType.hpp"
+#include "DifferentiatedCellProliferativeType.hpp"
 
 #include "HeterotypicBoundaryLengthWriter.hpp"
 

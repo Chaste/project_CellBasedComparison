@@ -47,7 +47,7 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const double M_TIME_FOR_SIMULATION = 1; //100
+static const double M_TIME_FOR_SIMULATION = 100; //100
 static const double M_TISSUE_RADIUS = 15; // 15
 static const double M_PROLIF_RADIUS = 5; // 5
 static const double M_DIVISION_PROBABILITY = 0.1; // 0.1

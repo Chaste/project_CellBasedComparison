@@ -48,8 +48,8 @@
 #include "PetscSetupAndFinalize.hpp"
 #include "Warnings.hpp"
 
-static const double M_END_STEADY_STATE = 1; //100
-static const double M_END_TIME = 2; //1100
+static const double M_END_STEADY_STATE = 100; //100
+static const double M_END_TIME = 1100; //1100
 static const double M_CRYPT_DIAMETER = 16;
 static const double M_CRYPT_LENGTH = 12;
 static const double M_CONTACT_INHIBITION_LEVEL = 0.8;
