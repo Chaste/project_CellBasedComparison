@@ -47,7 +47,7 @@
 
 #include "PetscSetupAndFinalize.hpp"
 
-static const double M_TIME_FOR_SIMULATION = 100; //100
+static const double M_TIME_FOR_SIMULATION = 1000; //100
 static const double M_TISSUE_RADIUS = 15; // 15
 static const double M_PROLIF_RADIUS = 5; // 5
 static const double M_DIVISION_PROBABILITY = 0.1; // 0.1
@@ -91,7 +91,7 @@ public:
      * Simulate juxtacrine signalling in a population of cells in the
      * Cellular Automaton model.
      */
-   void TestCaBasedDeltaNotch() throw (Exception)
+   void noTestCaBasedDeltaNotch() throw (Exception)
    {
         // Create a simple 2D PottsMesh
         unsigned domain_wide = 3*M_TISSUE_RADIUS;
@@ -156,7 +156,7 @@ public:
      * Simulate juxtacrine signalling in a population of cells in the
      * Cellular Potts model.
      */
-    void TestPottsBasedDeltaNotch() throw (Exception)
+    void noTestPottsBasedDeltaNotch() throw (Exception)
     {
         // Create a simple 2D PottsMesh
         unsigned element_size = 4;
@@ -227,7 +227,7 @@ public:
      * Simulate juxtacrine signalling in a population of cells in the
      * Overlapping Spheres model.
      */
-    void TestNodeBasedDeltaNotch() throw (Exception)
+    void noTestNodeBasedDeltaNotch() throw (Exception)
     {
 
         // Create a simple mesh
@@ -338,6 +338,7 @@ public:
         // Create a force law and pass it to the simulation
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
         p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(1.5);
         simulator.AddForce(p_linear_force);
 
         // Add a cell killer
@@ -352,7 +353,7 @@ public:
      * Simulate juxtacrine signalling in a population of cells
      * Cell Vertex model.
      */
-    void TestVertexBasedDeltaNotch() throw (Exception)
+    void noTestVertexBasedDeltaNotch() throw (Exception)
     {
         // Create a simple 2D MutableVertexMesh
         HoneycombVertexMeshGenerator generator(2*M_TISSUE_RADIUS,2.5*M_TISSUE_RADIUS);

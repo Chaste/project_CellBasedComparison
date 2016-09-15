@@ -410,6 +410,7 @@ public:
         // Create a force law and pass it to the simulation
         MAKE_PTR(GeneralisedLinearSpringForce<2>, p_linear_force);
         p_linear_force->SetMeinekeSpringStiffness(50.0);
+        p_linear_force->SetCutOffLength(1.5);
         simulator.AddForce(p_linear_force);
 
         // Add a cell killer
