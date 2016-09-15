@@ -3,7 +3,7 @@
 Welcome to the Chaste wiki.
 
 This section contains pages generated automatically from the source code accompanying Comparing individual-based approaches to modelling the self-organization of multicellular tissues, 
-our paper submitted to Royal Society Interface 
+our paper submitted to PLoS Computational Biology. 
 
 == Getting the code and installing dependencies ==
 
