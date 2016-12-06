@@ -136,6 +136,7 @@ public:
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellMutationStatesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
@@ -203,6 +204,7 @@ public:
         PottsBasedCellPopulation<2> cell_population(*p_mesh, cells);
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
         cell_population.SetNumSweepsPerTimestep(1);
 
@@ -303,6 +305,7 @@ public:
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
         // Set up cell-based simulation and output directory
@@ -383,6 +386,7 @@ public:
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
         cell_population.SetWriteVtkAsPoints(false);
@@ -467,6 +471,7 @@ public:
         // Set population to output all data to results files
         cell_population.AddCellWriter<CellIdWriter>();
         cell_population.AddCellWriter<CellAgesWriter>();
+        cell_population.AddCellWriter<CellVolumesWriter>();
         cell_population.AddCellWriter<CellDeltaNotchWriter>();
 
         // Set up cell-based simulation and output directory
